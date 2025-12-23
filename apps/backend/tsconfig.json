@@ -1,0 +1,14 @@
+{
+	"extends": "@qwertix/tsconfig/base.json",
+	"compilerOptions": {
+		"outDir": "./dist",
+		"baseUrl": ".",
+		"paths": {
+			"@/*": ["./src/*"]
+		},
+		"noPropertyAccessFromIndexSignature": false,
+		"noEmit": false
+	},
+	"include": ["src/**/*", "tests/**/*.ts", "e2e/**/*.ts"],
+	"exclude": ["node_modules", "dist"]
+}
