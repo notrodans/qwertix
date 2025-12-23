@@ -33,3 +33,8 @@ bun.lockb
 # Temporary
 tmp/
 temp/
+
+# Nvim local files
+.nvim.lua
+.exrc
+.nvimrc

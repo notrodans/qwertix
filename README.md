@@ -7,7 +7,6 @@ A high-performance multiplayer typing competition platform built with real-time 
 - **Real-time Racing:** Compete with friends in live typing battles.
 - **Modern Tech Stack:** Built with a focus on speed and type safety.
 - **FSD Architecture:** Strictly organized frontend using Feature-Sliced Design.
-- **Strict OOP Backend:** Robust and testable backend following Elegant Objects principles.
 
 ## 🛠 Tech Stack
 
@@ -20,8 +19,8 @@ A high-performance multiplayer typing competition platform built with real-time 
 
 ```text
 ├── apps/
-│   ├── frontend/     # React application (FSD)
-│   └── backend/      # Express & WebSocket server (Elegant Objects)
+│   ├── frontend/     # React application
+│   └── backend/      # Express & WebSocket server
 ├── libs/
 │   └── tsconfig/     # Shared TypeScript configurations
 └── package.json      # Workspace root & dependency catalog
@@ -32,7 +31,7 @@ A high-performance multiplayer typing competition platform built with real-time 
 ### Prerequisites
 
 - [Bun](https://bun.sh) (v1.1+)
-- [PostgreSQL](https://www.postgresql.org/)
+- [Docker](https://www.docker.com/)
 
 ### Installation
 
