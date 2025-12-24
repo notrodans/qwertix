@@ -1,12 +1,11 @@
 {
 	"name": "backend",
 	"description": "Qwertix Backend API & WebSocket Server",
-	"type": "module",
 	"private": true,
 	"scripts": {
 		"dev": "tsx watch src/main.ts",
-		"build": "tsc",
-		"start": "node dist/main.js",
+		"build": "tsup",
+		"start": "node dist/main.mjs",
 		"lint": "biome check .",
 		"lint:fix": "biome check --write .",
 		"format": "biome format --write .",
@@ -21,8 +20,8 @@
 		"cors": "^2.8.5",
 		"dotenv": "^17.2.3",
 		"drizzle-orm": "catalog:",
-		"express": "^4.21.2",
-		"pg": "^8.13.1",
+		"express": "^5.2.1",
+		"pg": "^8.16.3",
 		"uuid": "^13.0.0",
 		"ws": "^8.18.0",
 		"zod": "catalog:"
@@ -35,6 +34,7 @@
 		"@types/ws": "^8.18.1",
 		"tsx": "^4.21.0",
 		"typescript": "catalog:",
+		"tsup": "catalog:",
 		"vite-tsconfig-paths": "catalog:",
 		"@qwertix/tsconfig": "workspace:*",
 		"vitest": "catalog:",

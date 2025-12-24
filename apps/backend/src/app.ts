@@ -4,8 +4,8 @@ import express from 'express';
 import { createServer } from 'http';
 import { v4 as uuid } from 'uuid';
 import { WebSocketServer } from 'ws';
-import db from './db';
-import { users } from './db/schema';
+import db from '@/db';
+import { users } from '@/db/schema';
 
 config();
 

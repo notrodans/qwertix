@@ -1,6 +1,6 @@
 import react from '@vitejs/plugin-react';
 import tsconfigPaths from 'vite-tsconfig-paths';
-import { defineConfig, ViteUserConfig } from 'vitest/config';
+import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
 	plugins: [react(), tsconfigPaths()],
@@ -10,4 +10,4 @@ export default defineConfig({
 		setupFiles: './tests/setup.ts',
 		exclude: ['**/node_modules/**', '**/dist/**', '**/e2e/**'],
 	},
-} as ViteUserConfig);
+});

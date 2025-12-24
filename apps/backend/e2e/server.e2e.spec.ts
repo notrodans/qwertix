@@ -2,7 +2,7 @@ import type { AddressInfo } from 'net';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import WebSocket from 'ws';
-import { app, server } from '@/app';
+import { app, server } from '../src/app';
 
 describe('Backend E2E', () => {
 	// Use a random available port
