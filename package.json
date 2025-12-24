@@ -31,8 +31,7 @@
 			"vite-tsconfig-paths": "^6.0.3",
 			"supertest": "^7.1.4",
 			"drizzle-kit": "^0.31.8",
-			"drizzle-orm": "^0.45.1",
-			"tsc-alias": "^1.8.10"
+			"drizzle-orm": "^0.45.1"
 		}
 	},
 	"devDependencies": {
