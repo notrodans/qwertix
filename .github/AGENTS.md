@@ -113,6 +113,92 @@ function PresetPage() {
 *   **Props:** Define props with TypeScript interfaces.
 *   **Hooks:** Extract complex logic into custom hooks.
 
+#### **2.4. Avoiding Unnecessary `useEffect`**
+
+`useEffect` is a synchronization tool, not a state setter. Overusing it causes extra renders, complexity, and bugs.
+
+**A. Derived State**
+Do not use state for data that can be calculated from props or other state.
+
+```tsx
+// ❌ Bad: Redundant state and effect
+function ProductList({ products }) {
+    const [filtered, setFiltered] = useState([]);
+    useEffect(() => {
+        setFiltered(products.filter(p => p.inStock));
+    }, [products]);
+    return <List items={filtered} />;
+}
+
+// ✅ Good: Direct derivation (useMemo if expensive)
+function ProductList({ products }) {
+    const filtered = products.filter(p => p.inStock);
+    return <List items={filtered} />;
+}
+```
+
+**B. Mirroring Props to State**
+Do not copy props into state unless you intentionally need to diverge from the prop (rare).
+
+```tsx
+// ❌ Bad: Syncing prop to state
+function Profile({ user }) {
+    const [name, setName] = useState('');
+    useEffect(() => {
+        setName(user.name);
+    }, [user]);
+    return <div>{name}</div>;
+}
+
+// ✅ Good: Read prop directly
+function Profile({ user }) {
+    return <div>{user.name}</div>;
+}
+```
+
+**C. Handling User Events**
+Handle logic inside event handlers, not by watching state changes.
+
+```tsx
+// ❌ Bad: Watching state for API calls
+function Search() {
+    const [query, setQuery] = useState('');
+    useEffect(() => {
+        if (query) fetchResults(query);
+    }, [query]);
+    return <input onChange={e => setQuery(e.target.value)} />;
+}
+
+// ✅ Good: Trigger in handler (debounce if needed)
+function Search() {
+    const handleSearch = (e) => {
+        const value = e.target.value;
+        setQuery(value);
+        fetchResults(value);
+    };
+    return <input onChange={handleSearch} />;
+}
+```
+
+**D. Data Transformation**
+Transform data inside the render function or within the query selector (TanStack Query), not via effect.
+
+```tsx
+// ❌ Bad
+useEffect(() => {
+    setFormatted(data.map(item => item.value * 2));
+}, [data]);
+
+// ✅ Good
+const formatted = data.map(item => item.value * 2);
+```
+
+**When `useEffect` IS appropriate:**
+*   **External Subscriptions:** WebSocket connections, Global event listeners (`window.addEventListener`).
+*   **Browser APIs:** Interacting with non-React APIs like `IntersectionObserver`, `Canvas`, or `Map` widgets.
+*   **Synchronization:** Keeping a 3rd party library in sync with React props.
+*   **Note:** Data fetching should be handled by **TanStack Query**, not `useEffect`.
+
 ---
 
 ### **3. Backend Development (apps/backend)**
