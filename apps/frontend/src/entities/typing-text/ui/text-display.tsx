@@ -41,10 +41,12 @@ export function TextDisplay({ text, typed }: TextDisplayProps) {
 		const prevSpan = charRefs.current[currentIndex - 1];
 
 		if (prevSpan && currentSpan) {
+			const isCurrentSpace = currentSpan.dataset.type === 'space';
 			// Check if they are on the same line
-			const onSameLine = Math.abs(currentSpan.offsetTop - prevSpan.offsetTop) < 10;
-			
-			if (onSameLine) {
+			const onSameLine =
+				Math.abs(currentSpan.offsetTop - prevSpan.offsetTop) < 10;
+
+			if (onSameLine || isCurrentSpace) {
 				// Stick to the end of the previous character (stable for spaces)
 				left = prevSpan.offsetLeft + prevSpan.offsetWidth;
 				top = prevSpan.offsetTop;
