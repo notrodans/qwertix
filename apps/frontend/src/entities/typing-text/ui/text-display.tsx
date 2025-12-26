@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 interface TextDisplayProps {
 	text: string;
@@ -22,7 +22,7 @@ export function TextDisplay({ text, typed }: TextDisplayProps) {
 	charRefs.current = [];
 	let globalCharIndex = 0;
 
-	useLayoutEffect(() => {
+	const updateCursor = useCallback(() => {
 		const currentIndex = typed.length;
 		const cursorEl = cursorRef.current;
 
@@ -76,6 +76,14 @@ export function TextDisplay({ text, typed }: TextDisplayProps) {
 		cursorEl.style.height = `${adjustedHeight}px`;
 		cursorEl.style.opacity = '1';
 	}, [typed, text]);
+
+	useEffect(() => {
+		updateCursor();
+		window.addEventListener('resize', updateCursor);
+		return () => {
+			window.removeEventListener('resize', updateCursor);
+		};
+	}, [updateCursor]);
 
 	return (
 		<div
