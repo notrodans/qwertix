@@ -26,7 +26,7 @@ The frontend follows strict FSD principles with a **specific custom adaptation**
 *   **General Rules:**
     *   Lower layers cannot import from upper layers.
     *   Slices within the same layer (except `shared`) cannot cross-import.
-    *   **Public API:** Exports must be done via `pub/index.ts` (or `index.ts` at the root of the slice).
+    *   **Public API:** Exports must be done via `pub/index.ts`
     *   **Internal Imports:** Do NOT use aliases (e.g., `@/features/...`) for imports within the same slice. Use relative paths.
 
 **Specific Guidelines:**
