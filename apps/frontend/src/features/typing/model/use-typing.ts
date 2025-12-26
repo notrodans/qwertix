@@ -97,7 +97,8 @@ export function useTyping({ targetText, enabled = true }: UseTypingProps) {
 					return prev.slice(0, -1);
 				}
 
-				if (key === ' ' && prev.endsWith(' ')) {
+				// Prevent leading space or double spaces
+				if (key === ' ' && (prev.length === 0 || prev.endsWith(' '))) {
 					return prev;
 				}
 
