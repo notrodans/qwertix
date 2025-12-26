@@ -37,27 +37,34 @@ export function TextDisplay({ text, typed }: TextDisplayProps) {
 		let top = 0;
 		let height = 0;
 
-		const nextCharSpan = charRefs.current[currentIndex];
-		const prevCharSpan = charRefs.current[currentIndex - 1];
+		const currentSpan = charRefs.current[currentIndex];
+		const prevSpan = charRefs.current[currentIndex - 1];
 
-		if (nextCharSpan?.dataset.type === 'space') {
-			// The next character is a space that hasn't been typed yet.
-			// Position the cursor at the END of the previous character.
-			if (prevCharSpan) {
-				left = prevCharSpan.offsetLeft + prevCharSpan.offsetWidth;
-				top = prevCharSpan.offsetTop;
-				height = prevCharSpan.offsetHeight;
+		if (prevSpan && currentSpan) {
+			// Check if they are on the same line
+			const onSameLine = Math.abs(currentSpan.offsetTop - prevSpan.offsetTop) < 10;
+			
+			if (onSameLine) {
+				// Stick to the end of the previous character (stable for spaces)
+				left = prevSpan.offsetLeft + prevSpan.offsetWidth;
+				top = prevSpan.offsetTop;
+				height = prevSpan.offsetHeight;
+			} else {
+				// Wrapped to new line, align to start of current
+				left = currentSpan.offsetLeft;
+				top = currentSpan.offsetTop;
+				height = currentSpan.offsetHeight;
 			}
-		} else if (nextCharSpan) {
-			// Default behavior: position at the START of the next character.
-			left = nextCharSpan.offsetLeft;
-			top = nextCharSpan.offsetTop;
-			height = nextCharSpan.offsetHeight;
-		} else if (prevCharSpan) {
-			// We are at the end of all rendered text, position after the last char.
-			left = prevCharSpan.offsetLeft + prevCharSpan.offsetWidth;
-			top = prevCharSpan.offsetTop;
-			height = prevCharSpan.offsetHeight;
+		} else if (currentSpan) {
+			// Start of text
+			left = currentSpan.offsetLeft;
+			top = currentSpan.offsetTop;
+			height = currentSpan.offsetHeight;
+		} else if (prevSpan) {
+			// End of text
+			left = prevSpan.offsetLeft + prevSpan.offsetWidth;
+			top = prevSpan.offsetTop;
+			height = prevSpan.offsetHeight;
 		}
 
 		const adjustedTop = top + height * 0.15;
@@ -75,7 +82,7 @@ export function TextDisplay({ text, typed }: TextDisplayProps) {
 		>
 			<div
 				ref={cursorRef}
-				className="absolute left-0 top-0 w-[2px] bg-[#e2b714] will-change-transform z-10"
+				className="absolute left-0 top-0 w-0.5 bg-[#e2b714] will-change-transform z-10"
 				style={{
 					opacity: 0,
 					transition: 'transform 0.1s ease-out, height 0.1s ease-out',
