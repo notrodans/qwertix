@@ -38,7 +38,13 @@
 		"typescript": "catalog:",
 		"@biomejs/biome": "catalog:",
 		"@types/bun": "catalog:",
-		"@types/node": "catalog:"
+		"@types/node": "catalog:",
+		"globals": "catalog:",
+		"eslint": "catalog:",
+		"eslint-plugin-boundaries": "catalog:",
+		"typescript-eslint": "catalog:",
+		"eslint-plugin-import": "catalog:",
+		"eslint-import-resolver-typescript": "catalog:"
 	},
 	"scripts": {
 		"dev": "bun run --filter '*' dev",
