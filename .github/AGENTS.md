@@ -20,12 +20,85 @@ This document outlines the core conventions, technologies, and patterns used in 
 
 #### **2.1. Architecture: Feature-Sliced Design (FSD)**
 
-The frontend follows strict FSD principles. Layers are checked via ESLint boundaries.
+The frontend follows strict FSD principles with a **specific custom adaptation**. Layers are checked via ESLint boundaries.
+
 *   **Layers:** `app` -> `pages` -> `widgets` -> `features` -> `entities` -> `shared`.
-*   **Rules:**
+*   **General Rules:**
     *   Lower layers cannot import from upper layers.
     *   Slices within the same layer (except `shared`) cannot cross-import.
-    *   Use public API (`index.ts` or `pub/*`) for imports from other slices.
+    *   **Public API:** Exports must be done via `pub/index.ts` (or `index.ts` at the root of the slice).
+    *   **Internal Imports:** Do NOT use aliases (e.g., `@/features/...`) for imports within the same slice. Use relative paths.
+
+**Specific Guidelines:**
+
+1.  **Feature-First Approach:** Always start implementation from the `features` layer.
+2.  **Feature Managers:** Instead of atomic features for every action, create "Feature Managers" (e.g., `presets-panel`). This single slice handles the model and UI for multiple related actions (create, edit, delete, etc.). This consolidation achieves **low coupling** between different features and **high cohesion** within the feature itself.
+3.  **Segment Structure:**
+    *   **`ui`**: Presentation components.
+    *   **`model`**: Business logic, state management, and data representation (separated from UI).
+    *   **`compose`**: Mediators implementing the Dependency Inversion Principle (DIP).
+    *   **`domain`**: Pure domain logic (calculations, transformations, mapping).
+4.  **Composition (DIP):** Use "Layout" or "Mediator" components that accept dependencies (slots) as props, rather than importing them directly.
+
+**Example Structure (`preset-panel`):**
+
+```text
+preset-panel/
+├── index.ts                  # Public API
+├── model/
+│   └── use-edit-preset.ts    # Logic (create, remove, delete, update) — can separate
+├── compose
+│   └── preset-panel-layout.tsx  # Mediator Component
+└── ui/
+    ├── preset-panel-header.tsx
+    ├── edit/
+    │   └── ...
+    └── tables/
+        └── ...
+```
+
+**Mediator Example:**
+
+```tsx
+// features/preset-panel/ui/preset-panel-layout.tsx
+export function PresetPanelLayout({
+    header,
+    stats,
+    messages,
+}: {
+    header: React.ReactNode;
+    stats: React.ReactNode;
+    messages: React.ReactNode;
+}) {
+    return (
+        <div className="container mx-auto space-y-6 py-6">
+            {header}
+            {stats}
+            {messages}
+        </div>
+    );
+}
+```
+
+**Usage Example (Page Layer):**
+
+```tsx
+// pages/preset-page/ui/preset-page.tsx
+import { useGetPreset } from '@/entities/preset';
+import { PresetPanelLayout, PresetPanelHeader, ... } from '@/features/preset-panel';
+
+function PresetPage() {
+    const { data: preset } = useGetPreset();
+
+    return (
+        <PresetPanelLayout
+            header={<PresetPanelHeader name={preset.name} />}
+            stats={<PresetPanelStats ... />}
+            messages={<PresetPanelMessages ... />}
+        />
+    );
+}
+```
 
 #### **2.2. Core Stack**
 
@@ -95,4 +168,34 @@ export const UserRepository = {
 
 ---
 
-### **6. Monorepo Workflow**
+### **7. Spec-Driven Development (SDD)**
+
+*   **Core Principle:** Every feature must have a written specification (MD format) before implementation.
+*   **Location:**
+    *   **Frontend-only features:** `apps/frontend/specifications/*.md`
+    *   **Full-stack or Backend-related features:** `apps/backend/specifications/*.md`
+*   **Workflow:** Always check for or create a specification file to define requirements, API contracts, and logic before writing code.
+
+---
+
+### **8. Testing Guidelines**
+
+We strictly follow the **Test Pyramid** and **TDD** principles.
+
+#### **8.1. Strategies**
+*   **Unit (Vitest):** Isolate logic. Mock dependencies. Focus on `domain` and `model` layers.
+*   **Integration (Vitest/Supertest/Drizzle):** Test modules together. Use real database instances (Docker) where possible.
+*   **E2E (Playwright):** Simulate full user scenarios.
+
+#### **8.2. Best Practices**
+*   **AAA Pattern:** Structure tests with **A**rrange (setup), **A**ct (execute), **A**ssert (verify).
+*   **TDD:**
+    1.  Write a failing test first (Red).
+    2.  Implement the minimal code to pass (Green).
+    3.  Refactor while keeping the test green (Refactor).
+*   **Bug Fixing:** Found a bug? **Stop.** Write a test that reproduces the bug (it must fail). Fix the bug. Verify the test passes.
+*   **Quality:** Treat test code as production code. Maintain readability.
+
+---
+
+### **9. Monorepo Workflow**
