@@ -43,58 +43,52 @@ export function TextDisplay({ text, typed }: TextDisplayProps) {
 		let top = 0;
 		let height = 0;
 
-		// We try to find the character at the current index
-		// Because we populate charRefs including extra characters, the index should align 1:1 with typed.length
-		target = charRefs.current[currentIndex];
-
-		if (target) {
-			left = target.offsetLeft;
-			top = target.offsetTop;
-			height = target.offsetHeight;
-		} else {
-			// Fallback: Cursor is at the very end or off-sync
-			// Try the previous character
-			const lastChar = charRefs.current[currentIndex - 1];
-			if (lastChar) {
-				left = lastChar.offsetLeft + lastChar.offsetWidth;
-				top = lastChar.offsetTop;
-				height = lastChar.offsetHeight;
-			} else if (charRefs.current.length > 0) {
-				// Fallback to first char
-				const firstChar = charRefs.current[0];
-				if (firstChar) {
-					left = firstChar.offsetLeft;
-					top = firstChar.offsetTop;
-					height = firstChar.offsetHeight;
-				}
-			}
-		}
-
-		// Adjust vertical alignment
-		const adjustedTop = top + height * 0.15;
-		const adjustedHeight = height * 0.7;
-
-		// Apply styles directly
-		cursorEl.style.transform = `translate3d(${left}px, ${adjustedTop}px, 0)`;
-		cursorEl.style.height = `${adjustedHeight}px`;
-		cursorEl.style.opacity = '1';
-	}, [typed, text]); // words and typedWords are derived from these
-
-	return (
-		<div
-			ref={containerRef}
-			className="text-2xl leading-relaxed font-mono relative flex flex-wrap gap-y-2 select-none"
-		>
-			{/* Smooth Cursor */}
-			<div
-				ref={cursorRef}
-				className="absolute left-0 top-0 w-[2px] bg-[#e2b714] will-change-transform z-10"
-				style={{
-					opacity: 0,
-					transition: 'transform 0.25s ease-out, height 0.2s ease-out',
-				}}
-			/>
-
+		        // We try to find the character at the current index
+		        // Because we populate charRefs including extra characters, the index should align 1:1 with typed.length
+		        target = charRefs.current[currentIndex];
+		
+		        if (target) {
+		            left = target.offsetLeft;
+		            top = target.offsetTop;
+		            height = target.offsetHeight;
+		        } else {
+		            // Fallback: Cursor is past the end of the rendered text
+		            // Snap to the right side of the last rendered character
+		            const lastValidIndex = charRefs.current.length - 1;
+		            const lastChar = charRefs.current[lastValidIndex];
+		
+		            if (lastChar) {
+		                left = lastChar.offsetLeft + lastChar.offsetWidth;
+		                top = lastChar.offsetTop;
+		                height = lastChar.offsetHeight;
+		            }
+		        }
+		
+		        // Adjust vertical alignment
+		        const adjustedTop = top + (height * 0.15);
+		        const adjustedHeight = height * 0.7;
+		
+		        // Apply styles directly
+		        cursorEl.style.transform = `translate3d(${left}px, ${adjustedTop}px, 0)`;
+		        cursorEl.style.height = `${adjustedHeight}px`;
+		        cursorEl.style.opacity = '1';
+		        
+		    }, [typed, text]); // words and typedWords are derived from these
+		
+		    return (
+		        <div
+		            ref={containerRef}
+		            className="text-2xl leading-relaxed font-mono relative flex flex-wrap gap-y-2 select-none"
+		        >
+		            {/* Smooth Cursor */}
+		            <div
+		                ref={cursorRef}
+		                className="absolute left-0 top-0 w-[2px] bg-[#e2b714] will-change-transform z-10"
+		                style={{
+		                    opacity: 0,
+		                    transition: 'transform 0.15s ease-out, height 0.15s ease-out'
+		                }}
+		            />
 			{words.map((targetWord, wordIndex) => {
 				const typedWord = typedWords[wordIndex] || '';
 				const isLastWord = wordIndex === words.length - 1;

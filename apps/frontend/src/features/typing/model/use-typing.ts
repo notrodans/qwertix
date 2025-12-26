@@ -97,6 +97,10 @@ export function useTyping({ targetText, enabled = true }: UseTypingProps) {
 					return prev.slice(0, -1);
 				}
 
+				if (key === ' ' && prev.endsWith(' ')) {
+					return prev;
+				}
+
 				// Typing a character
 				// if (prev.length >= targetText.length) return prev;
 				return prev + key;
