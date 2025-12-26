@@ -43,52 +43,51 @@ export function TextDisplay({ text, typed }: TextDisplayProps) {
 		let top = 0;
 		let height = 0;
 
-		        // We try to find the character at the current index
-		        // Because we populate charRefs including extra characters, the index should align 1:1 with typed.length
-		        target = charRefs.current[currentIndex];
-		
-		        if (target) {
-		            left = target.offsetLeft;
-		            top = target.offsetTop;
-		            height = target.offsetHeight;
-		        } else {
-		            // Fallback: Cursor is past the end of the rendered text
-		            // Snap to the right side of the last rendered character
-		            const lastValidIndex = charRefs.current.length - 1;
-		            const lastChar = charRefs.current[lastValidIndex];
-		
-		            if (lastChar) {
-		                left = lastChar.offsetLeft + lastChar.offsetWidth;
-		                top = lastChar.offsetTop;
-		                height = lastChar.offsetHeight;
-		            }
-		        }
-		
-		        // Adjust vertical alignment
-		        const adjustedTop = top + (height * 0.15);
-		        const adjustedHeight = height * 0.7;
-		
-		        // Apply styles directly
-		        cursorEl.style.transform = `translate3d(${left}px, ${adjustedTop}px, 0)`;
-		        cursorEl.style.height = `${adjustedHeight}px`;
-		        cursorEl.style.opacity = '1';
-		        
-		    }, [typed, text]); // words and typedWords are derived from these
-		
-		    return (
-		        <div
-		            ref={containerRef}
-		            className="text-2xl leading-relaxed font-mono relative flex flex-wrap gap-y-2 select-none"
-		        >
-		            {/* Smooth Cursor */}
-		            <div
-		                ref={cursorRef}
-		                className="absolute left-0 top-0 w-[2px] bg-[#e2b714] will-change-transform z-10"
-		                style={{
-		                    opacity: 0,
-		                    transition: 'transform 0.15s ease-out, height 0.15s ease-out'
-		                }}
-		            />
+		// We try to find the character at the current index
+		// Because we populate charRefs including extra characters, the index should align 1:1 with typed.length
+		target = charRefs.current[currentIndex];
+
+		if (target) {
+			left = target.offsetLeft;
+			top = target.offsetTop;
+			height = target.offsetHeight;
+		} else {
+			// Fallback: Cursor is past the end of the rendered text
+			// Snap to the right side of the last rendered character
+			const lastValidIndex = charRefs.current.length - 1;
+			const lastChar = charRefs.current[lastValidIndex];
+
+			if (lastChar) {
+				left = lastChar.offsetLeft + lastChar.offsetWidth;
+				top = lastChar.offsetTop;
+				height = lastChar.offsetHeight;
+			}
+		}
+
+		// Adjust vertical alignment
+		const adjustedTop = top + height * 0.15;
+		const adjustedHeight = height * 0.7;
+
+		// Apply styles directly
+		cursorEl.style.transform = `translate3d(${left}px, ${adjustedTop}px, 0)`;
+		cursorEl.style.height = `${adjustedHeight}px`;
+		cursorEl.style.opacity = '1';
+	}, [typed, text]); // words and typedWords are derived from these
+
+	return (
+		<div
+			ref={containerRef}
+			className="text-2xl leading-relaxed font-mono relative flex flex-wrap gap-y-2 select-none"
+		>
+			{/* Smooth Cursor */}
+			<div
+				ref={cursorRef}
+				className="absolute left-0 top-0 w-[2px] bg-[#e2b714] will-change-transform z-10"
+				style={{
+					opacity: 0,
+					transition: 'transform 0.15s ease-out, height 0.15s ease-out',
+				}}
+			/>
 			{words.map((targetWord, wordIndex) => {
 				const typedWord = typedWords[wordIndex] || '';
 				const isLastWord = wordIndex === words.length - 1;
@@ -102,7 +101,10 @@ export function TextDisplay({ text, typed }: TextDisplayProps) {
 				// const hasError = typedWord !== targetWord.slice(0, typedWord.length);
 
 				return (
-					<div key={wordIndex} className="flex border-b-2 border-transparent">
+										<div 
+											key={wordIndex} 
+											className="flex whitespace-nowrap border-b-2 border-transparent"
+										>
 						{charIndices.map((charIndex) => {
 							const char = targetWord[charIndex];
 							const typedChar = typedWord[charIndex];
