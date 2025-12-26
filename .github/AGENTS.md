@@ -257,10 +257,15 @@ export const UserRepository = {
 ### **7. Spec-Driven Development (SDD)**
 
 *   **Core Principle:** Every feature must have a written specification (MD format) before implementation.
+*   **Agent Requirement:** Before starting any implementation, agents **must** clarify the feature requirements with the user, define the API contract, and document the logic in a specification file.
 *   **Location:**
     *   **Frontend-only features:** `apps/frontend/specifications/*.md`
     *   **Full-stack or Backend-related features:** `apps/backend/specifications/*.md`
-*   **Workflow:** Always check for or create a specification file to define requirements, API contracts, and logic before writing code.
+*   **Workflow:**
+    1.  Check if a specification already exists for the task.
+    2.  If not, discuss requirements and create a new `.md` specification.
+    3.  Only after the specification is finalized and saved should implementation begin.
+*   **Exceptions:** A separate specification is NOT required for bug fixes, provided the fix does not change the API, add new functionality, or impact the overall architecture.
 
 ---
 
