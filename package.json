@@ -27,7 +27,7 @@
 			"vite": "8.0.0-beta.4",
 			"@types/supertest": "^6.0.2",
 			"tsup": "^8.5.1",
-			"vite-plugin-node": "74.0.0",
+			"vite-plugin-node": "7.0.0",
 			"vite-tsconfig-paths": "^6.0.3",
 			"supertest": "^7.1.4",
 			"drizzle-kit": "^0.31.8",
