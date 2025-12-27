@@ -14,15 +14,13 @@ Enhance the user experience by adding a smooth cursor animation and integrating 
     - The cursor should be a thin vertical line (caret) or a block, depending on preference (User asked for "Monkeytype style", which usually offers both, but the default is often a caret or block with smooth motion. Let's stick to the yellow caret `|` but make it move smoothly).
     - **Note:** Since we are using a simple text rendering approach, finding exact coordinates might require a ref or measuring the DOM elements.
 
-### 2. Word Generation (MSW)
-- **Mock API:**
-    - Endpoint: `GET /api/words`
-    - Response: `string[]` (Array of random words).
+### 2. Word Generation
+- **Mock API / Simulation:**
+    - Function: `getWords()`
     - Logic: Pick ~20-50 random words from a predefined list.
 - **Setup:**
-    - Initialize MSW worker in `apps/frontend/src/mocks/browser.ts`.
-    - Register handlers in `apps/frontend/src/mocks/handlers.ts`.
-    - Start worker in `main.tsx` if in development mode.
+    - Use Playwright route interception for E2E tests (as seen in `e2e/typing.spec.ts`).
+    - For development, use a simple local mock or a real backend endpoint if available.
 
 ### 3. Data Fetching & Reset
 - **State Management:** Use `TanStack Query` (`useQuery`).
