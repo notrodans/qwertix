@@ -1,15 +1,17 @@
-import { useQuery } from '@tanstack/react-query';
+import { queryOptions } from '@tanstack/react-query';
 
-export function useGetWords() {
-	return useQuery({
-		queryKey: ['words'],
-		queryFn: async () => {
-			const res = await fetch('/api/words');
-			if (!res.ok) {
-				throw new Error('Network response was not ok');
-			}
-			return res.json() as Promise<string[]>;
-		},
-		select: (data) => data.join(' '), // Flatten array to single string for now
-	});
-}
+export const wordQueries = {
+	all: () => ['words'] as const,
+	list: () =>
+		queryOptions({
+			queryKey: wordQueries.all(),
+			queryFn: async () => {
+				const response = await fetch('/api/words');
+				if (!response.ok) {
+					throw new Error('Failed to fetch words');
+				}
+				return response.json() as Promise<string[]>;
+			},
+			refetchOnWindowFocus: false,
+		}),
+};

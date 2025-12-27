@@ -1,199 +1,176 @@
-import {
-	useCallback,
-	useEffect,
-	useLayoutEffect,
-	useMemo,
-	useRef,
-} from 'react';
+import { type ComponentProps, useEffect, useRef, useState } from 'react';
+import { Caret } from './caret';
+import { Character } from './character';
+import { Word } from './word';
 
-interface TextDisplayProps {
-	text: string;
-	typed: string;
+interface TextDisplayProps extends ComponentProps<'div'> {
+	targetText: string;
+	userTyped: string;
 }
 
-export function TextDisplay({ text, typed }: TextDisplayProps) {
-	const words = useMemo(() => {
-		if (!text) return [];
-		return text.split(' ');
-	}, [text]);
-
-	const typedWords = useMemo(() => {
-		return typed.split(' ');
-	}, [typed]);
-
-	const charRefs = useRef<(HTMLSpanElement | null)[]>([]);
-	const cursorRef = useRef<HTMLDivElement>(null);
-
-	// Mapping logic to find the visual index for each typed character
-	const visualMapping = useMemo(() => {
-		const mapping: number[] = [];
-		let gCharIdx = 0;
-
-		words.forEach((targetWord, wordIndex) => {
-			const typedWord = typedWords[wordIndex] || '';
-			const isLastWord = wordIndex === words.length - 1;
-			const maxLength = Math.max(targetWord.length, typedWord.length);
-
-			for (let i = 0; i < maxLength; i++) {
-				if (i < typedWord.length) {
-					mapping.push(gCharIdx);
-				}
-				gCharIdx++;
-			}
-
-			if (!isLastWord) {
-				if (wordIndex < typedWords.length - 1) {
-					mapping.push(gCharIdx);
-				}
-				gCharIdx++;
-			}
-		});
-		return mapping;
-	}, [words, typedWords]);
-
-	const updateCursor = useCallback(() => {
-		const currentIndex = typed.length;
-		const cursorEl = cursorRef.current;
-
-		if (!cursorEl) return;
-
-		if (!text) {
-			cursorEl.style.opacity = '0';
-			return;
-		}
-
-		let left = 0;
-		let top = 0;
-		let height = 0;
-
-		const lastTypedVisualIndex =
-			currentIndex > 0 ? visualMapping[currentIndex - 1] : -1;
-
-		const prevSpan =
-			lastTypedVisualIndex !== undefined && lastTypedVisualIndex !== -1
-				? charRefs.current[lastTypedVisualIndex]
-				: null;
-
-		const nextVisualIndex =
-			lastTypedVisualIndex !== -1 ? lastTypedVisualIndex + 1 : 0;
-		const currentSpan = charRefs.current[nextVisualIndex];
-
-		if (prevSpan && currentSpan) {
-			const isCurrentSpace = currentSpan.dataset.type === 'space';
-			const onSameLine =
-				Math.abs(currentSpan.offsetTop - prevSpan.offsetTop) < 10;
-
-			if (onSameLine || isCurrentSpace) {
-				left = prevSpan.offsetLeft + prevSpan.offsetWidth;
-				top = prevSpan.offsetTop;
-				height = prevSpan.offsetHeight;
-			} else {
-				left = currentSpan.offsetLeft;
-				top = currentSpan.offsetTop;
-				height = currentSpan.offsetHeight;
-			}
-		} else if (currentSpan) {
-			left = currentSpan.offsetLeft;
-			top = currentSpan.offsetTop;
-			height = currentSpan.offsetHeight;
-		} else if (prevSpan) {
-			left = prevSpan.offsetLeft + prevSpan.offsetWidth;
-			top = prevSpan.offsetTop;
-			height = prevSpan.offsetHeight;
-		}
-
-		const adjustedTop = top + height * 0.15;
-		const adjustedHeight = height * 0.7;
-
-		cursorEl.style.transform = `translate3d(${left}px, ${adjustedTop}px, 0)`;
-		cursorEl.style.height = `${adjustedHeight}px`;
-		cursorEl.style.opacity = '1';
-	}, [typed, text, visualMapping]);
-
-	// sync updates after DOM patches but before paint
-	useLayoutEffect(() => {
-		updateCursor();
-	}, [updateCursor]);
+export function TextDisplay({
+	targetText,
+	userTyped,
+	className,
+	...props
+}: TextDisplayProps) {
+	const containerRef = useRef<HTMLDivElement>(null);
+	const [cursorPos, setCursorPos] = useState({ left: 0, top: 0 });
 
 	useEffect(() => {
-		window.addEventListener('resize', updateCursor);
-		return () => {
-			window.removeEventListener('resize', updateCursor);
-		};
-	}, [updateCursor]);
+		if (!containerRef.current) return;
 
-	// Stable ref callback ensures cursor doesn't reset animation state on every render
-	const cursorRefCallback = useCallback((el: HTMLDivElement | null) => {
-		cursorRef.current = el;
-	}, []);
+		const activeIndex = userTyped.length;
+		const activeEl = containerRef.current.querySelector(
+			`[data-index="${activeIndex}"]`,
+		) as HTMLElement;
 
-	let globalCharIndex = 0;
+		if (activeEl) {
+			setCursorPos({
+				left: activeEl.offsetLeft,
+				top: activeEl.offsetTop,
+			});
+		} else {
+			// Fallback: if we are at the very end, try to find the last element and append
+			// Or maybe we just typed the last character?
+			// With dynamic indices, the last element should have index = userTyped.length - 1.
+			// The "next" position is after it.
+			const lastIndex = userTyped.length - 1;
+			const lastEl = containerRef.current.querySelector(
+				`[data-index="${lastIndex}"]`,
+			) as HTMLElement;
+
+			if (lastEl) {
+				setCursorPos({
+					left: lastEl.offsetLeft + lastEl.offsetWidth,
+					top: lastEl.offsetTop,
+				});
+			} else if (userTyped.length === 0 && targetText.length > 0) {
+				// Start of test
+				const firstEl = containerRef.current.querySelector(
+					'[data-index="0"]',
+				) as HTMLElement;
+				if (firstEl) {
+					setCursorPos({ left: firstEl.offsetLeft, top: firstEl.offsetTop });
+				}
+			}
+		}
+	}, [userTyped, targetText]);
+
+	let globalIndex = 0;
+	const targetWords = targetText.split(' ');
+	const userWords = userTyped.split(' ');
 
 	return (
-		<div className="text-2xl leading-relaxed font-mono relative flex flex-wrap gap-y-2 select-none">
-			{words.map((targetWord, wordIndex) => {
-				const typedWord = typedWords[wordIndex] || '';
-				const isLastWord = wordIndex === words.length - 1;
+		<div
+			ref={containerRef}
+			className={`font-mono text-2xl leading-relaxed wrap-break-word relative ${className}`}
+			data-testid="text-display"
+			{...props}
+		>
+			<Caret left={cursorPos.left} top={cursorPos.top} />
+			{targetWords.map((targetWord, wordIndex) => {
+				const userWord = userWords[wordIndex] || '';
 
-				const maxLength = Math.max(targetWord.length, typedWord.length);
-				const charIndices = Array.from({ length: maxLength }, (_, i) => i);
+				// Determine state
+				const isPast = userWords.length > wordIndex + 1;
+				const isActive = userWords.length === wordIndex + 1;
+
+				let wordState = 'upcoming';
+				if (isPast) wordState = 'past';
+				else if (isActive) wordState = 'active';
+
+				const isCorrectWord = userWord === targetWord;
+				const hasExtras = userWord.length > targetWord.length;
+
+				const hasError = (isPast && !isCorrectWord) || hasExtras;
+
+				// We render max length to accommodate extras
+				const maxLength = Math.max(targetWord.length, userWord.length);
+
+				const chars = [];
+				for (let i = 0; i < maxLength; i++) {
+					const charIndex = globalIndex++; // Assign unique index to every rendered char
+
+					const targetChar = targetWord[i]; // Might be undefined if extra
+					const userChar = userWord[i]; // Might be undefined if untyped
+
+					let charToRender = targetChar;
+					let color = '#646669'; // Default untyped
+
+					let charType = 'target';
+					let charStatus = 'untyped';
+
+					if (i < userWord.length) {
+						// User typed something here
+
+						if (i < targetWord.length) {
+							// Within bounds: Show TARGET char
+							charToRender = targetChar;
+							if (userChar === targetChar) {
+								color = '#d1d0c5';
+								charStatus = 'correct';
+							} else {
+								color = '#ca4754';
+								charStatus = 'incorrect';
+							}
+						} else {
+							// Extra character: Show USER char
+							charToRender = userChar;
+							color = '#7e2a33';
+							charType = 'extra';
+							charStatus = 'extra'; // Or incorrect?
+						}
+					} else {
+						// Untyped part of target
+						charToRender = targetChar;
+					}
+
+					chars.push(
+						<Character
+							key={charIndex}
+							index={charIndex}
+							char={charToRender ?? ''}
+							color={color}
+							type={charType}
+							status={charStatus}
+						/>,
+					);
+				}
+
+				// Logic for space
+				const showSpace = wordIndex < targetWords.length - 1;
+				let spaceEl = null;
+
+				if (showSpace) {
+					const spaceIndex = globalIndex++;
+					const isSpaceTyped = userWords.length > wordIndex + 1;
+
+					spaceEl = (
+						<Character
+							key={spaceIndex}
+							index={spaceIndex}
+							char=" "
+							color="#646669"
+							type="space"
+							status={isSpaceTyped ? 'typed' : 'untyped'}
+							width="0.5ch"
+						/>
+					);
+				}
 
 				return (
-					<div
+					<Word
 						key={wordIndex}
-						className="flex whitespace-nowrap border-b-2 border-transparent"
+						index={wordIndex}
+						state={wordState}
+						hasError={hasError}
 					>
-						{charIndices.map((charIndex) => {
-							const char = targetWord[charIndex];
-							const typedChar = typedWord[charIndex];
-							const currentIndex = globalCharIndex++;
-							const isExtra = charIndex >= targetWord.length;
-							let colorClass = 'text-[#646669]';
-							let textToRender = char;
-
-							if (isExtra) {
-								textToRender = typedChar;
-								colorClass = 'text-[#7d2a2f]';
-							} else if (typedChar !== undefined) {
-								const isCorrect = typedChar === char;
-								colorClass = isCorrect ? 'text-[#d1d0c5]' : 'text-[#ca4754]';
-							}
-
-							return (
-								<span
-									key={charIndex}
-									ref={(el) => {
-										charRefs.current[currentIndex] = el;
-									}}
-									data-testid="char-span"
-									className={`${colorClass}`}
-								>
-									{textToRender}
-								</span>
-							);
-						})}
-						{!isLastWord && (
-							<span
-								ref={(el) => {
-									const currentIndex = globalCharIndex++;
-									charRefs.current[currentIndex] = el;
-								}}
-								data-testid="char-span"
-								data-type="space"
-								className="whitespace-pre w-[0.5ch] inline-block"
-							>
-								{' '}
-							</span>
-						)}
-					</div>
+						{chars}
+						{spaceEl}
+					</Word>
 				);
 			})}
-
-			<div
-				ref={cursorRefCallback}
-				data-testid="cursor"
-				className="absolute left-0 top-0 w-0.5 bg-[#e2b714] will-change-transform z-10 transition-all duration-100 ease-out opacity-0 pointer-events-none"
-			/>
 		</div>
 	);
 }

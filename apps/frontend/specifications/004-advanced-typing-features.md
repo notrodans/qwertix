@@ -34,16 +34,49 @@ Refine the typing experience to match Monkeytype standards, focusing on editing 
     - If a past word does not match its target substring exactly, apply a red underline (`border-bottom` or `text-decoration`).
     - This gives immediate feedback on missed errors.
 
+### 5. Extra Character Handling & Error Display
+- **Goal:** Allow typing beyond word limits and standardizing error feedback.
+- **Behavior:**
+    - **Within Word Bounds:** Always display the **TARGET** character.
+        - If user types correct key -> Highlight Correct color.
+        - If user types wrong key -> Highlight Error color (Red). Do NOT show the user's wrong character overwriting the target.
+    - **Extra Characters:**
+        - Display the **USER's** typed character.
+        - Style: Dark Red (`#7e2a33`).
+        - **Underline:** Do NOT use individual character underlining. The word container will handle the single common underline.
+    - **Error Underlining (Word Level):**
+        - Apply a single red underline (`border-bottom`) to the entire word container if:
+            - The word is "past" (cursor moved beyond it) AND it is incorrect.
+            - OR The word has extra characters (regardless of cursor position).
+    - **Shifting:** The insertion of extra characters must push the subsequent words to the right.
+    - **Cursor:** The cursor must move after these extra characters.
+    - **Backspace:** Must be able to delete these extra characters.
+
+### 2. Cursor Animation
+- **Issue:** Current animation is "jerky".
+- **Fix:**
+    - Optimize CSS transition. Use a custom bezier curve for a "snappy" yet smooth feel.
+    - Increase duration for smoothness.
+    - Example: `transition: left 0.2s cubic-bezier(0.25, 1, 0.5, 1), top 0.2s cubic-bezier(0.25, 1, 0.5, 1);`
+
 ## Implementation Plan
 
 ### `features/typing`
 - Update `useTyping`:
-    - Calculate `lastCorrectWordIndex`.
-    - Handle `Ctrl+Backspace` (check `event.ctrlKey` or `metaKey` on Mac).
-    - Enforce the backspace boundary.
+    - Remove strict length limit (allow `userTyped` to exceed `targetText` length temporarily within words).
+    - Prevent double spaces or spaces at start to maintain word alignment.
+    - `lastCorrectWordIndex` logic remains to lock *completed* words, but within the current word, anything goes.
 
 ### `entities/typing-text`
 - Update `TextDisplay`:
-    - **Cursor:** Update CSS class for transition.
-    - **Spacing:** Add class/style to space spans.
-    - **Underline:** Inside the word map loop, check if the word is "past" and incorrect.
+    - **Rendering Strategy:** Change from character-based map to **Word-based** map.
+    - Split `targetText` and `userTyped` by space.
+    - For each word `i`:
+        - Get `targetWord = targetTextWords[i]`.
+        - Get `userWord = userTypedWords[i]`.
+        - Render `max(targetWord.length, userWord.length)` characters.
+        - Characters beyond `targetWord.length` are "Extras" (Error style).
+        - Characters matching are Correct/Incorrect.
+        - Characters beyond `userWord.length` are Untyped (Gray).
+    - **Indices:** Dynamically calculate `data-index` for cursor positioning by counting rendered characters (including extras).
+    - **Spacing:** Render space between words explicitly.
