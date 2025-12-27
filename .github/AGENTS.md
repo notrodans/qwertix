@@ -115,7 +115,7 @@ function PresetPage() {
 
 #### **2.4. Avoiding Unnecessary `useEffect`**
 
-`useEffect` is a synchronization tool, not a state setter. Overusing it causes extra renders, complexity, and bugs.
+`useEffect` is a synchronization tool, not a state setter. Overusing it causes extra renders, complexity, and bugs. **Strongly prefer explicit behavior** (direct function calls, event handlers) over implicit synchronization via `useEffect`. Logic should be easy to trace; `useEffect` often obscures the trigger of an action.
 
 **A. Derived State**
 Do not use state for data that can be calculated from props or other state.
@@ -287,6 +287,8 @@ We strictly follow the **Test Pyramid** and **TDD** principles.
 *   **Bug Fixing:** Found a bug? **Stop.** Write a test that reproduces the bug (it must fail). Fix the bug. Verify the test passes.
 *   **Mandatory Verification:** Every solved problem, bug fix, or new feature MUST be accompanied by at least one relevant test to ensure the solution works as intended and to prevent future regressions.
 *   **Quality:** Treat test code as production code. Maintain readability.
+*   **Antipatterns:**
+    *   **White Box Testing:** Avoid testing internal implementation details. Tests should focus on behavior and public APIs. Only use White Box testing if absolutely necessary and after user confirmation.
 
 ---
 
