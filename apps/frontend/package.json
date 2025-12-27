@@ -32,13 +32,9 @@
 		"@types/react-dom": "^19.2.3",
 		"@vitejs/plugin-react": "^5.1.2",
 		"jsdom": "catalog:",
-		"msw": "2.12.6",
 		"typescript": "catalog:",
 		"vite": "catalog:",
 		"vite-tsconfig-paths": "catalog:",
 		"vitest": "catalog:"
-	},
-	"msw": {
-		"workerDirectory": ["public"]
 	}
 }

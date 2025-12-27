@@ -140,4 +140,3 @@ test.describe('Typing Board Feature', () => {
 		await board.expectCharStatus(0, count - 1, 'incorrect');
 	});
 });
-
