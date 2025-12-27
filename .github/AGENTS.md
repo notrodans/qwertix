@@ -285,6 +285,7 @@ We strictly follow the **Test Pyramid** and **TDD** principles.
     2.  Implement the minimal code to pass (Green).
     3.  Refactor while keeping the test green (Refactor).
 *   **Bug Fixing:** Found a bug? **Stop.** Write a test that reproduces the bug (it must fail). Fix the bug. Verify the test passes.
+*   **Mandatory Verification:** Every solved problem, bug fix, or new feature MUST be accompanied by at least one relevant test to ensure the solution works as intended and to prevent future regressions.
 *   **Quality:** Treat test code as production code. Maintain readability.
 
 ---

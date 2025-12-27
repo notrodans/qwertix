@@ -4,7 +4,7 @@ test.describe('Typing functionality', () => {
 	test.beforeEach(async ({ page }) => {
 		// Disable MSW in the app
 		await page.addInitScript(() => {
-			(window as any).__SKIP_MSW__ = true;
+			(window as unknown as { __SKIP_MSW__: boolean }).__SKIP_MSW__ = true;
 		});
 
 		// Mock the words API to have deterministic text
@@ -12,7 +12,7 @@ test.describe('Typing functionality', () => {
 			await route.fulfill({
 				status: 200,
 				contentType: 'application/json',
-				body: JSON.stringify(['hello', 'world']),
+				body: JSON.stringify(['hello', 'world', 'again']),
 			});
 		});
 
@@ -64,12 +64,14 @@ test.describe('Typing functionality', () => {
 
 		// Type 'w' of "world"
 		await page.keyboard.type('w');
-		
+
 		// Index 5 is space, Index 6 is 'w'
 		await expect(spans.nth(6)).toHaveClass(/text-\[#d1d0c5\]/);
 	});
 
-	test('cursor should not lag when skipping characters in a word', async ({ page }) => {
+	test('cursor should not lag when skipping characters in a word', async ({
+		page,
+	}) => {
 		const container = page.locator('.text-2xl');
 		await expect(container).toBeVisible();
 
@@ -82,10 +84,10 @@ test.describe('Typing functionality', () => {
 
 		const cursor = page.getByTestId('cursor');
 		const cursorBox = await cursor.boundingBox();
-		
+
 		const wSpan = page.getByTestId('char-span').nth(6); // 'w' of 'world'
 		const wBox = await wSpan.boundingBox();
-		
+
 		const oOfHelloSpan = page.getByTestId('char-span').nth(4); // 'o' of 'hello'
 		const oOfHelloBox = await oOfHelloSpan.boundingBox();
 
@@ -95,28 +97,39 @@ test.describe('Typing functionality', () => {
 		expect(Math.abs((cursorBox?.x || 0) - (wBox?.x || 0))).toBeLessThan(30);
 	});
 
-	test('cursor should animate in the second word', async ({ page }) => {
+	test('cursor should animate smoothly across multiple words', async ({
+		page,
+	}) => {
 		const cursor = page.getByTestId('cursor');
-		
-		// Type "hello "
-		await page.keyboard.type('hello ');
-		await page.waitForTimeout(200);
-		
-		const boxBefore = await cursor.boundingBox();
-		
-		// Type "w"
-		await page.keyboard.type('w');
-		
-		// Check intermediate position (animating)
-		await page.waitForTimeout(30);
-		const boxDuring = await cursor.boundingBox();
-		
+
+		const typeAndCheck = async (word: string) => {
+			for (const char of word) {
+				const boxBefore = await cursor.boundingBox();
+				await page.keyboard.press(char);
+				// Small wait to catch it mid-animation
+				await page.waitForTimeout(40);
+				const boxDuring = await cursor.boundingBox();
+				await page.waitForTimeout(100);
+				const boxAfter = await cursor.boundingBox();
+
+				if (boxBefore && boxDuring && boxAfter) {
+					expect(boxDuring.x).not.toBe(boxBefore.x);
+					expect(boxDuring.x).not.toBe(boxAfter.x);
+				}
+			}
+		};
+
+		// First word
+		await typeAndCheck('hello');
+		// Space
+		await page.keyboard.press('Space');
 		await page.waitForTimeout(150);
-		const boxAfter = await cursor.boundingBox();
-		
-		console.log('Positions word 2:', { before: boxBefore?.x, during: boxDuring?.x, after: boxAfter?.x });
-		
-		expect(boxDuring?.x).not.toBe(boxBefore?.x);
-		expect(boxDuring?.x).not.toBe(boxAfter?.x);
+		// Second word
+		await typeAndCheck('world');
+		// Space
+		await page.keyboard.press('Space');
+		await page.waitForTimeout(150);
+		// Third word
+		await typeAndCheck('again');
 	});
 });

@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import {
+	useCallback,
+	useEffect,
+	useLayoutEffect,
+	useMemo,
+	useRef,
+} from 'react';
 
 interface TextDisplayProps {
 	text: string;
@@ -104,7 +110,11 @@ export function TextDisplay({ text, typed }: TextDisplayProps) {
 		cursorEl.style.opacity = '1';
 	}, [typed, text, visualMapping]);
 
-	// Effect for resize only
+	// sync updates after DOM patches but before paint
+	useLayoutEffect(() => {
+		updateCursor();
+	}, [updateCursor]);
+
 	useEffect(() => {
 		window.addEventListener('resize', updateCursor);
 		return () => {
@@ -112,15 +122,10 @@ export function TextDisplay({ text, typed }: TextDisplayProps) {
 		};
 	}, [updateCursor]);
 
-	// Callback ref for the cursor element. Placed at the end of JSX to ensure 
-	// it runs after child span refs are populated. This satisfies the requirement
-	// to avoid useLayoutEffect while keeping animations stable.
+	// Stable ref callback ensures cursor doesn't reset animation state on every render
 	const cursorRefCallback = useCallback((el: HTMLDivElement | null) => {
 		cursorRef.current = el;
-		if (el) {
-			updateCursor();
-		}
-	}, [updateCursor]);
+	}, []);
 
 	let globalCharIndex = 0;
 
@@ -187,7 +192,7 @@ export function TextDisplay({ text, typed }: TextDisplayProps) {
 			<div
 				ref={cursorRefCallback}
 				data-testid="cursor"
-				className="absolute left-0 top-0 w-0.5 bg-[#e2b714] will-change-transform z-10 transition-[transform,height,opacity] duration-100 ease-out opacity-0"
+				className="absolute left-0 top-0 w-0.5 bg-[#e2b714] will-change-transform z-10 transition-all duration-100 ease-out opacity-0 pointer-events-none"
 			/>
 		</div>
 	);
