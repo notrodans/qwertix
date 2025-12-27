@@ -16,11 +16,34 @@ export function TextDisplay({ text, typed }: TextDisplayProps) {
 	}, [typed]);
 
 	const charRefs = useRef<(HTMLSpanElement | null)[]>([]);
-	const containerRef = useRef<HTMLDivElement>(null);
 	const cursorRef = useRef<HTMLDivElement>(null);
 
-	charRefs.current = [];
-	let globalCharIndex = 0;
+	// Mapping logic to find the visual index for each typed character
+	const visualMapping = useMemo(() => {
+		const mapping: number[] = [];
+		let gCharIdx = 0;
+
+		words.forEach((targetWord, wordIndex) => {
+			const typedWord = typedWords[wordIndex] || '';
+			const isLastWord = wordIndex === words.length - 1;
+			const maxLength = Math.max(targetWord.length, typedWord.length);
+
+			for (let i = 0; i < maxLength; i++) {
+				if (i < typedWord.length) {
+					mapping.push(gCharIdx);
+				}
+				gCharIdx++;
+			}
+
+			if (!isLastWord) {
+				if (wordIndex < typedWords.length - 1) {
+					mapping.push(gCharIdx);
+				}
+				gCharIdx++;
+			}
+		});
+		return mapping;
+	}, [words, typedWords]);
 
 	const updateCursor = useCallback(() => {
 		const currentIndex = typed.length;
@@ -37,33 +60,37 @@ export function TextDisplay({ text, typed }: TextDisplayProps) {
 		let top = 0;
 		let height = 0;
 
-		const currentSpan = charRefs.current[currentIndex];
-		const prevSpan = charRefs.current[currentIndex - 1];
+		const lastTypedVisualIndex =
+			currentIndex > 0 ? visualMapping[currentIndex - 1] : -1;
+
+		const prevSpan =
+			lastTypedVisualIndex !== undefined && lastTypedVisualIndex !== -1
+				? charRefs.current[lastTypedVisualIndex]
+				: null;
+
+		const nextVisualIndex =
+			lastTypedVisualIndex !== -1 ? lastTypedVisualIndex + 1 : 0;
+		const currentSpan = charRefs.current[nextVisualIndex];
 
 		if (prevSpan && currentSpan) {
 			const isCurrentSpace = currentSpan.dataset.type === 'space';
-			// Check if they are on the same line
 			const onSameLine =
 				Math.abs(currentSpan.offsetTop - prevSpan.offsetTop) < 10;
 
 			if (onSameLine || isCurrentSpace) {
-				// Stick to the end of the previous character (stable for spaces)
 				left = prevSpan.offsetLeft + prevSpan.offsetWidth;
 				top = prevSpan.offsetTop;
 				height = prevSpan.offsetHeight;
 			} else {
-				// Wrapped to new line, align to start of current
 				left = currentSpan.offsetLeft;
 				top = currentSpan.offsetTop;
 				height = currentSpan.offsetHeight;
 			}
 		} else if (currentSpan) {
-			// Start of text
 			left = currentSpan.offsetLeft;
 			top = currentSpan.offsetTop;
 			height = currentSpan.offsetHeight;
 		} else if (prevSpan) {
-			// End of text
 			left = prevSpan.offsetLeft + prevSpan.offsetWidth;
 			top = prevSpan.offsetTop;
 			height = prevSpan.offsetHeight;
@@ -75,30 +102,30 @@ export function TextDisplay({ text, typed }: TextDisplayProps) {
 		cursorEl.style.transform = `translate3d(${left}px, ${adjustedTop}px, 0)`;
 		cursorEl.style.height = `${adjustedHeight}px`;
 		cursorEl.style.opacity = '1';
-	}, [typed, text]);
+	}, [typed, text, visualMapping]);
 
+	// Effect for resize only
 	useEffect(() => {
-		updateCursor();
 		window.addEventListener('resize', updateCursor);
 		return () => {
 			window.removeEventListener('resize', updateCursor);
 		};
 	}, [updateCursor]);
 
-	return (
-		<div
-			ref={containerRef}
-			className="text-2xl leading-relaxed font-mono relative flex flex-wrap gap-y-2 select-none"
-		>
-			<div
-				ref={cursorRef}
-				className="absolute left-0 top-0 w-0.5 bg-[#e2b714] will-change-transform z-10"
-				style={{
-					opacity: 0,
-					transition: 'transform 0.1s ease-out, height 0.1s ease-out',
-				}}
-			/>
+	// Callback ref for the cursor element. Placed at the end of JSX to ensure 
+	// it runs after child span refs are populated. This satisfies the requirement
+	// to avoid useLayoutEffect while keeping animations stable.
+	const cursorRefCallback = useCallback((el: HTMLDivElement | null) => {
+		cursorRef.current = el;
+		if (el) {
+			updateCursor();
+		}
+	}, [updateCursor]);
 
+	let globalCharIndex = 0;
+
+	return (
+		<div className="text-2xl leading-relaxed font-mono relative flex flex-wrap gap-y-2 select-none">
 			{words.map((targetWord, wordIndex) => {
 				const typedWord = typedWords[wordIndex] || '';
 				const isLastWord = wordIndex === words.length - 1;
@@ -133,6 +160,7 @@ export function TextDisplay({ text, typed }: TextDisplayProps) {
 									ref={(el) => {
 										charRefs.current[currentIndex] = el;
 									}}
+									data-testid="char-span"
 									className={`${colorClass}`}
 								>
 									{textToRender}
@@ -142,8 +170,10 @@ export function TextDisplay({ text, typed }: TextDisplayProps) {
 						{!isLastWord && (
 							<span
 								ref={(el) => {
-									charRefs.current[globalCharIndex++] = el;
+									const currentIndex = globalCharIndex++;
+									charRefs.current[currentIndex] = el;
 								}}
+								data-testid="char-span"
 								data-type="space"
 								className="whitespace-pre w-[0.5ch] inline-block"
 							>
@@ -153,6 +183,12 @@ export function TextDisplay({ text, typed }: TextDisplayProps) {
 					</div>
 				);
 			})}
+
+			<div
+				ref={cursorRefCallback}
+				data-testid="cursor"
+				className="absolute left-0 top-0 w-0.5 bg-[#e2b714] will-change-transform z-10 transition-[transform,height,opacity] duration-100 ease-out opacity-0"
+			/>
 		</div>
 	);
 }
