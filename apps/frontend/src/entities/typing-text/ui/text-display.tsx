@@ -20,9 +20,35 @@ export function TextDisplay({
 	useEffect(() => {
 		if (!containerRef.current) return;
 
-		const activeIndex = userTyped.length;
+		const targetWords = targetText.split(' ');
+		const userWords = userTyped.split(' ');
+		const activeWordIndex = userWords.length - 1;
+		const activeWordChars = userWords[activeWordIndex]?.length ?? 0;
+
+		let calculatedIndex = 0;
+		// Iterate over previous words to calculate their visual length
+		for (let i = 0; i < activeWordIndex; i++) {
+			if (i >= targetWords.length) break;
+
+			const targetWord = targetWords[i];
+			const userWord = userWords[i] || '';
+
+			// The visual length of a word is determined by the max length
+			// between target and user input (to account for extra chars)
+			const maxLength = Math.max(targetWord.length, userWord.length);
+			calculatedIndex += maxLength;
+
+			// Add space if it exists in layout
+			if (i < targetWords.length - 1) {
+				calculatedIndex++;
+			}
+		}
+
+		// Add progress in current word
+		calculatedIndex += activeWordChars;
+
 		const activeEl = containerRef.current.querySelector(
-			`[data-index="${activeIndex}"]`,
+			`[data-index="${calculatedIndex}"]`,
 		) as HTMLElement;
 
 		if (activeEl) {
@@ -31,22 +57,19 @@ export function TextDisplay({
 				top: activeEl.offsetTop,
 			});
 		} else {
-			// Fallback: if we are at the very end, try to find the last element and append
-			// Or maybe we just typed the last character?
-			// With dynamic indices, the last element should have index = userTyped.length - 1.
-			// The "next" position is after it.
-			const lastIndex = userTyped.length - 1;
-			const lastEl = containerRef.current.querySelector(
-				`[data-index="${lastIndex}"]`,
+			// Fallback: if we are at the very end or off-screen
+			const prevIndex = calculatedIndex - 1;
+			const prevEl = containerRef.current.querySelector(
+				`[data-index="${prevIndex}"]`,
 			) as HTMLElement;
 
-			if (lastEl) {
+			if (prevEl) {
 				setCursorPos({
-					left: lastEl.offsetLeft + lastEl.offsetWidth,
-					top: lastEl.offsetTop,
+					left: prevEl.offsetLeft + prevEl.offsetWidth,
+					top: prevEl.offsetTop,
 				});
-			} else if (userTyped.length === 0 && targetText.length > 0) {
-				// Start of test
+			} else if (calculatedIndex === 0) {
+				// Start of test, if element 0 exists
 				const firstEl = containerRef.current.querySelector(
 					'[data-index="0"]',
 				) as HTMLElement;
@@ -160,15 +183,16 @@ export function TextDisplay({
 				}
 
 				return (
-					<Word
-						key={wordIndex}
-						index={wordIndex}
-						state={wordState}
-						hasError={hasError}
-					>
-						{chars}
+					<span key={wordIndex}>
+						<Word
+							index={wordIndex}
+							state={wordState}
+							hasError={hasError}
+						>
+							{chars}
+						</Word>
 						{spaceEl}
-					</Word>
+					</span>
 				);
 			})}
 		</div>

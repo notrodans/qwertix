@@ -15,6 +15,8 @@ Implement the core typing mechanics: capturing user input, validating against th
     - **Correct:** Highlight character (e.g., `#d1d0c5`).
     - **Incorrect:** Highlight character in Red (e.g., `#ca4754`).
     - **Untyped:** Default Gray (`#646669`).
+- **Jump on Space:**
+    - Pressing the Space key while typing a word must always trigger a transition to the next word, even if the current word is incomplete or incorrect.
 - **Cursor:**
     - A visual caret (`|` or block) indicating the current typing position.
     - Should be positioned before the next character to be typed.

@@ -11,28 +11,25 @@ Refine the typing experience to match Monkeytype standards, focusing on editing 
     - If the cursor is at the start of a word (or on the space preceding it), it should delete the space and the entire previous word (unless locked).
 - **Word Locking:**
     - Prevent backspacing into a word that was **correctly** typed and "completed" (user typed the space after it).
-    - If a previous word was incorrect, the user *should* be able to backspace into it to fix it (implied, typical behavior).
-    - Implementation: Track a `confirmedIndex` which represents the end of the last successfully typed word. `typed.length` cannot go below this index.
+    - If a previous word was incorrect or incomplete, the user *can* still backspace into it **unless** they have already completed a subsequent word correctly.
+    - Implementation: The `confirmedIndex` (locking boundary) is only updated when a word is completed correctly. If a word is correct, the index jumps to the end of that word, effectively locking it and all preceding text.
 
 ### 2. Cursor Animation
 - **Issue:** Current animation is "jerky".
 - **Fix:**
     - Optimize CSS transition. Use a custom bezier curve for a "snappy" yet smooth feel.
-    - Ensure position calculations are robust.
+    - **Skip Logic:** When jumping over incomplete words (using space), the cursor position calculation must account for the "gap" to maintain visual alignment with the new word start.
     - Example: `transition: left 0.1s cubic-bezier(0.4, 1, 0.5, 1), top 0.1s cubic-bezier(0.4, 1, 0.5, 1);`
 
 ### 3. Word Spacing
 - **Issue:** Space between words is too wide.
-- **Fix:** Since we use a real space character `' '`, its width is defined by the font. To reduce it, we can:
-    - Set a specific width on the space `span` (e.g., `width: 0.5ch`) and `display: inline-block`.
-    - Or apply negative margin to the word container?
-    - **Decision:** Constrain the width of the space character span directly.
+- **Fix:** Constrain the width of the space character span directly (e.g., `width: 0.5ch`).
 
 ### 4. Error Underlining
 - **Logic:**
     - Identify "past" words (words fully behind the cursor).
-    - If a past word does not match its target substring exactly, apply a red underline (`border-bottom` or `text-decoration`).
-    - This gives immediate feedback on missed errors.
+    - If a past word does not match its target substring exactly, apply a red underline (`border-bottom`).
+    - **Exclusion:** The underline must NOT include the space character between words. Only the characters of the word itself are underlined.
 
 ### 5. Extra Character Handling
 - **Goal:** Allow the user to type more characters than the target word contains (simulating "missing a space" or just spamming keys).

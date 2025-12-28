@@ -37,10 +37,7 @@ export function calculateBackspace(
 /**
  * Validates and appends a new character to the typed string.
  */
-export function appendCharacter(
-	current: string,
-	char: string,
-): string {
+export function appendCharacter(current: string, char: string): string {
 	if (char === ' ') {
 		// Prevent space if at start
 		if (current.length === 0) return current;
@@ -67,22 +64,30 @@ export function checkWordCompletion(
 	// 'typed' has just been updated with a space at the end.
 	// So "word " has 1 space -> word index 0.
 	// "word1 word2 " has 2 spaces -> word index 1.
-	
+
 	// The space count in 'typed' includes the one just typed.
 	const spaceCount = (typed.match(/ /g) || []).length;
 	const wordIndex = spaceCount - 1; // 0-based index of the word just finished
 
 	const targetWords = targetText.split(' ');
-	
+
 	if (wordIndex < targetWords.length) {
 		const targetWord = targetWords[wordIndex];
-		const wordSegment = typed.slice(confirmedIndex);
-		
-		// Check if what we typed matches "targetWord + space"
-		if (wordSegment === targetWord + ' ') {
+
+		// We need to extract the LAST typed word to check correctness.
+		// `typed` contains everything.
+		// If we split by space, we get all words.
+		// The last one is empty because `typed` ends with space.
+		// The one before that is the word we just finished.
+
+		const userWords = typed.split(' ');
+		// userWords = ["word1", "word2", ""]
+		const lastTypedWord = userWords[wordIndex];
+
+		if (lastTypedWord === targetWord) {
 			return typed.length;
 		}
 	}
-	
+
 	return null;
 }

@@ -148,4 +148,88 @@ test.describe('Typing Board Feature', () => {
 		// Last char of word 0 should be incorrect
 		await board.expectCharStatus(0, count - 1, 'incorrect');
 	});
+
+	test('should jump to next word when space is pressed on incomplete word', async () => {
+		// Type only the first character of the first word
+		const firstChar = await board.getCharText(0, 0);
+		await board.type(firstChar + ' ');
+
+		// Verify we are now on the second word
+		// The first word should have an error because it's incomplete
+		await board.expectWordError(0, true);
+
+		// Type a character for the second word to verify input goes there
+		const secondWordFirstChar = await board.getCharText(1, 0);
+		await board.type(secondWordFirstChar);
+
+		// Check the status of the first char of the second word
+		await board.expectCharStatus(1, 0, 'correct');
+	});
+
+	test('should not allow backspace to return to previous word', async () => {
+		// Type the first word fully + space
+		const wordLocator = board.getWord(0);
+		const targetChars = wordLocator.locator(
+			'[data-testid="char"]:not([data-type="space"])',
+		);
+		const count = await targetChars.count();
+
+		let word = '';
+		for (let i = 0; i < count; i++) {
+			word += await targetChars.nth(i).getAttribute('data-char-value');
+		}
+		await board.type(word + ' ');
+
+		// Now on second word. Type one char.
+		const secondWordFirstChar = await board.getCharText(1, 0);
+		await board.type(secondWordFirstChar);
+		await board.expectCharStatus(1, 0, 'correct');
+
+		// Backspace to remove the char on second word
+		await board.press('Backspace');
+		await board.expectCharStatus(1, 0, 'untyped');
+
+		// Backspace again - should NOT go back to first word
+		await board.press('Backspace');
+
+		// Verify first word is still "past" (should still be fully typed/correct)
+		// and we haven't modified it.
+		// The last char of first word should be correct and typed.
+		await board.expectCharStatus(0, count - 1, 'correct');
+
+		// Verify we are still logically on the start of second word (or at least not modifying first)
+		// We can test this by typing again, it should appear in second word
+		await board.type(secondWordFirstChar);
+		await board.expectCharStatus(1, 0, 'correct');
+	});
+
+	test('should allow backspace to return to previous word if it was incomplete', async () => {
+		// Type incomplete first word "he " (target "hello")
+		await board.type('he ');
+
+		// Now on second word. Verify first word has error.
+		await board.expectWordError(0, true);
+
+		// Type one char of second word
+		const secondChar = await board.getCharText(1, 0);
+		await board.type(secondChar);
+		await board.expectCharStatus(1, 0, 'correct');
+
+		// Backspace: delete second word char
+		await board.press('Backspace');
+		await board.expectCharStatus(1, 0, 'untyped');
+
+		// Backspace: delete space
+		await board.press('Backspace');
+
+		// Backspace: delete 'e' from "he"
+		await board.press('Backspace');
+
+		// Now we should be at index 1 of word 0 (letter 'h' remains)
+		// Let's verify 'e' (index 1) is now untyped
+		await board.expectCharStatus(0, 1, 'untyped');
+
+		// And 'h' (index 0) is still correct
+		await board.expectCharStatus(0, 0, 'correct');
+	});
 });
