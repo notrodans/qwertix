@@ -54,7 +54,6 @@ export function appendCharacter(current: string, char: string): string {
  */
 export function checkWordCompletion(
 	typed: string,
-	confirmedIndex: number,
 	targetText: string,
 ): number | null {
 	// We only check on space

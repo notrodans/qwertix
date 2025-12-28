@@ -40,11 +40,7 @@ export function useTyping(targetText: string) {
 
 					// Check word completion if space was typed
 					if (event.key === ' ') {
-						const newConfirmedIndex = checkWordCompletion(
-							next,
-							confirmedIndex,
-							targetText,
-						);
+						const newConfirmedIndex = checkWordCompletion(next, targetText);
 						if (newConfirmedIndex !== null) {
 							setConfirmedIndex(newConfirmedIndex);
 						}

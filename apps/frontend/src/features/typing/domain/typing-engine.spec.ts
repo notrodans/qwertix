@@ -7,10 +7,9 @@ describe('typing-engine', () => {
 			const target = 'hello world';
 			// User types "hel " (incomplete)
 			const typed = 'hel ';
-			const currentConfirmed = 0;
 
 			// Should NOT confirm because it's incomplete
-			const result = checkWordCompletion(typed, currentConfirmed, target);
+			const result = checkWordCompletion(typed, target);
 			expect(result).toBeNull();
 		});
 
@@ -18,20 +17,18 @@ describe('typing-engine', () => {
 			const target = 'hello world';
 			// User types "hexx " (incorrect)
 			const typed = 'hexx ';
-			const currentConfirmed = 0;
 
 			// Should NOT confirm
-			const result = checkWordCompletion(typed, currentConfirmed, target);
+			const result = checkWordCompletion(typed, target);
 			expect(result).toBeNull();
 		});
 
 		it('should LOCK (return index) when word is typed CORRECTLY', () => {
 			const target = 'hello world';
 			const typed = 'hello ';
-			const currentConfirmed = 0;
 
 			// Should confirm "hello "
-			const result = checkWordCompletion(typed, currentConfirmed, target);
+			const result = checkWordCompletion(typed, target);
 			expect(result).toBe(6);
 		});
 
@@ -39,14 +36,12 @@ describe('typing-engine', () => {
 			const target = 'one two three';
 			// "on " (inc) + "two " (correct)
 			const typed = 'on two ';
-			// currentConfirmed is still 0 because "on " didn't lock
-			const currentConfirmed = 0;
 
 			// checkWordCompletion checks the LAST completed word (which is "two").
 			// "two" matches target "two".
 			// So it should confirm the WHOLE string 'on two '
 
-			const result = checkWordCompletion(typed, currentConfirmed, target);
+			const result = checkWordCompletion(typed, target);
 
 			expect(result).toBe(7); // Length of "on two "
 		});
@@ -55,9 +50,8 @@ describe('typing-engine', () => {
 			const target = 'one two three';
 			// "on " (inc) + "tww " (inc)
 			const typed = 'on tww ';
-			const currentConfirmed = 0;
 
-			const result = checkWordCompletion(typed, currentConfirmed, target);
+			const result = checkWordCompletion(typed, target);
 
 			expect(result).toBeNull();
 		});

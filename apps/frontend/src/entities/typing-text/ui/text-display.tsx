@@ -31,6 +31,7 @@ export function TextDisplay({
 			if (i >= targetWords.length) break;
 
 			const targetWord = targetWords[i];
+			if (!targetWord) break;
 			const userWord = userWords[i] || '';
 
 			// The visual length of a word is determined by the max length
@@ -184,11 +185,7 @@ export function TextDisplay({
 
 				return (
 					<span key={wordIndex}>
-						<Word
-							index={wordIndex}
-							state={wordState}
-							hasError={hasError}
-						>
+						<Word index={wordIndex} state={wordState} hasError={hasError}>
 							{chars}
 						</Word>
 						{spaceEl}
