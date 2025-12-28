@@ -193,6 +193,25 @@ useEffect(() => {
 const formatted = data.map(item => item.value * 2);
 ```
 
+**E. Syncing with DOM Layout**
+When you need to measure DOM elements (e.g., to position a tooltip or cursor) and update the UI immediately to prevent flicker, use `useLayoutEffect`. This runs synchronously after DOM mutations but before the browser paints.
+
+```tsx
+// ✅ Good: Measuring DOM to position an element
+function Tooltip({ targetRef }) {
+    const [style, setStyle] = useState({});
+
+    useLayoutEffect(() => {
+        if (targetRef.current) {
+            const rect = targetRef.current.getBoundingClientRect();
+            setStyle({ top: rect.bottom + 10, left: rect.left });
+        }
+    }, [targetRef]); // Re-measures if ref changes
+
+    return <div style={style}>Content</div>;
+}
+```
+
 **When `useEffect` IS appropriate:**
 *   **External Subscriptions:** WebSocket connections, Global event listeners (`window.addEventListener`).
 *   **Browser APIs:** Interacting with non-React APIs like `IntersectionObserver`, `Canvas`, or `Map` widgets.

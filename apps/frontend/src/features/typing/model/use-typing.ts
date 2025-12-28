@@ -1,13 +1,21 @@
-import { useCallback, useEffect, useState } from 'react';
+import { type RefObject, useCallback, useEffect, useState } from 'react';
 import {
 	appendCharacter,
 	calculateBackspace,
+	calculateCursorIndex,
 	checkWordCompletion,
 } from '../domain/typing-engine';
+import { useCursorPositioning } from './use-cursor-positioning';
 
-export function useTyping(targetText: string) {
+export function useTyping(
+	targetText: string,
+	containerRef: RefObject<HTMLElement | null>,
+) {
 	const [userTyped, setUserTyped] = useState('');
 	const [confirmedIndex, setConfirmedIndex] = useState(0);
+	const [caretPos, setCaretPos] = useState({ left: 0, top: 0 });
+
+	const updateCursor = useCursorPositioning(containerRef, setCaretPos);
 
 	const handleKeyDown = useCallback(
 		(event: KeyboardEvent) => {
@@ -16,13 +24,16 @@ export function useTyping(targetText: string) {
 			if ((event.ctrlKey || event.metaKey) && event.key !== 'Backspace') return;
 
 			if (event.key === 'Backspace') {
-				setUserTyped((prev) =>
-					calculateBackspace(
+				setUserTyped((prev) => {
+					const next = calculateBackspace(
 						prev,
 						confirmedIndex,
 						event.ctrlKey || event.metaKey,
-					),
-				);
+					);
+					const nextIndex = calculateCursorIndex(targetText, next);
+					requestAnimationFrame(() => updateCursor(nextIndex));
+					return next;
+				});
 				return;
 			}
 
@@ -46,11 +57,14 @@ export function useTyping(targetText: string) {
 						}
 					}
 
+					const nextIndex = calculateCursorIndex(targetText, next);
+					requestAnimationFrame(() => updateCursor(nextIndex));
+
 					return next;
 				});
 			}
 		},
-		[targetText, confirmedIndex],
+		[targetText, confirmedIndex, updateCursor],
 	);
 
 	useEffect(() => {
@@ -61,10 +75,24 @@ export function useTyping(targetText: string) {
 	const reset = useCallback(() => {
 		setUserTyped('');
 		setConfirmedIndex(0);
-	}, []);
+		// Reset cursor
+		requestAnimationFrame(() => updateCursor(0));
+	}, [updateCursor]);
+
+	const cursorIndex = calculateCursorIndex(targetText, userTyped);
+
+	// Also trigger cursor update on initial load or targetText change
+	// This replaces the effect... mostly. But on first render refs might be null.
+	// We might need a simplistic effect to catch the "mounted" state?
+	useEffect(() => {
+		// Wait for mount
+		requestAnimationFrame(() => updateCursor(cursorIndex));
+	}, [updateCursor, cursorIndex]);
 
 	return {
 		userTyped,
+		cursorIndex,
+		caretPos,
 		reset,
 	};
 }

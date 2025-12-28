@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { useRef } from 'react';
 import { TextDisplay, wordQueries } from '@/entities/typing-text';
 import {
 	RestartButton,
@@ -16,8 +17,10 @@ export function TypingBoard() {
 		refetch,
 	} = useQuery(wordQueries.list());
 
+	const containerRef = useRef<HTMLDivElement>(null);
+
 	const text = words ? words.join(' ') : '';
-	const { userTyped, reset } = useTyping(text);
+	const { userTyped, caretPos, reset } = useTyping(text, containerRef);
 
 	const handleReset = () => {
 		refetch();
@@ -34,6 +37,8 @@ export function TypingBoard() {
 				<TextDisplay
 					targetText={text}
 					userTyped={userTyped}
+					caretPos={caretPos}
+					containerRef={containerRef}
 					className="wrap-break-word text-justify"
 				/>
 			}
