@@ -1,7 +1,6 @@
-import cors from 'cors';
+import cors from '@fastify/cors';
 import { config } from 'dotenv';
-import express from 'express';
-import { createServer } from 'http';
+import Fastify from 'fastify';
 import { v4 as uuid } from 'uuid';
 import { WebSocketServer } from 'ws';
 import db from '@/db';
@@ -9,15 +8,12 @@ import { users } from '@/db/schema';
 
 config();
 
-export const app = express();
-export const server = createServer(app);
-const wss = new WebSocketServer({ server });
+export const app = Fastify();
 
-app.use(cors());
-app.use(express.json());
+app.register(cors);
 
-app.get('/health', (_req, res) => {
-	res.json({ status: 'ok', timestamp: new Date().toISOString() });
+app.get('/health', async (_req, _reply) => {
+	return { status: 'ok', timestamp: new Date().toISOString() };
 });
 
 const WORDS = [
@@ -173,13 +169,13 @@ const WORDS = [
 	'point',
 ];
 
-app.get('/words', (_req, res) => {
+app.get('/words', async (_req, _reply) => {
 	const shuffled = [...WORDS].sort(() => 0.5 - Math.random());
 	const selected = shuffled.slice(0, 30);
-	res.json(selected);
+	return selected;
 });
 
-app.post('/users', async (_req, res) => {
+app.post('/users', async (_req, _reply) => {
 	const user = await db
 		.insert(users)
 		.values({
@@ -188,8 +184,10 @@ app.post('/users', async (_req, res) => {
 		})
 		.returning();
 	console.log('Successfully created');
-	res.json({ success: true, data: user });
+	return { success: true, data: user };
 });
+
+const wss = new WebSocketServer({ server: app.server });
 
 wss.on('connection', (ws) => {
 	console.log('New WebSocket connection');

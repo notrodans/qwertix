@@ -19,7 +19,7 @@ Refine the typing experience to match Monkeytype standards, focusing on editing 
 - **Fix:**
     - Optimize CSS transition. Use a custom bezier curve for a "snappy" yet smooth feel.
     - Ensure position calculations are robust.
-    - Example: `transition: left 0.1s cubic-bezier(0.25, 1, 0.5, 1), top 0.1s cubic-bezier(0.25, 1, 0.5, 1);`
+    - Example: `transition: left 0.1s cubic-bezier(0.4, 1, 0.5, 1), top 0.1s cubic-bezier(0.4, 1, 0.5, 1);`
 
 ### 3. Word Spacing
 - **Issue:** Space between words is too wide.
@@ -34,30 +34,14 @@ Refine the typing experience to match Monkeytype standards, focusing on editing 
     - If a past word does not match its target substring exactly, apply a red underline (`border-bottom` or `text-decoration`).
     - This gives immediate feedback on missed errors.
 
-### 5. Extra Character Handling & Error Display
-- **Goal:** Allow typing beyond word limits and standardizing error feedback.
+### 5. Extra Character Handling
+- **Goal:** Allow the user to type more characters than the target word contains (simulating "missing a space" or just spamming keys).
 - **Behavior:**
-    - **Within Word Bounds:** Always display the **TARGET** character.
-        - If user types correct key -> Highlight Correct color.
-        - If user types wrong key -> Highlight Error color (Red). Do NOT show the user's wrong character overwriting the target.
-    - **Extra Characters:**
-        - Display the **USER's** typed character.
-        - Style: Dark Red (`#7e2a33`).
-        - **Underline:** Do NOT use individual character underlining. The word container will handle the single common underline.
-    - **Error Underlining (Word Level):**
-        - Apply a single red underline (`border-bottom`) to the entire word container if:
-            - The word is "past" (cursor moved beyond it) AND it is incorrect.
-            - OR The word has extra characters (regardless of cursor position).
-    - **Shifting:** The insertion of extra characters must push the subsequent words to the right.
+    - These "extra" characters should be visually inserted into the current word.
+    - They are always considered incorrect (red).
+    - **Shifting:** The insertion of these characters must push the subsequent words to the right (standard text flow behavior).
     - **Cursor:** The cursor must move after these extra characters.
     - **Backspace:** Must be able to delete these extra characters.
-
-### 2. Cursor Animation
-- **Issue:** Current animation is "jerky".
-- **Fix:**
-    - Optimize CSS transition. Use a custom bezier curve for a "snappy" yet smooth feel.
-    - Increase duration for smoothness.
-    - Example: `transition: left 0.2s cubic-bezier(0.25, 1, 0.5, 1), top 0.2s cubic-bezier(0.25, 1, 0.5, 1);`
 
 ## Implementation Plan
 

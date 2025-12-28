@@ -2,36 +2,26 @@ import type { AddressInfo } from 'net';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import WebSocket from 'ws';
-import { app, server } from '../src/app';
+import { app } from '../src/app';
 
 describe('Backend E2E', () => {
-	// Use a random available port
-	const PORT = 0;
-
-	beforeAll(() => {
-		return new Promise<void>((resolve) => {
-			server.listen(PORT, () => {
-				resolve();
-			});
-		});
+	beforeAll(async () => {
+		await app.ready();
+		await app.listen({ port: 0 });
 	});
 
-	afterAll(() => {
-		return new Promise<void>((resolve) => {
-			server.close(() => {
-				resolve();
-			});
-		});
+	afterAll(async () => {
+		await app.close();
 	});
 
 	it('responds with status ok on health check endpoint', async () => {
-		const response = await request(app).get('/health');
+		const response = await request(app.server).get('/health');
 		expect(response.status).toBe(200);
 		expect(response.body).toHaveProperty('status', 'ok');
 	});
 
 	it('echoes messages via websocket connection', async () => {
-		const { port } = server.address() as AddressInfo;
+		const { port } = app.server.address() as AddressInfo;
 		const wsUrl = `ws://localhost:${port}`;
 		const client = new WebSocket(wsUrl);
 

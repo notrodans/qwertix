@@ -12,7 +12,7 @@ export function Caret({ left, top }: CaretProps) {
 				left,
 				top,
 				transition:
-					'left 0.2s cubic-bezier(0.4, 1, 0.5, 1), top 0.2s cubic-bezier(0.25, 1, 0.5, 1)',
+					'left 0.2s cubic-bezier(0.4, 1, 0.5, 1), top 0.2s cubic-bezier(0.4, 1, 0.5, 1)',
 			}}
 		/>
 	);

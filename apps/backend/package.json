@@ -17,28 +17,26 @@
 		"db:studio": "drizzle-kit studio"
 	},
 	"dependencies": {
-		"cors": "^2.8.5",
+		"@fastify/cors": "^11.2.0",
 		"dotenv": "^17.2.3",
 		"drizzle-orm": "catalog:",
-		"express": "^5.2.1",
+		"fastify": "^5.6.2",
 		"pg": "^8.16.3",
 		"uuid": "^13.0.0",
 		"ws": "^8.18.0",
 		"zod": "catalog:"
 	},
 	"devDependencies": {
-		"@types/cors": "^2.8.17",
-		"@types/express": "^5.0.6",
+		"@qwertix/tsconfig": "workspace:*",
 		"@types/node": "catalog:",
 		"@types/pg": "8.16.0",
 		"@types/ws": "^8.18.1",
+		"drizzle-kit": "catalog:",
+		"supertest": "catalog:",
+		"tsup": "catalog:",
 		"tsx": "^4.21.0",
 		"typescript": "catalog:",
-		"tsup": "catalog:",
 		"vite-tsconfig-paths": "catalog:",
-		"@qwertix/tsconfig": "workspace:*",
-		"vitest": "catalog:",
-		"supertest": "catalog:",
-		"drizzle-kit": "catalog:"
+		"vitest": "catalog:"
 	}
 }
