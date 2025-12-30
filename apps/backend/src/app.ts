@@ -1,203 +1,64 @@
 import cors from '@fastify/cors';
-import { config } from 'dotenv';
+import fastifyJwt from '@fastify/jwt';
+import fastifySecureSession from '@fastify/secure-session';
 import Fastify from 'fastify';
-import { v4 as uuid } from 'uuid';
 import { WebSocketServer } from 'ws';
-import db from '@/db';
-import { users } from '@/db/schema';
+import { container, setupContainer } from './container';
+import type { AuthController } from './controllers/auth.controller';
+import type { PresetController } from './controllers/preset.controller';
+import type { ResultController } from './controllers/result.controller';
+import type { RoomController } from './controllers/room.controller';
+import { env } from './env';
+import type { WordService } from './services/word-service';
 
-config();
-
-export const app = Fastify();
+export const app = Fastify({
+	logger: {
+		transport: {
+			target: 'pino-pretty',
+			options: {
+				translateTime: 'HH:MM:ss Z',
+				ignore: 'pid,hostname',
+			},
+		},
+	},
+});
 
 app.register(cors);
+app.register(fastifyJwt, {
+	secret: env.JWT_SECRET,
+	decoratorName: 'jwtUser',
+});
+
+app.register(fastifySecureSession, {
+	secret: Buffer.from(env.JWT_SECRET.padEnd(32).slice(0, 32)), // secure-session requires 32 byte buffer
+	salt: Buffer.from('mq9hDxBVDbspDR6n'.padEnd(16).slice(0, 16)),
+});
+
+const wss = new WebSocketServer({ server: app.server });
+setupContainer(wss);
+
+app.register(async (instance) => {
+	await container.resolve<AuthController>('authController').register(instance);
+});
+app.register(async (instance) => {
+	await container.resolve<RoomController>('roomController').register(instance);
+});
+app.register(async (instance) => {
+	await container
+		.resolve<PresetController>('presetController')
+		.register(instance);
+});
+app.register(async (instance) => {
+	await container
+		.resolve<ResultController>('resultController')
+		.register(instance);
+});
 
 app.get('/health', async (_req, _reply) => {
 	return { status: 'ok', timestamp: new Date().toISOString() };
 });
 
-const WORDS = [
-	'the',
-	'be',
-	'of',
-	'and',
-	'a',
-	'to',
-	'in',
-	'he',
-	'have',
-	'it',
-	'that',
-	'for',
-	'they',
-	'i',
-	'with',
-	'as',
-	'not',
-	'on',
-	'she',
-	'at',
-	'by',
-	'this',
-	'we',
-	'you',
-	'do',
-	'but',
-	'from',
-	'or',
-	'which',
-	'one',
-	'would',
-	'all',
-	'will',
-	'there',
-	'say',
-	'who',
-	'make',
-	'when',
-	'can',
-	'more',
-	'if',
-	'no',
-	'man',
-	'out',
-	'other',
-	'so',
-	'what',
-	'time',
-	'up',
-	'go',
-	'about',
-	'than',
-	'into',
-	'could',
-	'state',
-	'only',
-	'new',
-	'year',
-	'some',
-	'take',
-	'come',
-	'these',
-	'know',
-	'see',
-	'use',
-	'get',
-	'like',
-	'then',
-	'first',
-	'any',
-	'work',
-	'now',
-	'may',
-	'such',
-	'give',
-	'over',
-	'think',
-	'most',
-	'even',
-	'find',
-	'day',
-	'also',
-	'after',
-	'way',
-	'many',
-	'must',
-	'look',
-	'before',
-	'great',
-	'back',
-	'through',
-	'long',
-	'where',
-	'much',
-	'should',
-	'well',
-	'people',
-	'down',
-	'own',
-	'just',
-	'because',
-	'good',
-	'each',
-	'those',
-	'feel',
-	'seem',
-	'how',
-	'high',
-	'too',
-	'place',
-	'little',
-	'world',
-	'very',
-	'still',
-	'nation',
-	'hand',
-	'old',
-	'life',
-	'tell',
-	'write',
-	'become',
-	'here',
-	'show',
-	'house',
-	'both',
-	'between',
-	'need',
-	'mean',
-	'call',
-	'develop',
-	'under',
-	'last',
-	'right',
-	'move',
-	'thing',
-	'general',
-	'school',
-	'never',
-	'same',
-	'another',
-	'begin',
-	'while',
-	'number',
-	'part',
-	'turn',
-	'real',
-	'leave',
-	'might',
-	'want',
-	'point',
-];
-
 app.get('/words', async (_req, _reply) => {
-	const shuffled = [...WORDS].sort(() => 0.5 - Math.random());
-	const selected = shuffled.slice(0, 30);
-	return selected;
-});
-
-app.post('/users', async (_req, _reply) => {
-	const user = await db
-		.insert(users)
-		.values({
-			email: `notrodans-${uuid()}-@gmail.com`,
-			username: 'notrodans',
-		})
-		.returning();
-	console.log('Successfully created');
-	return { success: true, data: user };
-});
-
-const wss = new WebSocketServer({ server: app.server });
-
-wss.on('connection', (ws) => {
-	console.log('New WebSocket connection');
-
-	ws.on('message', (message) => {
-		console.log('Received:', message.toString());
-		ws.send(`Echo: ${message}`);
-	});
-
-	ws.on('close', () => {
-		console.log('Client disconnected');
-	});
+	const wordService = container.resolve<WordService>('wordService');
+	return wordService.getWords(30);
 });
