@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/experimental-ct-react';
+import react from '@vitejs/plugin-react-oxc';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -35,6 +36,7 @@ export default defineConfig({
 
     /* Vite config */
     ctViteConfig: {
+      plugins: [react()],
       resolve: {
         alias: {
           '@': path.resolve(__dirname, './src'),
