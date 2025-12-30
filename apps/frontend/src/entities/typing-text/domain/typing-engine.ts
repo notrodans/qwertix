@@ -112,7 +112,7 @@ export function calculateCursorIndex(
 		const targetWord = targetWords[i];
 		// Safety check if targetWord is undefined (though logic shouldn't reach here if loop is correct)
 		if (typeof targetWord === 'undefined') break;
-		
+
 		const userWord = userWords[i] || '';
 
 		// The visual length of a word is determined by the max length

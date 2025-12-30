@@ -14,6 +14,10 @@ export function useTyping(
 	const [userTyped, setUserTyped] = useState('');
 	const [confirmedIndex, setConfirmedIndex] = useState(0);
 	const [caretPos, setCaretPos] = useState({ left: 0, top: 0 });
+	const [replayData, setReplayData] = useState<
+		{ key: string; timestamp: number }[]
+	>([]);
+	const [startTime, setStartTime] = useState<number | null>(null);
 
 	const updateCursor = useCursorPositioning(containerRef, setCaretPos);
 
@@ -23,7 +27,11 @@ export function useTyping(
 			if (event.altKey) return;
 			if ((event.ctrlKey || event.metaKey) && event.key !== 'Backspace') return;
 
+			if (!startTime) setStartTime(Date.now());
+			const timestamp = Date.now() - (startTime || Date.now());
+
 			if (event.key === 'Backspace') {
+				setReplayData((prev) => [...prev, { key: 'Backspace', timestamp }]);
 				const next = calculateBackspace(
 					userTyped,
 					confirmedIndex,
@@ -41,6 +49,11 @@ export function useTyping(
 				if (event.key === ' ') {
 					event.preventDefault();
 				}
+
+				setReplayData((prev) => [
+					...prev,
+					{ key: event.key, timestamp: Date.now() - (startTime || Date.now()) },
+				]);
 
 				const next = appendCharacter(userTyped, event.key);
 
@@ -80,5 +93,6 @@ export function useTyping(
 		userTyped,
 		caretPos,
 		reset,
+		replayData,
 	};
 }

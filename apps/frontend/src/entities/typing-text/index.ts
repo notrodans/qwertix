@@ -1,2 +1,5 @@
-export { wordQueries } from './model/queries';
-export { TextDisplay } from './ui/text-display';
+export * from './domain/typing-engine';
+export * from './model/queries';
+export * from './model/use-cursor-positioning';
+export * from './model/use-typing';
+export * from './ui/text-display';
