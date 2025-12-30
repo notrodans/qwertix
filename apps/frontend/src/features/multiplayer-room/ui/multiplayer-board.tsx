@@ -1,8 +1,12 @@
 import { RaceModeEnum } from '@qwertix/room-contracts';
 import { useEffect, useRef, useState } from 'react';
 import type { Participant, RoomConfig } from '@/entities/room';
-import { TextDisplay, useTyping } from '@/entities/typing-text';
-import { calculateAccuracy, calculateWPM } from '../domain/metrics';
+import {
+	calculateAccuracy,
+	calculateWPM,
+	TextDisplay,
+	useTyping,
+} from '@/entities/typing-text';
 
 interface TypingStats {
 	wpm: number;

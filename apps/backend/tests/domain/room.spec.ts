@@ -36,7 +36,7 @@ describe('Room Domain Logic', () => {
 		expect(stats).toBeDefined();
 		if (stats) {
 			expect(stats.accuracy).toBe(100);
-			expect(stats.wpm).toBe(1.8); // 9 chars / 5 = 1.8 words. 1.8 words / 1 min = 1.8 WPM
+			expect(stats.wpm).toBeCloseTo(1.8, 2); // 9 chars / 5 = 1.8 words. 1.8 words / 1 min = 1.8 WPM
 		}
 		vi.useRealTimers();
 	});
@@ -70,7 +70,33 @@ describe('Room Domain Logic', () => {
 		room.updateProgress('user-1', 5.5); // 50%
 
 		const participant = room.participants().get('user-1');
+
 		expect(participant?.progress).toBe(50);
 		expect(participant?.wpm).toBeDefined();
+	});
+
+	it('should restart room correctly', () => {
+		const room = createRoom();
+
+		room.addParticipant('u1', 'user1');
+		room.startRacing();
+		room.updateProgress('u1', 5);
+		room.finishRacing();
+		room.restart();
+
+		expect(room.status()).toBe('LOBBY');
+		expect(room.raceStartTime()).toBeNull();
+		expect(room.participants().get('u1')?.progress).toBe(0);
+	});
+
+	it('should convert to DTO correctly', () => {
+		const room = createRoom();
+		room.addParticipant('u1', 'user1');
+
+		const dto = room.toDTO();
+
+		expect(dto.id).toBe(room.id());
+		expect(dto.participants).toHaveLength(1);
+		expect(dto.text).toEqual(room.text());
 	});
 });

@@ -1,18 +1,16 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { roomQueries } from '@/entities/room';
-import { PresetSelector } from '@/features/preset-selector';
+import { ResultsScreen } from '@/features/results';
+import { SoloTypingMediator } from '@/features/solo-mode';
 import { Header } from '@/widgets/header';
 import { MainLayout } from '@/widgets/layout';
-import { TypingBoard } from '@/widgets/typing-board/pub';
 
 export function HomePage() {
 	const navigate = useNavigate();
-	const [selectedPresetId, setSelectedPresetId] = useState<number>();
 
 	const handleCreateRoom = async () => {
 		try {
-			const { roomId } = await roomQueries.create(selectedPresetId);
+			const { roomId } = await roomQueries.create();
 			navigate(`/room/${roomId}`);
 		} catch (e) {
 			console.error('Failed to create room', e);
@@ -22,20 +20,42 @@ export function HomePage() {
 
 	return (
 		<MainLayout header={<Header />}>
-			<div className="flex flex-col gap-8 w-full">
-				<div className="flex justify-between items-center w-full">
-					<PresetSelector
-						selectedPresetId={selectedPresetId}
-						onSelect={(p) => setSelectedPresetId(p.id)}
-					/>
+			<div className="flex flex-col gap-12 w-full max-w-4xl mx-auto py-12">
+				<SoloTypingMediator
+					renderResults={(results, onRestart) => (
+						<ResultsScreen
+							stats={results}
+							targetText={results.fullText}
+							participants={[
+								{
+									socketId: 'me',
+									username: 'You',
+									isHost: true,
+									progress: 100,
+									wpm: results.wpm,
+									rank: 1,
+									finishedAt: Date.now(),
+								},
+							]}
+							onClose={onRestart}
+							onRestart={onRestart}
+							isHost={true}
+						/>
+					)}
+				/>
+
+				<div className="flex justify-center mt-12 border-t border-zinc-900 pt-12">
 					<button
 						onClick={handleCreateRoom}
-						className="bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-2 px-4 rounded transition-colors"
+						className="flex items-center gap-2 text-zinc-500 hover:text-yellow-500 transition-colors font-bold group"
 					>
-						Create Multiplayer Room
+						<span>⚔️</span>
+						<span>Create Multiplayer Room</span>
+						<span className="opacity-0 group-hover:translate-x-1 transition-all opacity-100">
+							→
+						</span>
 					</button>
 				</div>
-				<TypingBoard />
 			</div>
 		</MainLayout>
 	);

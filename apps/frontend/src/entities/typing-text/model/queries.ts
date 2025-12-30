@@ -2,11 +2,11 @@ import { queryOptions } from '@tanstack/react-query';
 
 export const wordQueries = {
 	all: () => ['words'] as const,
-	list: () =>
+	list: (count = 30) =>
 		queryOptions({
-			queryKey: wordQueries.all(),
+			queryKey: [...wordQueries.all(), count],
 			queryFn: async () => {
-				const response = await fetch('/api/words');
+				const response = await fetch(`/api/words?count=${count}`);
 				if (!response.ok) {
 					throw new Error('Failed to fetch words');
 				}

@@ -7,7 +7,7 @@ import { ResultController } from './controllers/result.controller';
 import { RoomController } from './controllers/room.controller';
 import { DataBase } from './db';
 import { RoomManager } from './managers/room.manager';
-import { SocketManager } from './managers/socket.manager.ts';
+import { SocketManager } from './managers/socket.manager';
 import { AuthService } from './services/auth.service';
 import { PresetService } from './services/preset.service';
 import { ResultService } from './services/result.service';

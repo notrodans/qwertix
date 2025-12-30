@@ -114,4 +114,13 @@ describe('Room Logic', () => {
 		}
 		expect(room.text().length).toBe(10);
 	});
+
+	it('should delete room', () => {
+		const room = roomManager.createRoom();
+		const roomId = room.id();
+		expect(roomManager.getRoom(roomId)).toBeDefined();
+
+		roomManager.deleteRoom(roomId);
+		expect(roomManager.getRoom(roomId)).toBeUndefined();
+	});
 });

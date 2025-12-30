@@ -1,12 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
 import { useRef } from 'react';
-import { TextDisplay, useTyping, wordQueries } from '@/entities/typing-text';
 import {
 	RestartButton,
+	TextDisplay,
 	TypingConfigSummary,
 	TypingSessionLayout,
 	TypingStatusIndicator,
-} from '@/features/typing/pub';
+	useTyping,
+	wordQueries,
+} from '@/entities/typing-text';
 
 export function TypingBoard() {
 	const {

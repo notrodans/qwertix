@@ -58,7 +58,8 @@ app.get('/health', async (_req, _reply) => {
 	return { status: 'ok', timestamp: new Date().toISOString() };
 });
 
-app.get('/words', async (_req, _reply) => {
+app.get('/words', async (req, _reply) => {
+	const { count } = req.query as { count?: string };
 	const wordService = container.resolve<WordService>('wordService');
-	return wordService.getWords(30);
+	return wordService.getWords(count ? parseInt(count) : 30);
 });
