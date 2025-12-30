@@ -1,6 +1,6 @@
 import { asClass, asValue, createContainer, InjectionMode } from 'awilix';
+import type { FastifyInstance } from 'fastify';
 import { WebSocketServer } from 'ws';
-import { app } from './app';
 import { AuthController } from './controllers/auth.controller';
 import { PresetController } from './controllers/preset.controller';
 import { ResultController } from './controllers/result.controller';
@@ -17,7 +17,10 @@ export const container = createContainer({
 	injectionMode: InjectionMode.CLASSIC,
 });
 
-export function setupContainer(wss: WebSocketServer) {
+export function setupContainer(
+	wss: WebSocketServer,
+	fastifyApp: FastifyInstance,
+) {
 	container.register({
 		db: asClass(DataBase).singleton(),
 		roomManager: asClass(RoomManager).singleton(),
@@ -33,8 +36,8 @@ export function setupContainer(wss: WebSocketServer) {
 		roomController: asClass(RoomController).singleton(),
 
 		wss: asValue(wss),
-		app: asValue(app),
-		logger: asValue(app.log),
+		app: asValue(fastifyApp),
+		logger: asValue(fastifyApp.log),
 	});
 
 	// Resolve socketManager to start listening

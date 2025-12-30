@@ -35,7 +35,7 @@ app.register(fastifySecureSession, {
 });
 
 const wss = new WebSocketServer({ server: app.server });
-setupContainer(wss);
+setupContainer(wss, app);
 
 app.register(async (instance) => {
 	await container.resolve<AuthController>('authController').register(instance);
