@@ -1,2 +1,2 @@
-export * from './api/preset.api';
+export * from './model/api';
 export * from './ui/preset-selector';

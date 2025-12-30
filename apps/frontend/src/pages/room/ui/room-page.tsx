@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { type Participant } from '@/entities/room';
-import { type LocalResult, RoomContainer } from '@/features/multiplayer-room';
+import {
+	type LocalResult,
+	MultiplayerRoomMediator,
+} from '@/features/multiplayer-room';
 import { ResultsScreen } from '@/features/results';
 import { Header } from '@/widgets/header';
 import { MainLayout } from '@/widgets/layout';
@@ -18,7 +21,7 @@ export function RoomPage() {
 
 	return (
 		<MainLayout header={<Header />}>
-			<RoomContainer
+			<MultiplayerRoomMediator
 				roomId={roomId}
 				onFinish={(stats, text, participants) =>
 					setResult({ stats, text, participants })
