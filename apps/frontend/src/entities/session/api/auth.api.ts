@@ -1,0 +1,42 @@
+export interface User {
+	id: number;
+	username: string;
+	email: string;
+	avatarUrl?: string;
+}
+
+export interface AuthResponse {
+	token: string;
+	user: User;
+}
+
+export const authApi = {
+	login: async (email: string, password: string): Promise<AuthResponse> => {
+		const res = await fetch(`/api/auth/login`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ email, password }),
+		});
+		if (!res.ok) throw new Error('Login failed');
+		return res.json();
+	},
+
+	register: async (
+		username: string,
+		email: string,
+		password: string,
+	): Promise<AuthResponse> => {
+		const res = await fetch(`/api/auth/register`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ username, email, password }),
+		});
+		if (!res.ok) throw new Error('Registration failed');
+		return res.json();
+	},
+
+	// Helper to get headers with token
+	authHeader: (token: string) => ({
+		Authorization: `Bearer ${token}`,
+	}),
+};
