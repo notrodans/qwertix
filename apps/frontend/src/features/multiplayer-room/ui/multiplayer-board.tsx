@@ -14,6 +14,7 @@ interface TypingStats {
 	accuracy: number;
 	consistency: number;
 	replayData: { key: string; timestamp: number }[];
+	fullText: string;
 }
 
 interface MultiplayerBoardProps {
@@ -45,15 +46,23 @@ export function MultiplayerBoard({
 	const [startTime, setStartTime] = useState<number | null>(null);
 	const [submitted, setSubmitted] = useState(false);
 	const [timeLeft, setTimeLeft] = useState<number | null>(null);
+	const [accumulatedLength, setAccumulatedLength] = useState(0);
+	const [fullText, setFullText] = useState(text);
 
-	// Clear typed text when the target text is replaced (Time mode optimization)
+	// Handle new word chunks
 	const prevTextRef = useRef(text);
 	useEffect(() => {
-		if (config.mode === RaceModeEnum.TIME && prevTextRef.current !== text) {
-			setUserTyped('');
+		if (prevTextRef.current !== text) {
+			if (config.mode === RaceModeEnum.TIME) {
+				setAccumulatedLength((prev) => prev + userTyped.length + 1); // +1 for space
+				setUserTyped('');
+				setFullText((prev) => `${prev} ${text}`);
+			} else {
+				setFullText(text); // In WORDS mode, text is usually stable or appends
+			}
 		}
 		prevTextRef.current = text;
-	}, [text, config.mode, setUserTyped]);
+	}, [text, config.mode, setUserTyped, userTyped.length]);
 
 	useEffect(() => {
 		if (status === 'RACING' && !startTime) {
@@ -88,8 +97,9 @@ export function MultiplayerBoard({
 		}
 
 		// Calculate progress and WPM
+		const currentTypedLength = accumulatedLength + userTyped.length;
 		const progress = calculateProgress(userTyped.length, text.length);
-		const wpm = calculateWPM(userTyped.length, startTime, Date.now());
+		const wpm = calculateWPM(currentTypedLength, startTime, Date.now());
 
 		// Throttle updates
 		const timer = setTimeout(() => {
@@ -108,7 +118,14 @@ export function MultiplayerBoard({
 			text.length > 0
 		) {
 			const accuracy = calculateAccuracy(userTyped, text);
-			onSubmit({ wpm, raw: wpm, accuracy, consistency: 100, replayData });
+			onSubmit({
+				wpm,
+				raw: wpm,
+				accuracy,
+				consistency: 100,
+				replayData,
+				fullText,
+			});
 			setSubmitted(true);
 		}
 
@@ -127,17 +144,36 @@ export function MultiplayerBoard({
 		replayData,
 		text,
 		config,
+		accumulatedLength,
+		fullText,
 	]);
 
 	// Handle Forced Finish (Time Mode)
 	useEffect(() => {
 		if (status === 'FINISHED' && !submitted && startTime) {
-			const wpm = calculateWPM(userTyped.length, startTime, Date.now());
+			const currentTypedLength = accumulatedLength + userTyped.length;
+			const wpm = calculateWPM(currentTypedLength, startTime, Date.now());
 
-			onSubmit({ wpm, raw: wpm, accuracy: 100, consistency: 100, replayData });
+			onSubmit({
+				wpm,
+				raw: wpm,
+				accuracy: 100,
+				consistency: 100,
+				replayData,
+				fullText,
+			});
 			setSubmitted(true);
 		}
-	}, [status, submitted, startTime, userTyped, onSubmit, replayData]);
+	}, [
+		status,
+		submitted,
+		startTime,
+		userTyped,
+		onSubmit,
+		replayData,
+		accumulatedLength,
+		fullText,
+	]);
 
 	const remainingWords =
 		config.mode === RaceModeEnum.WORDS

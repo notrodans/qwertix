@@ -1,4 +1,10 @@
-import { type ComponentProps, type RefObject } from 'react';
+import {
+	type ComponentProps,
+	type RefObject,
+	useLayoutEffect,
+	useRef,
+	useState,
+} from 'react';
 import { Caret } from './caret';
 import { Character } from './character';
 import { Word } from './word';
@@ -21,114 +27,144 @@ export function TextDisplay({
 	let globalIndex = 0;
 	const targetWords = targetText.split(' ');
 	const userWords = userTyped.split(' ');
+	const [scrollOffset, setScrollOffset] = useState(0);
+	const wrapperRef = useRef<HTMLDivElement>(null);
+
+	useLayoutEffect(() => {
+		if (!containerRef.current) return;
+
+		const activeWord = containerRef.current.querySelector(
+			'[data-state="active"]',
+		) as HTMLElement;
+		if (!activeWord) return;
+
+		const wordTop = activeWord.offsetTop;
+		const rowHeight = activeWord.offsetHeight;
+
+		// We want the active word to be on the second row
+		// If wordTop > rowHeight, we need to scroll.
+		// Formula: offset = wordTop - rowHeight (so active is at row 1, index 0 is row 0)
+		if (wordTop > rowHeight) {
+			setScrollOffset(wordTop - rowHeight);
+		} else {
+			setScrollOffset(0);
+		}
+	}, [userTyped, containerRef]);
 
 	return (
 		<div
-			ref={containerRef}
-			className={`font-mono text-2xl leading-relaxed wrap-break-word relative ${className}`}
-			data-testid="text-display"
-			{...props}
+			ref={wrapperRef}
+			className="relative overflow-hidden"
+			style={{ height: '5.2rem' }} // Approx 3 lines with 2xl leading-relaxed
 		>
-			<Caret left={caretPos.left} top={caretPos.top} />
-			{targetWords.map((targetWord, wordIndex) => {
-				const userWord = userWords[wordIndex] || '';
+			<div
+				ref={containerRef}
+				className={`font-mono text-2xl leading-relaxed wrap-break-word relative transition-transform duration-200 ${className}`}
+				style={{ transform: `translateY(-${scrollOffset}px)` }}
+				data-testid="text-display"
+				{...props}
+			>
+				<Caret left={caretPos.left} top={caretPos.top} />
+				{targetWords.map((targetWord, wordIndex) => {
+					const userWord = userWords[wordIndex] || '';
 
-				// Determine state
-				const isPast = userWords.length > wordIndex + 1;
-				const isActive = userWords.length === wordIndex + 1;
+					// Determine state
+					const isPast = userWords.length > wordIndex + 1;
+					const isActive = userWords.length === wordIndex + 1;
 
-				let wordState = 'upcoming';
-				if (isPast) wordState = 'past';
-				else if (isActive) wordState = 'active';
+					let wordState = 'upcoming';
+					if (isPast) wordState = 'past';
+					else if (isActive) wordState = 'active';
 
-				const isCorrectWord = userWord === targetWord;
-				const hasExtras = userWord.length > targetWord.length;
+					const isCorrectWord = userWord === targetWord;
+					const hasExtras = userWord.length > targetWord.length;
 
-				const hasError = (isPast && !isCorrectWord) || hasExtras;
+					const hasError = (isPast && !isCorrectWord) || hasExtras;
 
-				// We render max length to accommodate extras
-				const maxLength = Math.max(targetWord.length, userWord.length);
+					// We render max length to accommodate extras
+					const maxLength = Math.max(targetWord.length, userWord.length);
 
-				const chars = [];
-				for (let i = 0; i < maxLength; i++) {
-					const charIndex = globalIndex++; // Assign unique index to every rendered char
+					const chars = [];
+					for (let i = 0; i < maxLength; i++) {
+						const charIndex = globalIndex++; // Assign unique index to every rendered char
 
-					const targetChar = targetWord[i]; // Might be undefined if extra
-					const userChar = userWord[i]; // Might be undefined if untyped
+						const targetChar = targetWord[i]; // Might be undefined if extra
+						const userChar = userWord[i]; // Might be undefined if untyped
 
-					let charToRender = targetChar;
-					let color = '#646669'; // Default untyped
+						let charToRender = targetChar;
+						let color = '#646669'; // Default untyped
 
-					let charType = 'target';
-					let charStatus = 'untyped';
+						let charType = 'target';
+						let charStatus = 'untyped';
 
-					if (i < userWord.length) {
-						// User typed something here
+						if (i < userWord.length) {
+							// User typed something here
 
-						if (i < targetWord.length) {
-							// Within bounds: Show TARGET char
-							charToRender = targetChar;
-							if (userChar === targetChar) {
-								color = '#d1d0c5';
-								charStatus = 'correct';
+							if (i < targetWord.length) {
+								// Within bounds: Show TARGET char
+								charToRender = targetChar;
+								if (userChar === targetChar) {
+									color = '#d1d0c5';
+									charStatus = 'correct';
+								} else {
+									color = '#ca4754';
+									charStatus = 'incorrect';
+								}
 							} else {
-								color = '#ca4754';
-								charStatus = 'incorrect';
+								// Extra character: Show USER char
+								charToRender = userChar;
+								color = '#7e2a33';
+								charType = 'extra';
+								charStatus = 'extra'; // Or incorrect?
 							}
 						} else {
-							// Extra character: Show USER char
-							charToRender = userChar;
-							color = '#7e2a33';
-							charType = 'extra';
-							charStatus = 'extra'; // Or incorrect?
+							// Untyped part of target
+							charToRender = targetChar;
 						}
-					} else {
-						// Untyped part of target
-						charToRender = targetChar;
+
+						chars.push(
+							<Character
+								key={charIndex}
+								index={charIndex}
+								char={charToRender ?? ''}
+								color={color}
+								type={charType}
+								status={charStatus}
+							/>,
+						);
 					}
 
-					chars.push(
-						<Character
-							key={charIndex}
-							index={charIndex}
-							char={charToRender ?? ''}
-							color={color}
-							type={charType}
-							status={charStatus}
-						/>,
+					// Logic for space
+					const showSpace = wordIndex < targetWords.length - 1;
+					let spaceEl = null;
+
+					if (showSpace) {
+						const spaceIndex = globalIndex++;
+						const isSpaceTyped = userWords.length > wordIndex + 1;
+
+						spaceEl = (
+							<Character
+								key={spaceIndex}
+								index={spaceIndex}
+								char=" "
+								color="#646669"
+								type="space"
+								status={isSpaceTyped ? 'typed' : 'untyped'}
+								width="0.5ch"
+							/>
+						);
+					}
+
+					return (
+						<span key={wordIndex}>
+							<Word index={wordIndex} state={wordState} hasError={hasError}>
+								{chars}
+							</Word>
+							{spaceEl}
+						</span>
 					);
-				}
-
-				// Logic for space
-				const showSpace = wordIndex < targetWords.length - 1;
-				let spaceEl = null;
-
-				if (showSpace) {
-					const spaceIndex = globalIndex++;
-					const isSpaceTyped = userWords.length > wordIndex + 1;
-
-					spaceEl = (
-						<Character
-							key={spaceIndex}
-							index={spaceIndex}
-							char=" "
-							color="#646669"
-							type="space"
-							status={isSpaceTyped ? 'typed' : 'untyped'}
-							width="0.5ch"
-						/>
-					);
-				}
-
-				return (
-					<span key={wordIndex}>
-						<Word index={wordIndex} state={wordState} hasError={hasError}>
-							{chars}
-						</Word>
-						{spaceEl}
-					</span>
-				);
-			})}
+				})}
+			</div>
 		</div>
 	);
 }

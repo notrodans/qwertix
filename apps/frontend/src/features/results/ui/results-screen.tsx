@@ -13,6 +13,8 @@ interface ResultsScreenProps {
 	};
 	targetText: string;
 	participants: Participant[];
+	isHost?: boolean;
+	onRestart?: () => void;
 	onClose: () => void;
 }
 
@@ -20,6 +22,8 @@ export function ResultsScreen({
 	stats,
 	targetText,
 	participants,
+	isHost,
+	onRestart,
 	onClose,
 }: ResultsScreenProps) {
 	const [showReplay, setShowReplay] = useState(false);
@@ -91,13 +95,21 @@ export function ResultsScreen({
 					</div>
 				</div>
 
-				<div className="flex justify-center pt-4">
+				<div className="flex justify-center gap-4 pt-4">
 					<button
 						onClick={onClose}
 						className="px-12 py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-bold rounded-lg transition-colors"
 					>
 						Return to Lobby
 					</button>
+					{isHost && onRestart && (
+						<button
+							onClick={onRestart}
+							className="px-12 py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-lg transition-colors shadow-lg shadow-green-900/20"
+						>
+							Play Again
+						</button>
+					)}
 				</div>
 			</div>
 		</div>

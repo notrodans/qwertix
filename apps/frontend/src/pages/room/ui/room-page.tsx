@@ -11,11 +11,6 @@ import { MainLayout } from '@/widgets/layout';
 
 export function RoomPage() {
 	const { roomId } = useParams<{ roomId: string }>();
-	const [result, setResult] = useState<{
-		stats: LocalResult;
-		text: string;
-		participants: Participant[];
-	} | null>(null);
 
 	if (!roomId) return <div>Invalid Room ID</div>;
 
@@ -23,18 +18,17 @@ export function RoomPage() {
 		<MainLayout header={<Header />}>
 			<MultiplayerRoomMediator
 				roomId={roomId}
-				onFinish={(stats, text, participants) =>
-					setResult({ stats, text, participants })
-				}
+				renderResults={(props) => (
+					<ResultsScreen
+						stats={props.stats}
+						targetText={props.text}
+						participants={props.participants}
+						isHost={props.isHost}
+						onRestart={props.onRestart}
+						onClose={props.onClose}
+					/>
+				)}
 			/>
-			{result && (
-				<ResultsScreen
-					stats={result.stats}
-					targetText={result.text}
-					participants={result.participants}
-					onClose={() => setResult(null)}
-				/>
-			)}
 		</MainLayout>
 	);
 }

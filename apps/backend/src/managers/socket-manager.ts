@@ -87,7 +87,26 @@ export class SocketManager {
 			case 'LEAVE_ROOM':
 				this.handleDisconnect(ws);
 				break;
+			case 'RESTART_GAME':
+				this.handleRestartGame(ws);
+				break;
 		}
+	}
+
+	private handleRestartGame(ws: ExtendedWebSocket) {
+		if (!ws.roomId || !ws.userId) return;
+		const room = this.roomManager.getRoom(ws.roomId);
+		if (!room) return;
+
+		const participant = room.participants().get(ws.userId);
+		if (!participant?.isHost) {
+			this.send(ws, 'ERROR', { message: 'Only host can restart game' });
+			return;
+		}
+
+		// Reset room state
+		room.restart(); // Need to implement this in Room class
+		this.broadcastToRoom(room, 'ROOM_UPDATE', room.toDTO());
 	}
 
 	private handleUpdateSettings(ws: ExtendedWebSocket, config: RoomConfig) {
@@ -95,7 +114,7 @@ export class SocketManager {
 		const room = this.roomManager.getRoom(ws.roomId);
 		if (!room) return;
 
-		const participant = room.participants.get(ws.userId);
+		const participant = room.participants().get(ws.userId);
 		if (!participant?.isHost) {
 			this.send(ws, 'ERROR', { message: 'Only host can change settings' });
 			return;
@@ -114,7 +133,7 @@ export class SocketManager {
 		const room = this.roomManager.getRoom(ws.roomId);
 		if (!room) return;
 
-		const sender = room.participants.get(ws.userId);
+		const sender = room.participants().get(ws.userId);
 		if (!sender?.isHost) {
 			this.send(ws, 'ERROR', { message: 'Only host can transfer role' });
 			return;
@@ -177,7 +196,7 @@ export class SocketManager {
 		const room = this.roomManager.getRoom(ws.roomId);
 		if (!room) return;
 
-		const participant = room.participants.get(ws.userId);
+		const participant = room.participants().get(ws.userId);
 		if (!participant?.isHost) {
 			this.send(ws, 'ERROR', { message: 'Only host can start race' });
 			return;
@@ -194,20 +213,20 @@ export class SocketManager {
 			this.broadcastToRoom(room, 'RACE_START', {});
 
 			// Handle automatic termination for TIME mode
-			if (room.config.mode === RaceModeEnum.TIME && room.config.duration) {
+			if (room.config().mode === RaceModeEnum.TIME && room.config().duration) {
 				setTimeout(() => {
 					this.terminateRace(room);
-				}, room.config.duration * 1000);
+				}, room.config().duration * 1000);
 			}
 		}, 5000);
 	}
 
 	private terminateRace(room: Room) {
-		if (room.status !== 'RACING') return;
+		if (room.status() !== 'RACING') return;
 
-		room.status = 'FINISHED';
+		room.finishRacing();
 		this.broadcastToRoom(room, 'RACE_FINISHED', {
-			leaderboard: Array.from(room.participants.values()).sort(
+			leaderboard: Array.from(room.participants().values()).sort(
 				(a, b) => (a.rank || 999) - (b.rank || 999),
 			),
 		});
@@ -219,31 +238,30 @@ export class SocketManager {
 	) {
 		if (!ws.roomId || !ws.userId) return;
 		const room = this.roomManager.getRoom(ws.roomId);
-		if (!room || room.status !== 'RACING') return;
+		if (!room || room.status() !== 'RACING') return;
 
 		room.updateProgress(ws.userId, payload.progress, payload.wpm);
 
 		this.broadcastToRoom(
 			room,
 			'PROGRESS_UPDATE',
-			Array.from(room.participants.values()),
+			Array.from(room.participants().values()),
 		);
 
-		if (room.participants.get(ws.userId)?.finishedAt) {
-			const allFinished = Array.from(room.participants.values()).every(
+		if (room.participants().get(ws.userId)?.finishedAt) {
+			const allFinished = Array.from(room.participants().values()).every(
 				(p) => p.finishedAt !== null,
 			);
 			if (allFinished) {
-				room.status = 'FINISHED';
+				room.finishRacing();
 				this.broadcastToRoom(room, 'RACE_FINISHED', {
-					leaderboard: Array.from(room.participants.values()).sort(
+					leaderboard: Array.from(room.participants().values()).sort(
 						(a, b) => (a.rank || 999) - (b.rank || 999),
 					),
 				});
 			}
 		}
 	}
-
 	private async handleSubmitResult(
 		ws: ExtendedWebSocket,
 		payload: ResultPayload,
@@ -252,7 +270,7 @@ export class SocketManager {
 			const room = ws.roomId ? this.roomManager.getRoom(ws.roomId) : null;
 			await this.resultService.saveResult(
 				ws.dbUserId || null,
-				room?.presetId || null,
+				room?.presetId() || null,
 				payload.wpm,
 				payload.raw,
 				payload.accuracy,
@@ -282,18 +300,18 @@ export class SocketManager {
 		if (ws.roomId && ws.userId) {
 			const room = this.roomManager.getRoom(ws.roomId);
 			if (room) {
-				const wasHost = room.participants.get(ws.userId)?.isHost;
+				const wasHost = room.participants().get(ws.userId)?.isHost;
 				room.removeParticipant(ws.userId);
 				this.broadcastToRoom(room, 'PLAYER_LEFT', { userId: ws.userId });
 
-				if (room.participants.size === 0) {
+				if (room.participants().size === 0) {
 					this.roomManager.deleteRoom(ws.roomId);
 				} else {
 					this.broadcastToRoom(room, 'ROOM_UPDATE', room.toDTO());
 
 					// Notify new host if role changed
 					if (wasHost) {
-						const newHost = Array.from(room.participants.values()).find(
+						const newHost = Array.from(room.participants().values()).find(
 							(p) => p.isHost,
 						);
 						if (newHost) {
@@ -321,7 +339,7 @@ export class SocketManager {
 	private broadcastToRoom(room: Room, type: string, payload: unknown) {
 		for (const client of this.wss.clients) {
 			const extWs = client as ExtendedWebSocket;
-			if (extWs.roomId === room.id && extWs.readyState === WebSocket.OPEN) {
+			if (extWs.roomId === room.id() && extWs.readyState === WebSocket.OPEN) {
 				extWs.send(JSON.stringify({ type, payload }));
 			}
 		}

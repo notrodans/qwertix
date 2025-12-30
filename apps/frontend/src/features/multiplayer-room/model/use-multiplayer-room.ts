@@ -28,12 +28,6 @@ export function useMultiplayerRoom(
 	});
 
 	useEffect(() => {
-		if (isError) {
-			setError('Room not found or connection failed');
-		}
-	}, [isError]);
-
-	useEffect(() => {
 		if (!roomId) return;
 
 		// Connect WS
@@ -135,7 +129,6 @@ export function useMultiplayerRoom(
 		];
 
 		// Join Room once connected
-
 		const joinRoom = () => {
 			socketService.send('JOIN_ROOM', { roomId, username });
 		};
@@ -182,15 +175,20 @@ export function useMultiplayerRoom(
 		socketService.send('SUBMIT_RESULT', stats);
 	};
 
+	const restartGame = () => {
+		socketService.send('RESTART_GAME', {});
+	};
+
 	return {
 		room,
-		error,
+		error: isError ? 'Room not found or connection faild' : error,
 		startRace,
 		updateProgress,
 		updateSettings,
 		transferHost,
 		loadMoreWords,
 		submitResult,
+		restartGame,
 		currentUser: room?.participants.find((p) => p.username === username),
 	};
 }

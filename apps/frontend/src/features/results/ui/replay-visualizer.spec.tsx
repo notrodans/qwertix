@@ -3,16 +3,13 @@ import { describe, expect, it, vi } from 'vitest';
 import { ReplayVisualizer } from './replay-visualizer';
 
 // Mock TextDisplay to avoid complex rendering logic
-vi.mock('@/entities/typing-text', async (importOriginal) => {
-	const actual =
-		await importOriginal<typeof import('@/entities/typing-text')>();
-	return {
-		...actual,
-		TextDisplay: ({ userTyped }: { userTyped: string }) => (
-			<div data-testid="user-typed">{userTyped}</div>
-		),
-	};
-});
+vi.mock('@/entities/typing-text', () => ({
+	TextDisplay: ({ userTyped }: { userTyped: string }) => (
+		<div data-testid="user-typed">{userTyped}</div>
+	),
+	calculateCursorIndex: vi.fn(),
+	useCursorPositioning: vi.fn(() => vi.fn()),
+}));
 
 describe('ReplayVisualizer', () => {
 	const targetText = 'hello world';
