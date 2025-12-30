@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { DataBase } from '../src/db';
-import { ResultService } from '../src/services/result.service';
+import { DataBase } from '../../src/db';
+import { ResultService } from '../../src/services/result.service';
 
 const { mockInsert, mockExecute } = vi.hoisted(() => {
 	const mockExecute = vi.fn();

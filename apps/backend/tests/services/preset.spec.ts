@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { DataBase } from '../src/db';
-import { PresetService } from '../src/services/preset.service';
+import { DataBase } from '../../src/db';
+import { PresetService } from '../../src/services/preset.service';
 
 const { mockSelect, mockInsert, mockExecute } = vi.hoisted(() => {
 	const mockExecute = vi.fn();

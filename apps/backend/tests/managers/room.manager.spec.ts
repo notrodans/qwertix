@@ -1,7 +1,7 @@
 import { type FastifyBaseLogger } from 'fastify';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { RaceModeEnum, Room, type RoomConfig } from '../../src/domain/room';
-import { RoomManager } from '../../src/managers/room-manager';
+import { RoomManager } from '../../src/managers/room.manager';
 import { WordService } from '../../src/services/word-service';
 
 describe('Room Logic', () => {

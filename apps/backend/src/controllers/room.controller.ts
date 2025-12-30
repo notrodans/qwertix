@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import type { RoomConfig } from '../domain/room';
-import { RoomManager } from '../managers/room-manager';
+import { RoomManager } from '../managers/room.manager';
 import { PresetService } from '../services/preset.service';
 
 export class RoomController {

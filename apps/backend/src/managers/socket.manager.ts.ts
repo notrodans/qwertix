@@ -4,7 +4,7 @@ import { v4 as uuid } from 'uuid';
 import { WebSocket, WebSocketServer } from 'ws';
 import { Room } from '../domain/room';
 import { ResultService } from '../services/result.service';
-import { RoomManager } from './room-manager';
+import { RoomManager } from './room.manager';
 
 interface ExtendedWebSocket extends WebSocket {
 	roomId?: string;
@@ -67,10 +67,7 @@ export class SocketManager {
 				this.handleStartRace(ws);
 				break;
 			case 'UPDATE_PROGRESS':
-				this.handleUpdateProgress(
-					ws,
-					msg.payload as { typedLength: number },
-				);
+				this.handleUpdateProgress(ws, msg.payload as { typedLength: number });
 				break;
 			case 'UPDATE_SETTINGS':
 				this.handleUpdateSettings(ws, msg.payload as RoomConfig);
@@ -277,7 +274,10 @@ export class SocketManager {
 			}
 
 			// Authoritative calculation on backend
-			const stats = room.getParticipantFinalStats(ws.userId, payload.replayData);
+			const stats = room.getParticipantFinalStats(
+				ws.userId,
+				payload.replayData,
+			);
 
 			if (!stats) {
 				this.send(ws, 'ERROR', { message: 'Failed to calculate stats' });

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
-import { RaceModeEnum, Room } from '../src/domain/room';
+import { RaceModeEnum, Room } from '../../src/domain/room';
 
-describe('Metrics Calculation via Room', () => {
+describe('Room Domain Logic', () => {
 	const createRoom = () =>
 		new Room('TEST01', ['hello', 'world'], {
 			mode: RaceModeEnum.WORDS,
