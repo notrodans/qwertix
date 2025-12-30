@@ -4,9 +4,10 @@
 		"tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
 		"baseUrl": ".",
 		"paths": {
+			"@env": ["./env"],
 			"@/*": ["./src/*"]
 		},
 		"noEmit": true
 	},
-	"include": ["src"]
+	"include": ["src", "env.ts"]
 }

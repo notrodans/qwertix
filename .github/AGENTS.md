@@ -10,8 +10,8 @@ This document outlines the core conventions, technologies, and patterns used in 
     *   **`apps/backend`**: The API and WebSocket server.
 *   **Package Manager:** **Bun**. Use `bun install`, `bun add`, and `bun run`.
 *   **Primary Technologies:**
-    *   **Frontend:** React, Vite, TanStack Query, openapi-ts, Zod, **Feature-Sliced Design (FSD)**.
-    *   **Backend:** Node.js, Express, WebSockets (`ws`), PostgreSQL (Raw SQL), Zod.
+    *   **Frontend:** React (Latest) + Vite, TanStack Query, Zustand, React Router DOM, openapi-ts, Zod, Tailwind CSS, `@tailwindcss/vite`, `@t3-oss/env-core`, **Feature-Sliced Design (FSD)**.
+    *   **Backend:** Node.js, Fastify, WebSockets (`ws`), PostgreSQL (Drizzle ORM, `pg` driver), Zod, Awilix, bcryptjs, dotenv, pino-pretty, uuid.
     *   **Tooling:** Biome (Linting/Formatting), ESLint (FSD Architecture checks).
 
 ---
@@ -103,9 +103,10 @@ function PresetPage() {
 #### **2.2. Core Stack**
 
 *   **Framework:** React (Latest) + Vite.
-*   **State Management:** **TanStack Query** for server state. Global client state should be minimal.
+*   **State Management:** **TanStack Query** for server state, **Zustand** for global client state.
 *   **Validation:** **Zod**.
 *   **Styling:** Tailwind CSS.
+*   **API Proxy:** All requests to the backend API should be made to the `/api` endpoint. This is proxied to the backend server via `vite`.
 
 #### **2.3. Component Patterns**
 
@@ -215,7 +216,6 @@ function Tooltip({ targetRef }) {
 **When `useEffect` IS appropriate:**
 *   **External Subscriptions:** WebSocket connections, Global event listeners (`window.addEventListener`).
 *   **Browser APIs:** Interacting with non-React APIs like `IntersectionObserver`, `Canvas`, or `Map` widgets.
-*   **Synchronization:** Keeping a 3rd party library in sync with React props.
 *   **Note:** Data fetching should be handled by **TanStack Query**, not `useEffect`.
 
 ---
@@ -226,16 +226,24 @@ function Tooltip({ targetRef }) {
 
 *   **Runtime:** Node.js (executed via `tsx` in dev).
 *   **Build Tool:** **tsc** (for ESM production bundles).
-*   **Framework:** **Express.js**.
+*   **Framework:** **Fastify**.
 *   **Real-time:** Native **ws** library.
 *   **Database:** **PostgreSQL**.
     *   **Query Builder:** **Drizzle ORM**.
     *   **Driver:** `pg` (node-postgres).
 *   **Validation:** **Zod**.
+*   **Authentication:** `@fastify/jwt`, `@fastify/passport`, `@fastify/secure-session`, `passport-local`, `bcryptjs`.
+*   **Dependency Injection:** `awilix`.
+*   **Environment Variables:** `dotenv`, `@t3-oss/env-core`.
+*   **Logging:** `pino-pretty`.
+*   **Utilities:** `uuid`.
 *   **Testing:** **Vitest** (Unit & E2E via Supertest).
 
 #### 3.2. Architecture
 
+*   **Dependency Injection (DI):** Implement the Dependency Inversion Principle (DIP) using Dependency Injection (DI). Use a DI container (e.g., `awilix`) to manage dependencies.
+    *   **Services** and **Controllers** should accept their dependencies via constructor injection.
+    *   Avoid direct imports of singletons (e.g., `roomManager`) in business logic classes.
 *   **Controllers:** Handle HTTP requests and WebSocket events.
 *   **Services:** Contain business logic.
 *   **Repositories:** Contain **Drizzle** queries.
@@ -244,14 +252,16 @@ function Tooltip({ targetRef }) {
 
 ```typescript
 import { eq } from 'drizzle-orm';
-import { db } from '../db';
+import { DataBase } from '../db';
 import { users } from '../db/schema';
 
 export const UserRepository = {
-  async findById(id: number) {
-    const result = await db.select().from(users).where(eq(users.id, id));
-    return result[0];
-  }
+    constructor(private db: DataBase) {}
+
+    async findById(id: number) {
+        const result = await this.db.source.select().from(users).where(eq(users.id, id));
+        return result[0];
+    }
 };
 ```
 

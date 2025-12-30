@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-	font-family: "Roboto Mono", "Courier New", monospace;
+	font-family: "Hermit", "Courier New", monospace;
 	line-height: 1.5;
 	font-weight: 400;
 
