@@ -83,7 +83,9 @@ export function MultiplayerBoard({
 	}, [status, startTime, config]);
 
 	useEffect(() => {
-		if (status !== 'RACING' || !startTime || submitted) return;
+		if (status !== 'RACING' || !startTime || submitted) {
+			return;
+		}
 
 		// Calculate progress and WPM
 		const progress = calculateProgress(userTyped.length, text.length);
@@ -110,7 +112,9 @@ export function MultiplayerBoard({
 			setSubmitted(true);
 		}
 
-		return () => clearTimeout(timer);
+		return () => {
+			clearTimeout(timer);
+		};
 	}, [
 		userTyped,
 		status,

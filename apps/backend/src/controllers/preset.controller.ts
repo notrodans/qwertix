@@ -1,3 +1,4 @@
+import fastifyPassport from '@fastify/passport';
 import type { FastifyInstance } from 'fastify';
 import type { RoomConfig } from '@/domain/room';
 import { PresetService } from '../services/preset.service';
@@ -14,7 +15,7 @@ export class PresetController {
 		app.post(
 			'/presets',
 			{
-				preValidation: app.passport?.authenticate('jwt', { session: false }),
+				preValidation: fastifyPassport.authenticate('jwt', { session: false }),
 			},
 			async (req, reply) => {
 				const { name, config } = req.body as {

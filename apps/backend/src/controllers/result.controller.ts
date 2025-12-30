@@ -12,7 +12,7 @@ export class ResultController {
 			return result;
 		});
 
-		app.get('/results/user/:userId', async (req, reply) => {
+		app.get('/results/user/:userId', async (req) => {
 			const { userId } = req.params as { userId: string };
 			return await this.resultService.getUserResults(parseInt(userId));
 		});

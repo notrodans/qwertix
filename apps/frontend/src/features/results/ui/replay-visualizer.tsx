@@ -29,11 +29,17 @@ export function ReplayVisualizer({
 		}
 
 		const event = replayData[currentIndex];
-		const prevTimestamp =
-			currentIndex > 0 ? replayData[currentIndex - 1].timestamp : 0;
+		if (!event) {
+			onComplete?.();
+			return;
+		}
+
+		const prevEvent = currentIndex > 0 ? replayData[currentIndex - 1] : null;
+		const prevTimestamp = prevEvent ? prevEvent.timestamp : 0;
 		const delay = event.timestamp - prevTimestamp;
 
 		const timeout = setTimeout(() => {
+			if (!event) return; // Re-check inside timeout for extra safety
 			const key = event.key;
 			let nextTyped = userTyped;
 

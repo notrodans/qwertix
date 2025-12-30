@@ -1,6 +1,6 @@
-import { FastifyBaseLogger } from 'fastify';
+import { type FastifyBaseLogger } from 'fastify';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { RaceModeEnum, Room, RoomConfig } from '../src/domain/room';
+import { RaceModeEnum, Room, type RoomConfig } from '../src/domain/room';
 import { RoomManager } from '../src/managers/room-manager';
 import { WordService } from '../src/services/word-service';
 
@@ -38,8 +38,8 @@ describe('Room Logic', () => {
 
 	it('should handle race flow', () => {
 		const room = roomManager.createRoom();
-		const _p1 = room.addParticipant('socket-1', 'User 1');
-		const _p2 = room.addParticipant('socket-2', 'User 2');
+		room.addParticipant('socket-1', 'User 1');
+		room.addParticipant('socket-2', 'User 2');
 
 		room.startRace();
 		expect(room.status).toBe('COUNTDOWN');
@@ -63,8 +63,8 @@ describe('Room Logic', () => {
 
 	it('should remove participant and reassign host', () => {
 		const room = roomManager.createRoom();
-		const _p1 = room.addParticipant('socket-1', 'User 1');
-		const _p2 = room.addParticipant('socket-2', 'User 2');
+		room.addParticipant('socket-1', 'User 1');
+		room.addParticipant('socket-2', 'User 2');
 
 		room.removeParticipant('socket-1');
 		expect(room.participants.size).toBe(1);
@@ -104,7 +104,11 @@ describe('Room Logic', () => {
 
 		roomManager.updateRoomConfig(room.id, newConfig);
 
-		expect(room.config.wordCount).toBe(10);
+		if (room.config.mode === RaceModeEnum.WORDS) {
+			expect(room.config.wordCount).toBe(10);
+		} else {
+			throw new Error('Room mode should be WORDS');
+		}
 		expect(room.text.length).toBe(10);
 	});
 });
