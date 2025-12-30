@@ -12,8 +12,7 @@
 		"preview": "vite preview",
 		"test": "vitest run",
 		"test:watch": "vitest",
-		"test:e2e": "playwright test",
-		"test:ct": "playwright test -c playwright-ct.config.ts"
+		"test:e2e": "playwright test"
 	},
 	"dependencies": {
 		"@qwertix/room-contracts": "workspace:*",
@@ -28,7 +27,6 @@
 		"zustand": "^5.0.9"
 	},
 	"devDependencies": {
-		"@playwright/experimental-ct-react": "^1.57.0",
 		"@playwright/test": "catalog:",
 		"@qwertix/tsconfig": "workspace:*",
 		"@testing-library/dom": "catalog:",

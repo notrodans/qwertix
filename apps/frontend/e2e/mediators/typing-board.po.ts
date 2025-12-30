@@ -16,7 +16,7 @@ export class TypingBoardPage {
 	}
 
 	async goto() {
-		await this.page.goto('/');
+		await this.page.goto('/sandbox/typing-board');
 	}
 
 	async waitForLoad() {

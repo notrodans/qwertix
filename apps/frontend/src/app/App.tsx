@@ -4,6 +4,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { HomePage } from '@/pages/home/pub';
 import { LoginPage } from '@/pages/login';
 import { RoomPage } from '@/pages/room/pub';
+import { SandboxPage } from '@/pages/sandbox';
 import { queryClient } from '@/shared/api/query/client';
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
 						<Route path="/" element={<HomePage />} />
 						<Route path="/room/:roomId" element={<RoomPage />} />
 						<Route path="/login" element={<LoginPage />} />
+						<Route path="/sandbox/:component" element={<SandboxPage />} />
 					</Routes>
 				</BrowserRouter>
 			</QueryClientProvider>
