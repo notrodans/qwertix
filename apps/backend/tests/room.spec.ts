@@ -1,6 +1,6 @@
 import { FastifyBaseLogger } from 'fastify';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { Room } from '../src/domain/room';
+import { RaceModeEnum, Room, RoomConfig } from '../src/domain/room';
 import { RoomManager } from '../src/managers/room-manager';
 import { WordService } from '../src/services/word-service';
 
@@ -81,9 +81,30 @@ describe('Room Logic', () => {
 	});
 
 	it('should create room with custom config', () => {
-		const config = { mode: 'WORDS', wordCount: 50 };
+		const config: RoomConfig = { mode: RaceModeEnum.WORDS, wordCount: 50 };
 		const room = roomManager.createRoom(config);
-		expect(room.config.mode).toBe('WORDS');
+		expect(room.config.mode).toBe(RaceModeEnum.WORDS);
 		expect(room.text.length).toBe(50);
+	});
+
+	it('should promote new host when old one leaves', () => {
+		const room = roomManager.createRoom();
+		room.addParticipant('s1', 'u1');
+		room.addParticipant('s2', 'u2');
+
+		expect(room.participants.get('s1')?.isHost).toBe(true);
+
+		room.removeParticipant('s1');
+		expect(room.participants.get('s2')?.isHost).toBe(true);
+	});
+
+	it('should update config and text', () => {
+		const room = roomManager.createRoom();
+		const newConfig: RoomConfig = { mode: RaceModeEnum.WORDS, wordCount: 10 };
+
+		roomManager.updateRoomConfig(room.id, newConfig);
+
+		expect(room.config.wordCount).toBe(10);
+		expect(room.text.length).toBe(10);
 	});
 });
