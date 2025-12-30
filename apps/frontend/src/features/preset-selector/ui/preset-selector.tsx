@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
-import { type Preset, presetApi } from '../api/preset.api';
+import { type Preset, presetApi } from '../model/api';
 
 interface PresetSelectorProps {
 	onSelect: (preset: Preset) => void;

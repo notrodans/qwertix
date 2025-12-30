@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { Participant } from '@/entities/room';
+import { formatAccuracy, formatConsistency, formatWPM } from '../domain/format';
 import { ReplayVisualizer } from './replay-visualizer';
 
 interface ResultsScreenProps {
@@ -29,22 +30,22 @@ export function ResultsScreen({
 				<div className="grid grid-cols-4 gap-4">
 					<StatBox
 						label="WPM"
-						value={Math.round(stats.wpm)}
+						value={formatWPM(stats.wpm)}
 						color="text-emerald-400"
 					/>
 					<StatBox
 						label="ACC"
-						value={`${stats.accuracy}%`}
+						value={formatAccuracy(stats.accuracy)}
 						color="text-yellow-400"
 					/>
 					<StatBox
 						label="RAW"
-						value={Math.round(stats.raw)}
+						value={formatWPM(stats.raw)}
 						color="text-zinc-400"
 					/>
 					<StatBox
 						label="CONS"
-						value={`${stats.consistency}%`}
+						value={formatConsistency(stats.consistency)}
 						color="text-zinc-400"
 					/>
 				</div>
@@ -62,7 +63,7 @@ export function ResultsScreen({
 									>
 										<span>{p.username}</span>
 										<span className="font-mono text-emerald-400">
-											{Math.round(p.wpm)} WPM
+											{formatWPM(p.wpm)} WPM
 										</span>
 									</div>
 								))}
