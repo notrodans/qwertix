@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { DataBase } from '../src/db';
-import { AuthService } from '../src/services/auth.service';
+import { DataBase } from '../../src/db';
+import { AuthService } from '../../src/services/auth.service';
 
 const { mockSelect, mockInsert, mockExecute } = vi.hoisted(() => {
 	const mockExecute = vi.fn();

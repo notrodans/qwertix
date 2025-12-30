@@ -65,7 +65,7 @@ export function useTyping(
 				// Check word completion if space was typed
 				if (event.key === ' ') {
 					const newConfirmedIndex = checkWordCompletion(next, targetText);
-					if (newConfirmedIndex !== null) {
+					if (newConfirmedIndex !== -1) {
 						setConfirmedIndex(newConfirmedIndex);
 					}
 				}

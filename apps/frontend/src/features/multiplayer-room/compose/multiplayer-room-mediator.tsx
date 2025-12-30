@@ -1,5 +1,5 @@
-import { type Participant } from '@/entities/room';
 import { type ReactNode, useState } from 'react';
+import { type Participant } from '@/entities/room';
 import { useMultiplayerRoom } from '../model/use-multiplayer-room';
 import { Lobby } from '../ui/lobby';
 import { MultiplayerBoard } from '../ui/multiplayer-board';
@@ -32,9 +32,9 @@ export function MultiplayerRoomMediator({
 	const [username] = useState(
 		() => `Guest-${Math.floor(Math.random() * 1000)}`,
 	);
-	const [localStats, setLocalStats] = useState<(LocalResult & { fullText: string }) | null>(
-		null,
-	);
+	const [localStats, setLocalStats] = useState<
+		(LocalResult & { fullText: string }) | null
+	>(null);
 
 	const {
 		room,
@@ -54,7 +54,9 @@ export function MultiplayerRoomMediator({
 	});
 
 	if (error) {
-		return <RoomLayout error={<div className="text-red-400">Error: {error}</div>} />;
+		return (
+			<RoomLayout error={<div className="text-red-400">Error: {error}</div>} />
+		);
 	}
 
 	if (!room) {

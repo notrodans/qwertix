@@ -95,22 +95,54 @@ export class Room {
 		}
 	}
 
-	updateProgress(id: string, progress: number, wpm: number): void {
+	updateProgress(id: string, typedLength: number): void {
 		const participant = this._participants.get(id);
-		if (!participant) return;
+		if (!participant || !this._raceStartTime) return;
 
-		participant.progress = progress;
-		participant.wpm = wpm;
+		const now = Date.now();
+		const totalLength = this._text.join(' ').length;
+
+		participant.progress = this.calculateProgress(typedLength, totalLength);
+		participant.wpm = this.calculateWPM(typedLength, this._raceStartTime, now);
 
 		if (this._config.mode === RaceModeEnum.WORDS) {
-			// Simple progress check 100%
-			if (progress >= 100 && !participant.finishedAt) {
-				participant.finishedAt = Date.now();
+			if (participant.progress >= 100 && !participant.finishedAt) {
+				participant.finishedAt = now;
 				participant.rank = this.getNextRank();
 			}
 		}
-		// TIME mode finish is handled by server timer usually, or client saying "time up"
-		// But conceptually, in time mode, you don't "finish" until time is up.
+	}
+
+	public getParticipantFinalStats(
+		socketId: string,
+		replayData: { key: string; timestamp: number }[],
+	) {
+		const participant = this._participants.get(socketId);
+		if (!participant || !this._raceStartTime) return null;
+
+		const now = Date.now();
+		let reconstructedTypedText = '';
+		for (const event of replayData) {
+			if (event.key === 'Backspace') {
+				reconstructedTypedText = reconstructedTypedText.slice(0, -1);
+			} else if (event.key.length === 1) {
+				reconstructedTypedText += event.key;
+			}
+		}
+
+		const targetText = this._text.join(' ');
+		const accuracy = this.calculateAccuracy(reconstructedTypedText, targetText);
+		const wpm = this.calculateWPM(
+			reconstructedTypedText.length,
+			this._raceStartTime,
+			now,
+		);
+
+		return {
+			wpm,
+			raw: wpm,
+			accuracy,
+		};
 	}
 
 	private getNextRank(): number {
@@ -136,7 +168,6 @@ export class Room {
 	restart(): void {
 		this._status = 'LOBBY';
 		this._raceStartTime = null;
-		// Reset participants progress
 		for (const p of this._participants.values()) {
 			p.progress = 0;
 			p.wpm = 0;
@@ -168,6 +199,32 @@ export class Room {
 			return true;
 		}
 		return false;
+	}
+
+	private calculateWPM(
+		typedLength: number,
+		startTime: number,
+		now: number,
+	): number {
+		const timeMinutes = (now - startTime) / 60000;
+		const charactersPerWord = 5;
+		const words = typedLength / charactersPerWord;
+		return timeMinutes > 0 ? words / timeMinutes : 0;
+	}
+
+	private calculateAccuracy(typedText: string, targetText: string): number {
+		if (typedText.length === 0) return 100;
+		let correct = 0;
+		const length = Math.min(typedText.length, targetText.length);
+		for (let i = 0; i < length; i++) {
+			if (typedText[i] === targetText[i]) correct++;
+		}
+		return Math.round((correct / typedText.length) * 100);
+	}
+
+	private calculateProgress(typedLength: number, totalLength: number): number {
+		if (totalLength === 0) return 0;
+		return Math.min((typedLength / totalLength) * 100, 100);
 	}
 
 	toDTO(): RoomDTO {

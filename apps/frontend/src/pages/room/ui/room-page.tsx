@@ -1,10 +1,5 @@
-import { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { type Participant } from '@/entities/room';
-import {
-	type LocalResult,
-	MultiplayerRoomMediator,
-} from '@/features/multiplayer-room';
+import { MultiplayerRoomMediator } from '@/features/multiplayer-room';
 import { ResultsScreen } from '@/features/results';
 import { Header } from '@/widgets/header';
 import { MainLayout } from '@/widgets/layout';

@@ -1,9 +1,10 @@
+import { defineConfig } from 'eslint/config';
 import boundaries from 'eslint-plugin-boundaries';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
-export default tseslint.config({
-	ignores: ['dist', 'src/shared/api/schema/generated.ts'],
+export default defineConfig({
+	ignores: ['!**/node_modules/', 'dist'],
 	files: ['**/*.{ts,tsx}'],
 	languageOptions: {
 		parser: tseslint.parser,
@@ -11,6 +12,7 @@ export default tseslint.config({
 		globals: globals.browser,
 	},
 	plugins: {
+		'@typescript-eslint': tseslint.plugin,
 		boundaries,
 	},
 	settings: {

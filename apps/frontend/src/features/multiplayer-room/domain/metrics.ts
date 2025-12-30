@@ -4,7 +4,8 @@ export function calculateWPM(
 	now: number,
 ): number {
 	const timeMinutes = (now - startTime) / 60000;
-	const words = typedLength / 5;
+	const charactersPerWord = 5;
+	const words = typedLength / charactersPerWord;
 	return timeMinutes > 0 ? words / timeMinutes : 0;
 }
 

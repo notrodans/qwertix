@@ -55,12 +55,6 @@ export function LoginPage() {
 						Login
 					</button>
 				</form>
-				<div className="text-center text-sm text-zinc-500">
-					Don't have an account?{' '}
-					<a href="/register" className="text-emerald-400 hover:underline">
-						Register
-					</a>
-				</div>
 			</div>
 		</div>
 	);

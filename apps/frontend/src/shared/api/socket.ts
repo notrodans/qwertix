@@ -57,16 +57,13 @@ export class SocketService {
 		if (!this.listeners.has(type)) {
 			this.listeners.set(type, new Set());
 		}
-		// Cast to any for storage. The public API `on<T>` ensures type safety at the call site.
-		// biome-ignore lint/suspicious/noExplicitAny: internal storage casting
-		this.listeners.get(type)?.add(handler as MessageHandler<any>);
+		this.listeners.get(type)?.add(handler);
 
 		return () => this.off(type, handler);
 	}
 
 	off<T>(type: string, handler: MessageHandler<T>) {
-		// biome-ignore lint/suspicious/noExplicitAny: internal storage casting
-		this.listeners.get(type)?.delete(handler as MessageHandler<any>);
+		this.listeners.get(type)?.delete(handler);
 	}
 
 	private dispatch(type: string, payload: unknown) {

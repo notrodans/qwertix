@@ -18,6 +18,5 @@ export const env = createEnv({
 		JWT_SECRET: z.string().default('supersecret'),
 	},
 	runtimeEnv: process.env,
-
 	emptyStringAsUndefined: true,
 });

@@ -149,8 +149,8 @@ export function useMultiplayerRoom(
 		socketService.send('START_RACE', {});
 	};
 
-	const updateProgress = (progress: number, wpm: number) => {
-		socketService.send('UPDATE_PROGRESS', { progress, wpm });
+	const updateProgress = (typedLength: number) => {
+		socketService.send('UPDATE_PROGRESS', { typedLength });
 	};
 
 	const updateSettings = (config: RoomConfig) => {

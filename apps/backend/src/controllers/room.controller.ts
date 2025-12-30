@@ -20,7 +20,7 @@ export class RoomController {
 			}
 
 			const room = this.roomManager.createRoom(config);
-			return reply.send({ roomId: room.id });
+			return reply.send({ roomId: room.id() });
 		});
 
 		app.get('/rooms/:roomId', async (req, reply) => {

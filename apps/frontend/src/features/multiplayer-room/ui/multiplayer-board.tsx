@@ -2,11 +2,7 @@ import { RaceModeEnum } from '@qwertix/room-contracts';
 import { useEffect, useRef, useState } from 'react';
 import type { Participant, RoomConfig } from '@/entities/room';
 import { TextDisplay, useTyping } from '@/entities/typing-text';
-import {
-	calculateAccuracy,
-	calculateProgress,
-	calculateWPM,
-} from '../domain/metrics';
+import { calculateAccuracy, calculateWPM } from '../domain/metrics';
 
 interface TypingStats {
 	wpm: number;
@@ -20,7 +16,7 @@ interface TypingStats {
 interface MultiplayerBoardProps {
 	text: string;
 	config: RoomConfig;
-	onProgress: (progress: number, wpm: number) => void;
+	onProgress: (typedLength: number) => void;
 	onLoadMore: () => void;
 	onSubmit: (stats: TypingStats) => void;
 	status: 'COUNTDOWN' | 'RACING' | 'FINISHED';
@@ -96,14 +92,12 @@ export function MultiplayerBoard({
 			return;
 		}
 
-		// Calculate progress and WPM
+		// Calculate progress and WPM for local display (optional, but keep for now)
 		const currentTypedLength = accumulatedLength + userTyped.length;
-		const progress = calculateProgress(userTyped.length, text.length);
-		const wpm = calculateWPM(currentTypedLength, startTime, Date.now());
 
-		// Throttle updates
+		// Throttle updates to server
 		const timer = setTimeout(() => {
-			onProgress(progress, wpm);
+			onProgress(currentTypedLength);
 		}, 200);
 
 		// Check if we need more words (infinite scroll)
@@ -118,6 +112,7 @@ export function MultiplayerBoard({
 			text.length > 0
 		) {
 			const accuracy = calculateAccuracy(userTyped, text);
+			const wpm = calculateWPM(currentTypedLength, startTime, Date.now());
 			onSubmit({
 				wpm,
 				raw: wpm,

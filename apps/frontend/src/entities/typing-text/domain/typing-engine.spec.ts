@@ -69,24 +69,24 @@ describe('typing-engine', () => {
 	});
 
 	describe('checkWordCompletion', () => {
-		it('should NOT lock (return null) when incomplete word is skipped via space', () => {
+		it('should NOT lock (return -1) when incomplete word is skipped via space', () => {
 			const target = 'hello world';
 			// User types "hel " (incomplete)
 			const typed = 'hel ';
 
 			// Should NOT confirm because it's incomplete
 			const result = checkWordCompletion(typed, target);
-			expect(result).toBeNull();
+			expect(result).toBe(-1);
 		});
 
-		it('should NOT lock (return null) when incorrect word is skipped via space', () => {
+		it('should NOT lock (return -1) when incorrect word is skipped via space', () => {
 			const target = 'hello world';
 			// User types "hexx " (incorrect)
 			const typed = 'hexx ';
 
 			// Should NOT confirm
 			const result = checkWordCompletion(typed, target);
-			expect(result).toBeNull();
+			expect(result).toBe(-1);
 		});
 
 		it('should LOCK (return index) when word is typed CORRECTLY', () => {
@@ -119,7 +119,7 @@ describe('typing-engine', () => {
 
 			const result = checkWordCompletion(typed, target);
 
-			expect(result).toBeNull();
+			expect(result).toBe(-1);
 		});
 	});
 });

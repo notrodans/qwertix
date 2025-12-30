@@ -52,12 +52,9 @@ export function appendCharacter(current: string, char: string): string {
  * Checks if the current word is completed correctly and returns the new confirmed index.
  * Returns null if the word is not completed or incorrect.
  */
-export function checkWordCompletion(
-	typed: string,
-	targetText: string,
-): number | null {
+export function checkWordCompletion(typed: string, targetText: string): number {
 	// We only check on space
-	if (!typed.endsWith(' ')) return null;
+	if (!typed.endsWith(' ')) return -1;
 
 	// Calculate which word index we are on based on spaces in 'typed'
 	// 'typed' has just been updated with a space at the end.
@@ -88,7 +85,7 @@ export function checkWordCompletion(
 		}
 	}
 
-	return null;
+	return -1;
 }
 
 /**

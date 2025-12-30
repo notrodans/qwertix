@@ -50,7 +50,7 @@ export function PresetSelector({
 						>
 							<span className="font-bold">{preset.name}</span>
 							<span className="ml-2 text-xs text-zinc-500">
-								{preset.config.mode}{' '}
+								{preset.config.mode}
 								{preset.config.mode === 'TIME'
 									? `${preset.config.duration}s`
 									: `${preset.config.wordCount}w`}

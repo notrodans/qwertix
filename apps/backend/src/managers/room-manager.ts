@@ -41,7 +41,7 @@ export class RoomManager {
 
 	updateRoomConfig(roomId: string, config: RoomConfig): boolean {
 		const room = this.getRoom(roomId);
-		if (!room || room.status !== 'LOBBY') return false;
+		if (!room || room.status() !== 'LOBBY') return false;
 
 		const initialWordCount =
 			config.mode === RaceModeEnum.WORDS ? config.wordCount : 50;

@@ -69,7 +69,7 @@ export class SocketManager {
 			case 'UPDATE_PROGRESS':
 				this.handleUpdateProgress(
 					ws,
-					msg.payload as { progress: number; wpm: number },
+					msg.payload as { typedLength: number },
 				);
 				break;
 			case 'UPDATE_SETTINGS':
@@ -213,10 +213,11 @@ export class SocketManager {
 			this.broadcastToRoom(room, 'RACE_START', {});
 
 			// Handle automatic termination for TIME mode
-			if (room.config().mode === RaceModeEnum.TIME && room.config().duration) {
+			const config = room.config();
+			if (config.mode === RaceModeEnum.TIME && config.duration) {
 				setTimeout(() => {
 					this.terminateRace(room);
-				}, room.config().duration * 1000);
+				}, config.duration * 1000);
 			}
 		}, 5000);
 	}
@@ -234,13 +235,13 @@ export class SocketManager {
 
 	private handleUpdateProgress(
 		ws: ExtendedWebSocket,
-		payload: { progress: number; wpm: number },
+		payload: { typedLength: number },
 	) {
 		if (!ws.roomId || !ws.userId) return;
 		const room = this.roomManager.getRoom(ws.roomId);
 		if (!room || room.status() !== 'RACING') return;
 
-		room.updateProgress(ws.userId, payload.progress, payload.wpm);
+		room.updateProgress(ws.userId, payload.typedLength);
 
 		this.broadcastToRoom(
 			room,
@@ -268,12 +269,27 @@ export class SocketManager {
 	) {
 		try {
 			const room = ws.roomId ? this.roomManager.getRoom(ws.roomId) : null;
+			if (!room || !ws.userId) {
+				this.send(ws, 'ERROR', {
+					message: 'Room not found for result submission',
+				});
+				return;
+			}
+
+			// Authoritative calculation on backend
+			const stats = room.getParticipantFinalStats(ws.userId, payload.replayData);
+
+			if (!stats) {
+				this.send(ws, 'ERROR', { message: 'Failed to calculate stats' });
+				return;
+			}
+
 			await this.resultService.saveResult(
 				ws.dbUserId || null,
-				room?.presetId() || null,
-				payload.wpm,
-				payload.raw,
-				payload.accuracy,
+				room.presetId() || null,
+				stats.wpm,
+				stats.raw,
+				stats.accuracy,
 				payload.consistency,
 				payload.replayData,
 			);
