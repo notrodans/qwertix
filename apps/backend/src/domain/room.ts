@@ -101,6 +101,27 @@ export class Room {
 		this.text.push(...newWords);
 	}
 
+	updateConfig(config: RoomConfig, newText?: string[]): void {
+		this.config = config;
+		if (newText) {
+			this.text = newText;
+		}
+	}
+
+	transferHost(targetSocketId: string): boolean {
+		const currentHost = Array.from(this.participants.values()).find(
+			(p) => p.isHost,
+		);
+		const targetParticipant = this.participants.get(targetSocketId);
+
+		if (targetParticipant && currentHost) {
+			currentHost.isHost = false;
+			targetParticipant.isHost = true;
+			return true;
+		}
+		return false;
+	}
+
 	toDTO(): RoomDTO {
 		return {
 			id: this.id,

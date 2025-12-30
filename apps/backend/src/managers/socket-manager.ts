@@ -1,3 +1,4 @@
+import { RaceModeEnum, type RoomConfig } from '@qwertix/room-contracts';
 import type { FastifyBaseLogger, FastifyInstance } from 'fastify';
 import { v4 as uuid } from 'uuid';
 import { WebSocket, WebSocketServer } from 'ws';
@@ -71,6 +72,12 @@ export class SocketManager {
 					msg.payload as { progress: number; wpm: number },
 				);
 				break;
+			case 'UPDATE_SETTINGS':
+				this.handleUpdateSettings(ws, msg.payload as RoomConfig);
+				break;
+			case 'TRANSFER_HOST':
+				this.handleTransferHost(ws, msg.payload as { targetId: string });
+				break;
 			case 'LOAD_MORE_WORDS':
 				this.handleLoadMoreWords(ws);
 				break;
@@ -80,6 +87,50 @@ export class SocketManager {
 			case 'LEAVE_ROOM':
 				this.handleDisconnect(ws);
 				break;
+		}
+	}
+
+	private handleUpdateSettings(ws: ExtendedWebSocket, config: RoomConfig) {
+		if (!ws.roomId || !ws.userId) return;
+		const room = this.roomManager.getRoom(ws.roomId);
+		if (!room) return;
+
+		const participant = room.participants.get(ws.userId);
+		if (!participant?.isHost) {
+			this.send(ws, 'ERROR', { message: 'Only host can change settings' });
+			return;
+		}
+
+		if (this.roomManager.updateRoomConfig(ws.roomId, config)) {
+			this.broadcastToRoom(room, 'ROOM_UPDATE', room.toDTO());
+		}
+	}
+
+	private handleTransferHost(
+		ws: ExtendedWebSocket,
+		payload: { targetId: string },
+	) {
+		if (!ws.roomId || !ws.userId) return;
+		const room = this.roomManager.getRoom(ws.roomId);
+		if (!room) return;
+
+		const sender = room.participants.get(ws.userId);
+		if (!sender?.isHost) {
+			this.send(ws, 'ERROR', { message: 'Only host can transfer role' });
+			return;
+		}
+
+		if (room.transferHost(payload.targetId)) {
+			this.broadcastToRoom(room, 'ROOM_UPDATE', room.toDTO());
+			// Optionally send individual notification
+			const targetWs = Array.from(this.wss.clients).find(
+				(c) => (c as ExtendedWebSocket).userId === payload.targetId,
+			);
+			if (targetWs) {
+				this.send(targetWs, 'HOST_PROMOTED', {
+					message: 'You are now the host',
+				});
+			}
 		}
 	}
 
@@ -141,7 +192,25 @@ export class SocketManager {
 		setTimeout(() => {
 			room.startRacing();
 			this.broadcastToRoom(room, 'RACE_START', {});
+
+			// Handle automatic termination for TIME mode
+			if (room.config.mode === RaceModeEnum.TIME && room.config.duration) {
+				setTimeout(() => {
+					this.terminateRace(room);
+				}, room.config.duration * 1000);
+			}
 		}, 5000);
+	}
+
+	private terminateRace(room: Room) {
+		if (room.status !== 'RACING') return;
+
+		room.status = 'FINISHED';
+		this.broadcastToRoom(room, 'RACE_FINISHED', {
+			leaderboard: Array.from(room.participants.values()).sort(
+				(a, b) => (a.rank || 999) - (b.rank || 999),
+			),
+		});
 	}
 
 	private handleUpdateProgress(
@@ -213,6 +282,7 @@ export class SocketManager {
 		if (ws.roomId && ws.userId) {
 			const room = this.roomManager.getRoom(ws.roomId);
 			if (room) {
+				const wasHost = room.participants.get(ws.userId)?.isHost;
 				room.removeParticipant(ws.userId);
 				this.broadcastToRoom(room, 'PLAYER_LEFT', { userId: ws.userId });
 
@@ -220,6 +290,23 @@ export class SocketManager {
 					this.roomManager.deleteRoom(ws.roomId);
 				} else {
 					this.broadcastToRoom(room, 'ROOM_UPDATE', room.toDTO());
+
+					// Notify new host if role changed
+					if (wasHost) {
+						const newHost = Array.from(room.participants.values()).find(
+							(p) => p.isHost,
+						);
+						if (newHost) {
+							const hostWs = Array.from(this.wss.clients).find(
+								(c) => (c as ExtendedWebSocket).userId === newHost.socketId,
+							);
+							if (hostWs) {
+								this.send(hostWs, 'HOST_PROMOTED', {
+									message: 'You are now the host',
+								});
+							}
+						}
+					}
 				}
 			}
 		}

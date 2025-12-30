@@ -39,6 +39,18 @@ export class RoomManager {
 		return newWords;
 	}
 
+	updateRoomConfig(roomId: string, config: RoomConfig): boolean {
+		const room = this.getRoom(roomId);
+		if (!room || room.status !== 'LOBBY') return false;
+
+		const initialWordCount =
+			config.mode === RaceModeEnum.WORDS ? config.wordCount : 50;
+		const text = this.wordService.getWords(initialWordCount);
+
+		room.updateConfig(config, text);
+		return true;
+	}
+
 	getRoom(id: string): Room | undefined {
 		return this.rooms.get(id);
 	}

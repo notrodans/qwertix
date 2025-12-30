@@ -1,10 +1,23 @@
 import { env } from '@env';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
-import { type Participant, type Room, roomQueries } from '@/entities/room';
+import {
+	type Participant,
+	RaceModeEnum,
+	type Room,
+	type RoomConfig,
+	roomQueries,
+} from '@/entities/room';
 import { socketService } from '@/shared/api/socket';
 
-export function useMultiplayerRoom(roomId: string, username: string) {
+export function useMultiplayerRoom(
+	roomId: string,
+	username: string,
+	options?: {
+		onWordsAppended?: (words: string[]) => void;
+		onHostPromoted?: (message: string) => void;
+	},
+) {
 	const [room, setRoom] = useState<Room | null>(null);
 	const [error, setError] = useState<string | null>(null);
 
@@ -58,7 +71,6 @@ export function useMultiplayerRoom(roomId: string, username: string) {
 
 		const handleCountdown = (_payload: { startTime: number }) => {
 			setRoom((prev) => (prev ? { ...prev, status: 'COUNTDOWN' } : null));
-			// Could also store startTime to show countdown timer
 		};
 
 		const handleRaceStart = () => {
@@ -86,11 +98,20 @@ export function useMultiplayerRoom(roomId: string, username: string) {
 		const handleWordsAppended = (payload: { words: string[] }) => {
 			setRoom((prev) => {
 				if (!prev) return null;
+				// If we want to clear what was written (performance optimization for Time mode)
+				// we replace the text instead of appending.
+				const isTimeMode = prev.config.mode === RaceModeEnum.TIME;
+
 				return {
 					...prev,
-					text: [...prev.text, ...payload.words],
+					text: isTimeMode ? payload.words : [...prev.text, ...payload.words],
 				};
 			});
+			options?.onWordsAppended?.(payload.words);
+		};
+
+		const handleHostPromoted = (payload: { message: string }) => {
+			options?.onHostPromoted?.(payload.message);
 		};
 
 		const handleError = (payload: { message: string }) => {
@@ -98,6 +119,7 @@ export function useMultiplayerRoom(roomId: string, username: string) {
 		};
 
 		// Listeners
+
 		const unsubs = [
 			socketService.on('ROOM_STATE', handleRoomState),
 			socketService.on('PLAYER_JOINED', handlePlayerJoined),
@@ -107,10 +129,13 @@ export function useMultiplayerRoom(roomId: string, username: string) {
 			socketService.on('PROGRESS_UPDATE', handleProgressUpdate),
 			socketService.on('RACE_FINISHED', handleRaceFinished),
 			socketService.on('WORDS_APPENDED', handleWordsAppended),
+			socketService.on('HOST_PROMOTED', handleHostPromoted),
+			socketService.on('ROOM_UPDATE', handleRoomState),
 			socketService.on('ERROR', handleError),
 		];
 
 		// Join Room once connected
+
 		const joinRoom = () => {
 			socketService.send('JOIN_ROOM', { roomId, username });
 		};
@@ -135,6 +160,14 @@ export function useMultiplayerRoom(roomId: string, username: string) {
 		socketService.send('UPDATE_PROGRESS', { progress, wpm });
 	};
 
+	const updateSettings = (config: RoomConfig) => {
+		socketService.send('UPDATE_SETTINGS', config);
+	};
+
+	const transferHost = (targetId: string) => {
+		socketService.send('TRANSFER_HOST', { targetId });
+	};
+
 	const loadMoreWords = () => {
 		socketService.send('LOAD_MORE_WORDS', {});
 	};
@@ -154,6 +187,8 @@ export function useMultiplayerRoom(roomId: string, username: string) {
 		error,
 		startRace,
 		updateProgress,
+		updateSettings,
+		transferHost,
 		loadMoreWords,
 		submitResult,
 		currentUser: room?.participants.find((p) => p.username === username),

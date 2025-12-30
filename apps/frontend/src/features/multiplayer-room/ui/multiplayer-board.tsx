@@ -1,6 +1,12 @@
+import { RaceModeEnum } from '@qwertix/room-contracts';
 import { useEffect, useRef, useState } from 'react';
-import type { Participant } from '@/entities/room';
+import type { Participant, RoomConfig } from '@/entities/room';
 import { TextDisplay, useTyping } from '@/entities/typing-text';
+import {
+	calculateAccuracy,
+	calculateProgress,
+	calculateWPM,
+} from '../domain/metrics';
 
 interface TypingStats {
 	wpm: number;
@@ -12,6 +18,7 @@ interface TypingStats {
 
 interface MultiplayerBoardProps {
 	text: string;
+	config: RoomConfig;
 	onProgress: (progress: number, wpm: number) => void;
 	onLoadMore: () => void;
 	onSubmit: (stats: TypingStats) => void;
@@ -22,6 +29,7 @@ interface MultiplayerBoardProps {
 
 export function MultiplayerBoard({
 	text,
+	config,
 	onProgress,
 	onLoadMore,
 	onSubmit,
@@ -30,9 +38,22 @@ export function MultiplayerBoard({
 	currentUser,
 }: MultiplayerBoardProps) {
 	const containerRef = useRef<HTMLDivElement>(null);
-	const { userTyped, caretPos, replayData } = useTyping(text, containerRef);
+	const { userTyped, caretPos, replayData, setUserTyped } = useTyping(
+		text,
+		containerRef,
+	);
 	const [startTime, setStartTime] = useState<number | null>(null);
 	const [submitted, setSubmitted] = useState(false);
+	const [timeLeft, setTimeLeft] = useState<number | null>(null);
+
+	// Clear typed text when the target text is replaced (Time mode optimization)
+	const prevTextRef = useRef(text);
+	useEffect(() => {
+		if (config.mode === RaceModeEnum.TIME && prevTextRef.current !== text) {
+			setUserTyped('');
+		}
+		prevTextRef.current = text;
+	}, [text, config.mode, setUserTyped]);
 
 	useEffect(() => {
 		if (status === 'RACING' && !startTime) {
@@ -40,17 +61,35 @@ export function MultiplayerBoard({
 		}
 	}, [status, startTime]);
 
+	// Timer for Time Mode
+	useEffect(() => {
+		if (
+			status === 'RACING' &&
+			startTime &&
+			config.mode === RaceModeEnum.TIME &&
+			config.duration
+		) {
+			const interval = setInterval(() => {
+				const elapsed = (Date.now() - startTime) / 1000;
+				const remaining = Math.max(0, config.duration - elapsed);
+				setTimeLeft(Math.ceil(remaining));
+
+				if (remaining <= 0) {
+					clearInterval(interval);
+				}
+			}, 1000);
+			return () => clearInterval(interval);
+		}
+	}, [status, startTime, config]);
+
 	useEffect(() => {
 		if (status !== 'RACING' || !startTime || submitted) return;
 
 		// Calculate progress and WPM
-		const progress = Math.min((userTyped.length / text.length) * 100, 100);
+		const progress = calculateProgress(userTyped.length, text.length);
+		const wpm = calculateWPM(userTyped.length, startTime, Date.now());
 
-		const timeMinutes = (Date.now() - startTime) / 60000;
-		const words = userTyped.length / 5;
-		const wpm = timeMinutes > 0 ? words / timeMinutes : 0;
-
-		// Throttle updates (e.g., every 500ms or on significant change)
+		// Throttle updates
 		const timer = setTimeout(() => {
 			onProgress(progress, wpm);
 		}, 200);
@@ -61,19 +100,13 @@ export function MultiplayerBoard({
 		}
 
 		// Check completion (for WORDS mode)
-		if (userTyped.length === text.length && text.length > 0) {
-			// Calculate accuracy: check how many chars match targetText
-			let correct = 0;
-			for (let i = 0; i < text.length; i++) {
-				if (userTyped[i] === text[i]) correct++;
-			}
-			const accuracy = Math.round((correct / text.length) * 100);
-
-			// Raw WPM: (all characters typed / 5) / time
-			const raw = wpm; // In a real app, this would include errors too
-			const consistency = 100; // Simplified for now
-
-			onSubmit({ wpm, raw, accuracy, consistency, replayData });
+		if (
+			config.mode === RaceModeEnum.WORDS &&
+			userTyped.length === text.length &&
+			text.length > 0
+		) {
+			const accuracy = calculateAccuracy(userTyped, text);
+			onSubmit({ wpm, raw: wpm, accuracy, consistency: 100, replayData });
 			setSubmitted(true);
 		}
 
@@ -89,22 +122,36 @@ export function MultiplayerBoard({
 		submitted,
 		replayData,
 		text,
+		config,
 	]);
 
 	// Handle Forced Finish (Time Mode)
 	useEffect(() => {
 		if (status === 'FINISHED' && !submitted && startTime) {
-			const timeMinutes = (Date.now() - startTime) / 60000;
-			const words = userTyped.length / 5;
-			const wpm = timeMinutes > 0 ? words / timeMinutes : 0;
+			const wpm = calculateWPM(userTyped.length, startTime, Date.now());
 
 			onSubmit({ wpm, raw: wpm, accuracy: 100, consistency: 100, replayData });
 			setSubmitted(true);
 		}
 	}, [status, submitted, startTime, userTyped, onSubmit, replayData]);
 
+	const remainingWords =
+		config.mode === RaceModeEnum.WORDS
+			? text.split(' ').length - userTyped.split(' ').length + 1
+			: null;
+
 	return (
 		<div className="w-full max-w-4xl mx-auto space-y-8">
+			{/* Indicators */}
+			<div className="flex justify-center text-4xl font-black text-yellow-500 font-mono h-12">
+				{config.mode === RaceModeEnum.TIME && timeLeft !== null && (
+					<div className="animate-pulse">{timeLeft}s</div>
+				)}
+				{config.mode === RaceModeEnum.WORDS && remainingWords !== null && (
+					<div>{remainingWords} words left</div>
+				)}
+			</div>
+
 			{/* Opponents Progress */}
 			<div className="space-y-2 bg-gray-900/50 p-4 rounded-lg">
 				{participants

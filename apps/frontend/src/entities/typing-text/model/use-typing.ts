@@ -94,5 +94,7 @@ export function useTyping(
 		caretPos,
 		reset,
 		replayData,
+		setUserTyped,
+		setReplayData,
 	};
 }
