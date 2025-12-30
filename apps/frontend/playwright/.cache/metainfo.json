@@ -1,0 +1,309 @@
+{
+  "version": "1.57.0",
+  "viteVersion": "6.4.1",
+  "registerSourceHash": "ea233d95b980072c81eb49458aee55f5d33fdb02",
+  "components": [
+    {
+      "id": "_home_notrodans_projects_wartype_apps_frontend_src_widgets_typing_board_ui_typing_board_TypingBoard",
+      "filename": "/home/notrodans/projects/wartype/apps/frontend/src/widgets/typing-board/ui/typing-board.ct.tsx",
+      "importSource": "./typing-board",
+      "remoteName": "TypingBoard"
+    }
+  ],
+  "sources": {
+    "/home/notrodans/projects/wartype/apps/frontend/playwright/index.html": {
+      "timestamp": 1767059738379.581
+    },
+    "/home/notrodans/projects/wartype/apps/frontend/playwright/index.tsx": {
+      "timestamp": 1767059744142.6248
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/react@19.2.3/node_modules/react/jsx-runtime.js": {
+      "timestamp": 1766427396144.9468
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+react-query@5.90.12+83d5fd7b249dbeef/node_modules/@tanstack/react-query/build/modern/index.js": {
+      "timestamp": 1766776768335.39
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/react@19.2.3/node_modules/react/index.js": {
+      "timestamp": 1766427396144.8699
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/react-dom@19.2.3+83d5fd7b249dbeef/node_modules/react-dom/client.js": {
+      "timestamp": 1766427395389.0605
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/@playwright+experimental-ct-react@1.57.0+244a5dcb53f39a20/node_modules/@playwright/experimental-ct-react/hooks.mjs": {
+      "timestamp": 1767059713027.8809
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+query-core@5.90.12/node_modules/@tanstack/query-core/build/modern/index.js": {
+      "timestamp": 1766776769333.1484
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+react-query@5.90.12+83d5fd7b249dbeef/node_modules/@tanstack/react-query/build/modern/types.js": {
+      "timestamp": 1766776768335.8284
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+react-query@5.90.12+83d5fd7b249dbeef/node_modules/@tanstack/react-query/build/modern/useQueries.js": {
+      "timestamp": 1766776768336.2532
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+react-query@5.90.12+83d5fd7b249dbeef/node_modules/@tanstack/react-query/build/modern/useQuery.js": {
+      "timestamp": 1766776768336.2954
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+react-query@5.90.12+83d5fd7b249dbeef/node_modules/@tanstack/react-query/build/modern/useSuspenseQuery.js": {
+      "timestamp": 1766776768336.4285
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+react-query@5.90.12+83d5fd7b249dbeef/node_modules/@tanstack/react-query/build/modern/useSuspenseInfiniteQuery.js": {
+      "timestamp": 1766776768336.3413
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+react-query@5.90.12+83d5fd7b249dbeef/node_modules/@tanstack/react-query/build/modern/useSuspenseQueries.js": {
+      "timestamp": 1766776768336.3916
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+react-query@5.90.12+83d5fd7b249dbeef/node_modules/@tanstack/react-query/build/modern/usePrefetchQuery.js": {
+      "timestamp": 1766776768336.1956
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+react-query@5.90.12+83d5fd7b249dbeef/node_modules/@tanstack/react-query/build/modern/usePrefetchInfiniteQuery.js": {
+      "timestamp": 1766776768336.1484
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+react-query@5.90.12+83d5fd7b249dbeef/node_modules/@tanstack/react-query/build/modern/queryOptions.js": {
+      "timestamp": 1766776768335.712
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+react-query@5.90.12+83d5fd7b249dbeef/node_modules/@tanstack/react-query/build/modern/infiniteQueryOptions.js": {
+      "timestamp": 1766776768335.4373
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+react-query@5.90.12+83d5fd7b249dbeef/node_modules/@tanstack/react-query/build/modern/QueryClientProvider.js": {
+      "timestamp": 1766776768335.6072
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+react-query@5.90.12+83d5fd7b249dbeef/node_modules/@tanstack/react-query/build/modern/HydrationBoundary.js": {
+      "timestamp": 1766776768335.3423
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+react-query@5.90.12+83d5fd7b249dbeef/node_modules/@tanstack/react-query/build/modern/QueryErrorResetBoundary.js": {
+      "timestamp": 1766776768335.6538
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+react-query@5.90.12+83d5fd7b249dbeef/node_modules/@tanstack/react-query/build/modern/useIsFetching.js": {
+      "timestamp": 1766776768335.9927
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+react-query@5.90.12+83d5fd7b249dbeef/node_modules/@tanstack/react-query/build/modern/useMutationState.js": {
+      "timestamp": 1766776768336.0972
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+react-query@5.90.12+83d5fd7b249dbeef/node_modules/@tanstack/react-query/build/modern/useMutation.js": {
+      "timestamp": 1766776768336.0388
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+react-query@5.90.12+83d5fd7b249dbeef/node_modules/@tanstack/react-query/build/modern/mutationOptions.js": {
+      "timestamp": 1766776768335.5564
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+react-query@5.90.12+83d5fd7b249dbeef/node_modules/@tanstack/react-query/build/modern/useInfiniteQuery.js": {
+      "timestamp": 1766776768335.9304
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+react-query@5.90.12+83d5fd7b249dbeef/node_modules/@tanstack/react-query/build/modern/IsRestoringProvider.js": {
+      "timestamp": 1766776768335.505
+    },
+    "/home/notrodans/projects/wartype/apps/frontend/src/widgets/typing-board/ui/typing-board.tsx": {
+      "timestamp": 1767027971622.586
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/react@19.2.3/node_modules/react/cjs/react-jsx-runtime.production.js": {
+      "timestamp": 1766427396145.2402
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/react@19.2.3/node_modules/react/cjs/react.production.js": {
+      "timestamp": 1766427396145.553
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/react-dom@19.2.3+83d5fd7b249dbeef/node_modules/react-dom/cjs/react-dom-client.production.js": {
+      "timestamp": 1766427395389.8362
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+query-core@5.90.12/node_modules/@tanstack/query-core/build/modern/focusManager.js": {
+      "timestamp": 1766776769333.0564
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+query-core@5.90.12/node_modules/@tanstack/query-core/build/modern/hydration.js": {
+      "timestamp": 1766776769333.0989
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+query-core@5.90.12/node_modules/@tanstack/query-core/build/modern/infiniteQueryObserver.js": {
+      "timestamp": 1766776769333.2424
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+query-core@5.90.12/node_modules/@tanstack/query-core/build/modern/mutationCache.js": {
+      "timestamp": 1766776769333.3403
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+query-core@5.90.12/node_modules/@tanstack/query-core/build/modern/mutationObserver.js": {
+      "timestamp": 1766776769333.3757
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+query-core@5.90.12/node_modules/@tanstack/query-core/build/modern/notifyManager.js": {
+      "timestamp": 1766776769333.4077
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+query-core@5.90.12/node_modules/@tanstack/query-core/build/modern/onlineManager.js": {
+      "timestamp": 1766776769333.4424
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+query-core@5.90.12/node_modules/@tanstack/query-core/build/modern/queriesObserver.js": {
+      "timestamp": 1766776769333.5012
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+query-core@5.90.12/node_modules/@tanstack/query-core/build/modern/queryCache.js": {
+      "timestamp": 1766776769333.588
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+query-core@5.90.12/node_modules/@tanstack/query-core/build/modern/queryClient.js": {
+      "timestamp": 1766776769333.623
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+query-core@5.90.12/node_modules/@tanstack/query-core/build/modern/queryObserver.js": {
+      "timestamp": 1766776769333.671
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+query-core@5.90.12/node_modules/@tanstack/query-core/build/modern/retryer.js": {
+      "timestamp": 1766776769333.757
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+query-core@5.90.12/node_modules/@tanstack/query-core/build/modern/timeoutManager.js": {
+      "timestamp": 1766776769333.8877
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+query-core@5.90.12/node_modules/@tanstack/query-core/build/modern/streamedQuery.js": {
+      "timestamp": 1766776769333.79
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+query-core@5.90.12/node_modules/@tanstack/query-core/build/modern/utils.js": {
+      "timestamp": 1766776769333.9546
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+query-core@5.90.12/node_modules/@tanstack/query-core/build/modern/mutation.js": {
+      "timestamp": 1766776769333.2976
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+query-core@5.90.12/node_modules/@tanstack/query-core/build/modern/query.js": {
+      "timestamp": 1766776769333.5488
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+query-core@5.90.12/node_modules/@tanstack/query-core/build/modern/types.js": {
+      "timestamp": 1766776769333.9214
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+react-query@5.90.12+83d5fd7b249dbeef/node_modules/@tanstack/react-query/build/modern/errorBoundaryUtils.js": {
+      "timestamp": 1766776768335.227
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+react-query@5.90.12+83d5fd7b249dbeef/node_modules/@tanstack/react-query/build/modern/suspense.js": {
+      "timestamp": 1766776768335.7793
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+react-query@5.90.12+83d5fd7b249dbeef/node_modules/@tanstack/react-query/build/modern/useBaseQuery.js": {
+      "timestamp": 1766776768335.8792
+    },
+    "/home/notrodans/projects/wartype/apps/frontend/src/app/index.css": {
+      "timestamp": 1767047221192.3936
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/scheduler@0.27.0/node_modules/scheduler/index.js": {
+      "timestamp": 1766427395591.7144
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/react-dom@19.2.3+83d5fd7b249dbeef/node_modules/react-dom/index.js": {
+      "timestamp": 1766427395389.0942
+    },
+    "/home/notrodans/projects/wartype/apps/frontend/src/entities/typing-text/index.ts": {
+      "timestamp": 1767052218998.6924
+    },
+    "/home/notrodans/projects/wartype/apps/frontend/src/features/typing/pub/index.ts": {
+      "timestamp": 1767027708614.4282
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+query-core@5.90.12/node_modules/@tanstack/query-core/build/modern/subscribable.js": {
+      "timestamp": 1766776769333.8218
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+query-core@5.90.12/node_modules/@tanstack/query-core/build/modern/infiniteQueryBehavior.js": {
+      "timestamp": 1766776769333.1978
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+query-core@5.90.12/node_modules/@tanstack/query-core/build/modern/thenable.js": {
+      "timestamp": 1766776769333.8547
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+query-core@5.90.12/node_modules/@tanstack/query-core/build/modern/removable.js": {
+      "timestamp": 1766776769333.7249
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/react-dom@19.2.3+83d5fd7b249dbeef/node_modules/react-dom/cjs/react-dom.production.js": {
+      "timestamp": 1766427395393.3755
+    },
+    "/home/notrodans/projects/wartype/apps/frontend/src/entities/typing-text/domain/typing-engine.ts": {
+      "timestamp": 1767027890378.7173
+    },
+    "/home/notrodans/projects/wartype/apps/frontend/src/features/typing/compose/typing-session-layout.tsx": {
+      "timestamp": 1766864471829.4846
+    },
+    "/home/notrodans/projects/wartype/apps/frontend/src/entities/typing-text/model/use-cursor-positioning.ts": {
+      "timestamp": 1766960395098.876
+    },
+    "/home/notrodans/projects/wartype/apps/frontend/src/entities/typing-text/ui/text-display.tsx": {
+      "timestamp": 1766960212993.654
+    },
+    "/home/notrodans/projects/wartype/apps/frontend/src/features/typing/ui/typing-config-summary.tsx": {
+      "timestamp": 1766864892267.169
+    },
+    "/home/notrodans/projects/wartype/apps/frontend/src/entities/typing-text/model/queries.ts": {
+      "timestamp": 1766874462624.6838
+    },
+    "/home/notrodans/projects/wartype/apps/frontend/src/features/typing/ui/restart-button.tsx": {
+      "timestamp": 1766864888209.15
+    },
+    "/home/notrodans/projects/wartype/apps/frontend/src/entities/typing-text/model/use-typing.ts": {
+      "timestamp": 1767055995870.6765
+    },
+    "/home/notrodans/projects/wartype/apps/frontend/src/features/typing/ui/typing-status-indicator.tsx": {
+      "timestamp": 1766864896693.1897
+    },
+    "/home/notrodans/projects/wartype/node_modules/.bun/scheduler@0.27.0/node_modules/scheduler/cjs/scheduler.production.js": {
+      "timestamp": 1766427395591.9895
+    },
+    "/home/notrodans/projects/wartype/apps/frontend/src/entities/typing-text/ui/caret.tsx": {
+      "timestamp": 1766872424181.4167
+    },
+    "/home/notrodans/projects/wartype/apps/frontend/src/entities/typing-text/ui/character.tsx": {
+      "timestamp": 1766866167972.1199
+    },
+    "/home/notrodans/projects/wartype/apps/frontend/src/entities/typing-text/ui/word.tsx": {
+      "timestamp": 1766866172452.151
+    },
+    "/home/notrodans/projects/wartype/apps/frontend/src/shared/ui/icon/refresh-icon.tsx": {
+      "timestamp": 1766864875670.0916
+    }
+  },
+  "deps": {
+    "/home/notrodans/projects/wartype/apps/frontend/src/widgets/typing-board/ui/typing-board.tsx": [
+      "/home/notrodans/projects/wartype/apps/frontend/src/widgets/typing-board/ui/typing-board.tsx",
+      "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+react-query@5.90.12+83d5fd7b249dbeef/node_modules/@tanstack/react-query/build/modern/index.js",
+      "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+query-core@5.90.12/node_modules/@tanstack/query-core/build/modern/index.js",
+      "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+query-core@5.90.12/node_modules/@tanstack/query-core/build/modern/focusManager.js",
+      "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+query-core@5.90.12/node_modules/@tanstack/query-core/build/modern/subscribable.js",
+      "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+query-core@5.90.12/node_modules/@tanstack/query-core/build/modern/utils.js",
+      "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+query-core@5.90.12/node_modules/@tanstack/query-core/build/modern/timeoutManager.js",
+      "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+query-core@5.90.12/node_modules/@tanstack/query-core/build/modern/hydration.js",
+      "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+query-core@5.90.12/node_modules/@tanstack/query-core/build/modern/thenable.js",
+      "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+query-core@5.90.12/node_modules/@tanstack/query-core/build/modern/infiniteQueryObserver.js",
+      "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+query-core@5.90.12/node_modules/@tanstack/query-core/build/modern/queryObserver.js",
+      "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+query-core@5.90.12/node_modules/@tanstack/query-core/build/modern/notifyManager.js",
+      "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+query-core@5.90.12/node_modules/@tanstack/query-core/build/modern/query.js",
+      "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+query-core@5.90.12/node_modules/@tanstack/query-core/build/modern/retryer.js",
+      "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+query-core@5.90.12/node_modules/@tanstack/query-core/build/modern/onlineManager.js",
+      "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+query-core@5.90.12/node_modules/@tanstack/query-core/build/modern/removable.js",
+      "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+query-core@5.90.12/node_modules/@tanstack/query-core/build/modern/infiniteQueryBehavior.js",
+      "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+query-core@5.90.12/node_modules/@tanstack/query-core/build/modern/mutationCache.js",
+      "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+query-core@5.90.12/node_modules/@tanstack/query-core/build/modern/mutation.js",
+      "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+query-core@5.90.12/node_modules/@tanstack/query-core/build/modern/mutationObserver.js",
+      "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+query-core@5.90.12/node_modules/@tanstack/query-core/build/modern/queriesObserver.js",
+      "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+query-core@5.90.12/node_modules/@tanstack/query-core/build/modern/queryCache.js",
+      "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+query-core@5.90.12/node_modules/@tanstack/query-core/build/modern/queryClient.js",
+      "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+query-core@5.90.12/node_modules/@tanstack/query-core/build/modern/streamedQuery.js",
+      "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+query-core@5.90.12/node_modules/@tanstack/query-core/build/modern/types.js",
+      "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+react-query@5.90.12+83d5fd7b249dbeef/node_modules/@tanstack/react-query/build/modern/types.js",
+      "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+react-query@5.90.12+83d5fd7b249dbeef/node_modules/@tanstack/react-query/build/modern/useQueries.js",
+      "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+react-query@5.90.12+83d5fd7b249dbeef/node_modules/@tanstack/react-query/build/modern/QueryClientProvider.js",
+      "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+react-query@5.90.12+83d5fd7b249dbeef/node_modules/@tanstack/react-query/build/modern/IsRestoringProvider.js",
+      "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+react-query@5.90.12+83d5fd7b249dbeef/node_modules/@tanstack/react-query/build/modern/QueryErrorResetBoundary.js",
+      "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+react-query@5.90.12+83d5fd7b249dbeef/node_modules/@tanstack/react-query/build/modern/errorBoundaryUtils.js",
+      "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+react-query@5.90.12+83d5fd7b249dbeef/node_modules/@tanstack/react-query/build/modern/suspense.js",
+      "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+react-query@5.90.12+83d5fd7b249dbeef/node_modules/@tanstack/react-query/build/modern/useQuery.js",
+      "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+react-query@5.90.12+83d5fd7b249dbeef/node_modules/@tanstack/react-query/build/modern/useBaseQuery.js",
+      "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+react-query@5.90.12+83d5fd7b249dbeef/node_modules/@tanstack/react-query/build/modern/useSuspenseQuery.js",
+      "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+react-query@5.90.12+83d5fd7b249dbeef/node_modules/@tanstack/react-query/build/modern/useSuspenseInfiniteQuery.js",
+      "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+react-query@5.90.12+83d5fd7b249dbeef/node_modules/@tanstack/react-query/build/modern/useSuspenseQueries.js",
+      "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+react-query@5.90.12+83d5fd7b249dbeef/node_modules/@tanstack/react-query/build/modern/usePrefetchQuery.js",
+      "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+react-query@5.90.12+83d5fd7b249dbeef/node_modules/@tanstack/react-query/build/modern/usePrefetchInfiniteQuery.js",
+      "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+react-query@5.90.12+83d5fd7b249dbeef/node_modules/@tanstack/react-query/build/modern/queryOptions.js",
+      "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+react-query@5.90.12+83d5fd7b249dbeef/node_modules/@tanstack/react-query/build/modern/infiniteQueryOptions.js",
+      "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+react-query@5.90.12+83d5fd7b249dbeef/node_modules/@tanstack/react-query/build/modern/HydrationBoundary.js",
+      "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+react-query@5.90.12+83d5fd7b249dbeef/node_modules/@tanstack/react-query/build/modern/useIsFetching.js",
+      "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+react-query@5.90.12+83d5fd7b249dbeef/node_modules/@tanstack/react-query/build/modern/useMutationState.js",
+      "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+react-query@5.90.12+83d5fd7b249dbeef/node_modules/@tanstack/react-query/build/modern/useMutation.js",
+      "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+react-query@5.90.12+83d5fd7b249dbeef/node_modules/@tanstack/react-query/build/modern/mutationOptions.js",
+      "/home/notrodans/projects/wartype/node_modules/.bun/@tanstack+react-query@5.90.12+83d5fd7b249dbeef/node_modules/@tanstack/react-query/build/modern/useInfiniteQuery.js",
+      "/home/notrodans/projects/wartype/apps/frontend/src/entities/typing-text/index.ts",
+      "/home/notrodans/projects/wartype/apps/frontend/src/entities/typing-text/domain/typing-engine.ts",
+      "/home/notrodans/projects/wartype/apps/frontend/src/entities/typing-text/model/queries.ts",
+      "/home/notrodans/projects/wartype/apps/frontend/src/entities/typing-text/model/use-cursor-positioning.ts",
+      "/home/notrodans/projects/wartype/apps/frontend/src/entities/typing-text/model/use-typing.ts",
+      "/home/notrodans/projects/wartype/apps/frontend/src/entities/typing-text/ui/text-display.tsx",
+      "/home/notrodans/projects/wartype/apps/frontend/src/entities/typing-text/ui/caret.tsx",
+      "/home/notrodans/projects/wartype/apps/frontend/src/entities/typing-text/ui/character.tsx",
+      "/home/notrodans/projects/wartype/apps/frontend/src/entities/typing-text/ui/word.tsx",
+      "/home/notrodans/projects/wartype/apps/frontend/src/features/typing/pub/index.ts",
+      "/home/notrodans/projects/wartype/apps/frontend/src/features/typing/compose/typing-session-layout.tsx",
+      "/home/notrodans/projects/wartype/apps/frontend/src/features/typing/ui/restart-button.tsx",
+      "/home/notrodans/projects/wartype/apps/frontend/src/shared/ui/icon/refresh-icon.tsx",
+      "/home/notrodans/projects/wartype/apps/frontend/src/features/typing/ui/typing-config-summary.tsx",
+      "/home/notrodans/projects/wartype/apps/frontend/src/features/typing/ui/typing-status-indicator.tsx"
+    ]
+  }
+}
