@@ -11,7 +11,7 @@
 		"format": "biome format --write .",
 		"typecheck": "tsc --noEmit",
 		"test": "vitest run tests",
-		"test:e2e": "vitest run e2e",
+		"test:e2e": "vitest run e2e -c vitest.config.e2e.ts",
 		"db:generate": "drizzle-kit generate",
 		"db:push": "drizzle-kit push",
 		"db:studio": "drizzle-kit studio"
