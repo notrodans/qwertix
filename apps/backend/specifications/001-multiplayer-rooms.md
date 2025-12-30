@@ -1,52 +1,51 @@
-# Multiplayer Rooms Specification
+# Multiplayer Rooms & Racing
 
 ## 1. Overview
-This feature allows users to create private rooms, invite friends via a link, and race against each other in real-time.
+Allows users to create game sessions, invite others via a unique link, and compete in real-time typing races.
 
 ## 2. Terminology
-- **Room**: A game session with a unique ID (e.g., `slug` or `uuid`).
-- **Host**: The user who created the room. Has privileges to start the race.
-- **Participant**: Any user in the room (including the host).
-- **State**: The current status of the room (`LOBBY`, `COUNTDOWN`, `RACING`, `FINISHED`).
+- **Room**: A dedicated session for a group of players.
+- **Host**: The room creator with authority to start the race.
+- **Participant**: Any player currently in the room.
+- **State**: Lifecycle of a race (`LOBBY`, `COUNTDOWN`, `RACING`, `FINISHED`).
 
-## 3. Data Models
+## 3. Room Features
 
-### 3.1 Room
-- **ID**: Unique 6-character code.
-- **Status**: Current phase of the race.
-- **Config**: Room settings (e.g., word count).
-- **Text**: The list of words to type.
+### 3.1 Configuration (Presets)
+- **Modes**:
+  - **WORDS**: Race ends after typing a specific number of words.
+  - **TIME**: Race ends after a set duration. Text is infinite.
+- **Presets**: Pre-defined configurations (e.g., "Standard 30 words", "Blitz 15 seconds").
 
-### 3.2 Participant
-- **Username**: Display name.
-- **Role**: Host or regular player.
-- **Progress**: Typing completion percentage.
-- **WPM**: Current typing speed.
-- **Rank**: Finishing position.
+### 3.2 Dynamic Racing
+- **Infinite Scrolling**: In time-based modes, new words are added automatically as players reach the end of the visible text.
+- **Live Progress**: Participants see each other's typing speed (WPM) and progress percentage in real-time.
 
-## 4. HTTP API
+## 4. Results & Performance
 
-### 4.1 Create Room
-- **POST /api/rooms**
-- Returns a unique `roomId`.
+### 4.1 Metrics
+- **WPM**: Speed based on correctly typed characters.
+- **Accuracy**: Percentage of correct vs. total keystrokes.
+- **Consistency**: Stability of typing speed throughout the race.
+- **Raw WPM**: Total speed including errors.
 
-### 4.2 Get Room Info
-- **GET /api/rooms/:roomId**
-- Returns initial room state and settings.
+### 4.2 Replays
+- Detailed recording of every keystroke with timestamps.
+- Ability to watch a visual playback of the performance after the race.
 
-## 5. WebSocket Protocol
+### 4.3 Persistence
+- **Authenticated Users**: Results and replays are saved to the history.
+- **Guest Users**: Results are displayed at the end of the race but are not stored.
 
-### 5.1 Client -> Server Messages
-- `JOIN_ROOM`: Enter a specific room.
-- `START_RACE`: Trigger countdown (Host only).
-- `UPDATE_PROGRESS`: Send current typing stats.
-- `LEAVE_ROOM`: Exit the room.
+## 5. API & Protocol
 
-### 5.2 Server -> Client Messages
-- `ROOM_STATE`: Full sync of room data.
-- `PLAYER_JOINED`/`PLAYER_LEFT`: Notifications about participants.
-- `COUNTDOWN_START`: Signals race is starting soon.
-- `RACE_START`: Signals race has officially begun.
-- `PROGRESS_UPDATE`: Broadcast of everyone's speed and progress.
-- `RACE_FINISHED`: Final leaderboard.
-- `ERROR`: Feedback on invalid actions.
+### 5.1 Actions
+- Create a room with a specific configuration.
+- Join a room via ID.
+- Start the race (countdown and kickoff).
+- Submit final results and replay data.
+
+### 5.2 Events
+- Real-time updates on participants joining or leaving.
+- Live broadcast of player progress.
+- Notification when the race is completed.
