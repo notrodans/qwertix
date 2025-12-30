@@ -35,16 +35,16 @@
 		}
 	},
 	"devDependencies": {
-		"typescript": "catalog:",
 		"@biomejs/biome": "catalog:",
 		"@types/bun": "catalog:",
 		"@types/node": "catalog:",
-		"globals": "catalog:",
 		"eslint": "catalog:",
+		"eslint-import-resolver-typescript": "catalog:",
 		"eslint-plugin-boundaries": "catalog:",
-		"typescript-eslint": "catalog:",
 		"eslint-plugin-import": "catalog:",
-		"eslint-import-resolver-typescript": "catalog:"
+		"globals": "catalog:",
+		"typescript": "catalog:",
+		"typescript-eslint": "catalog:"
 	},
 	"scripts": {
 		"dev": "bun run --filter '*' dev",
