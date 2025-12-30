@@ -8,6 +8,20 @@
 			"when": 1766460844604,
 			"tag": "0000_safe_aaron_stack",
 			"breakpoints": true
+		},
+		{
+			"idx": 1,
+			"version": "7",
+			"when": 1767036856356,
+			"tag": "0001_charming_vanisher",
+			"breakpoints": true
+		},
+		{
+			"idx": 2,
+			"version": "7",
+			"when": 1767043771479,
+			"tag": "0002_safe_orphan",
+			"breakpoints": true
 		}
 	]
 }
