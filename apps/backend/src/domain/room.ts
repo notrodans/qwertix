@@ -5,6 +5,11 @@ import {
 	type RoomDTO,
 	type RoomStatus,
 } from '@qwertix/room-contracts';
+import {
+	calculateAccuracy,
+	calculateWPM,
+	reconstructText,
+} from './typing-logic';
 
 export { RaceModeEnum, type RoomConfig, type RoomStatus, type Participant };
 
@@ -115,7 +120,7 @@ export class Room {
 		const totalLength = this._text.join(' ').length;
 
 		participant.progress = this.calculateProgress(typedLength, totalLength);
-		participant.wpm = this.calculateWPM(typedLength, this._raceStartTime, now);
+		participant.wpm = calculateWPM(typedLength, this._raceStartTime, now);
 
 		if (this._config.mode === RaceModeEnum.WORDS) {
 			if (participant.progress >= 100 && !participant.finishedAt) {
@@ -138,58 +143,10 @@ export class Room {
 		if (!participant || !this._raceStartTime) return null;
 
 		const now = Date.now();
-		let reconstructedTypedText = '';
-		for (const event of replayData) {
-			if (event.key === 'Backspace') {
-				const isCtrl = !!event.ctrlKey;
-				const confirmedIndex = event.confirmedIndex ?? 0;
-
-				if (reconstructedTypedText.length > confirmedIndex) {
-					if (isCtrl) {
-						const textAfterConfirmed =
-							reconstructedTypedText.slice(confirmedIndex);
-						const trimmed = textAfterConfirmed.trimEnd();
-						const diff = textAfterConfirmed.length - trimmed.length;
-
-						if (diff === 0) {
-							const lastSpace = trimmed.lastIndexOf(' ');
-							if (lastSpace === -1) {
-								reconstructedTypedText = reconstructedTypedText.slice(
-									0,
-									confirmedIndex,
-								);
-							} else {
-								reconstructedTypedText = reconstructedTypedText.slice(
-									0,
-									confirmedIndex + lastSpace + 1,
-								);
-							}
-						} else {
-							const lastSpace = trimmed.lastIndexOf(' ');
-							if (lastSpace === -1) {
-								reconstructedTypedText = reconstructedTypedText.slice(
-									0,
-									confirmedIndex,
-								);
-							} else {
-								reconstructedTypedText = reconstructedTypedText.slice(
-									0,
-									confirmedIndex + lastSpace + 1,
-								);
-							}
-						}
-					} else {
-						reconstructedTypedText = reconstructedTypedText.slice(0, -1);
-					}
-				}
-			} else if (event.key.length === 1) {
-				reconstructedTypedText += event.key;
-			}
-		}
-
+		const reconstructedTypedText = reconstructText(replayData);
 		const targetText = this._text.join(' ');
-		const accuracy = this.calculateAccuracy(reconstructedTypedText, targetText);
-		const wpm = this.calculateWPM(
+		const accuracy = calculateAccuracy(reconstructedTypedText, targetText);
+		const wpm = calculateWPM(
 			reconstructedTypedText.length,
 			this._raceStartTime,
 			now,
@@ -257,28 +214,6 @@ export class Room {
 			return true;
 		}
 		return false;
-	}
-
-	private calculateWPM(
-		typedLength: number,
-		startTime: number,
-		now: number,
-	): number {
-		const timeMinutes = (now - startTime) / 60000;
-		const charactersPerWord = 5;
-		const words = typedLength / charactersPerWord;
-		return timeMinutes > 0 ? words / timeMinutes : 0;
-	}
-
-	private calculateAccuracy(typedText: string, targetText: string): number {
-		if (typedText.length === 0) return 100;
-		let correct = 0;
-		for (let i = 0; i < typedText.length; i++) {
-			if (i < targetText.length && typedText[i] === targetText[i]) {
-				correct++;
-			}
-		}
-		return Math.round((correct / typedText.length) * 100);
 	}
 
 	private calculateProgress(typedLength: number, totalLength: number): number {
