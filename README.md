@@ -1,12 +1,12 @@
 # Qwertix ⌨️
 
-A high-performance multiplayer typing competition platform built with real-time features.
+A multiplayer typing competition platform built with real-time features.
 
 ## 🚀 Features
 
-- **Real-time Racing:** Compete with friends in live typing battles.
-- **Modern Tech Stack:** Built with a focus on speed and type safety.
-- **FSD Architecture:** Strictly organized frontend using Feature-Sliced Design.
+- **Bad Code:** Hand-crafted, artisanal technical debt.
+- **No Optimization:** We value CPU cycles and use as many as possible.
+- **Bugs:** Not bugs, but unexpected surprises in the user journey.
 
 ## 🛠 Tech Stack
 

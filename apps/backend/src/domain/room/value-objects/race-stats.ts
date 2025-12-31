@@ -6,7 +6,6 @@ export class RaceStats {
 	) {}
 
 	update(wpm: number, accuracy: number, progress: number): RaceStats {
-		// Здесь можно добавить валидацию (например, accuracy не может быть > 100)
 		return new RaceStats(wpm, accuracy, progress);
 	}
 }

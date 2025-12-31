@@ -1,10 +1,11 @@
+import { RaceModeEnum } from '@qwertix/room-contracts';
 import type { FastifyBaseLogger, FastifyInstance } from 'fastify';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { WebSocket, WebSocketServer } from 'ws';
-import { Room } from '../../src/domain/room';
-import { RoomManager } from '../../src/managers/room.manager';
+import { Room } from '../../src/domain/room.aggregate';
 import { SocketManager } from '../../src/managers/socket.manager';
 import { ResultService } from '../../src/services/result.service';
+import { RoomService } from '../../src/services/room.service';
 
 // Mock ws
 vi.mock('ws');
@@ -14,7 +15,7 @@ describe('SocketManager', () => {
 	let socketManager: SocketManager;
 	// biome-ignore lint/suspicious/noExplicitAny: needed
 	let mockWss: any;
-	let mockRoomManager: RoomManager;
+	let mockRoomService: RoomService;
 	let mockResultService: ResultService;
 	let mockLogger: FastifyBaseLogger;
 	let mockApp: FastifyInstance;
@@ -27,12 +28,12 @@ describe('SocketManager', () => {
 			on: vi.fn(),
 		};
 
-		mockRoomManager = {
-			getRoom: vi.fn(),
+		mockRoomService = {
+			get: vi.fn(),
 			updateRoomConfig: vi.fn(),
 			appendWordsToRoom: vi.fn(),
-			deleteRoom: vi.fn(),
-		} as unknown as RoomManager;
+			delete: vi.fn(),
+		} as unknown as RoomService;
 
 		mockResultService = {
 			saveResult: vi.fn(),
@@ -48,8 +49,9 @@ describe('SocketManager', () => {
 		mockApp = {
 			jwt: {
 				verify: vi.fn(),
+				sign: vi.fn(),
 			},
-		} as unknown as FastifyInstance;
+		} as unknown as any;
 
 		mockWs = {
 			on: vi.fn(),
@@ -61,7 +63,7 @@ describe('SocketManager', () => {
 
 		socketManager = new SocketManager(
 			mockWss as unknown as WebSocketServer,
-			mockRoomManager,
+			mockRoomService,
 			mockLogger,
 			mockResultService,
 			mockApp,
@@ -82,13 +84,17 @@ describe('SocketManager', () => {
 		)[1];
 	};
 
-	it('should handle JOIN_ROOM', () => {
+	it('should handle JOIN_ROOM', async () => {
 		const messageHandler = setupConnection();
-		const room = new Room('test-room', ['word']);
+		const room = new Room(
+			'test-room',
+			{ mode: RaceModeEnum.WORDS, wordCount: 10 },
+			['word'],
+		);
 		// biome-ignore lint/suspicious/noExplicitAny: needed
-		(mockRoomManager.getRoom as any).mockReturnValue(room);
+		(mockRoomService.get as any).mockResolvedValue(room);
 
-		messageHandler(
+		await messageHandler(
 			JSON.stringify({
 				type: 'JOIN_ROOM',
 				payload: { roomId: 'test-room', username: 'user1' },
@@ -102,20 +108,24 @@ describe('SocketManager', () => {
 		);
 	});
 
-	it('should handle START_RACE with 3s countdown', () => {
+	it('should handle START_RACE with 3s countdown', async () => {
 		const messageHandler = setupConnection();
-		const room = new Room('test-room', ['word']);
+		const room = new Room(
+			'test-room',
+			{ mode: RaceModeEnum.WORDS, wordCount: 10 },
+			['word'],
+		);
 		room.addParticipant('h1', 'host');
 		mockWs.roomId = 'test-room';
 		mockWs.userId = 'h1';
 
 		// biome-ignore lint/suspicious/noExplicitAny: needed
-		(mockRoomManager.getRoom as any).mockReturnValue(room);
+		(mockRoomService.get as any).mockResolvedValue(room);
 		// biome-ignore lint/suspicious/noExplicitAny: needed
 		(mockWss.clients as any).add(mockWs);
 
 		vi.useFakeTimers();
-		messageHandler(
+		await messageHandler(
 			JSON.stringify({
 				type: 'START_RACE',
 				payload: {},
@@ -139,9 +149,13 @@ describe('SocketManager', () => {
 		vi.useRealTimers();
 	});
 
-	it('should terminate race immediately when ONE player finishes', () => {
+	it('should terminate race immediately when ONE player finishes', async () => {
 		const messageHandler = setupConnection();
-		const room = new Room('test-room', ['hello']);
+		const room = new Room(
+			'test-room',
+			{ mode: RaceModeEnum.WORDS, wordCount: 1 },
+			['hello'],
+		);
 		room.addParticipant('u1', 'user1');
 		room.addParticipant('u2', 'user2');
 		room.startRacing();
@@ -149,7 +163,7 @@ describe('SocketManager', () => {
 		mockWs.roomId = 'test-room';
 		mockWs.userId = 'u1';
 		// biome-ignore lint/suspicious/noExplicitAny: needed
-		(mockRoomManager.getRoom as any).mockReturnValue(room);
+		(mockRoomService.get as any).mockResolvedValue(room);
 
 		// Setup broadcast mock
 		const client2 = {
@@ -164,7 +178,7 @@ describe('SocketManager', () => {
 		// biome-ignore lint/suspicious/noExplicitAny: needed
 		(mockWss.clients as any).add(client2);
 
-		messageHandler(
+		await messageHandler(
 			JSON.stringify({
 				type: 'UPDATE_PROGRESS',
 				payload: { typedLength: 5 }, // "hello" length is 5 -> 100%
@@ -180,44 +194,52 @@ describe('SocketManager', () => {
 		);
 	});
 
-	it('should handle UPDATE_SETTINGS by host', () => {
+	it('should handle UPDATE_SETTINGS by host', async () => {
 		const messageHandler = setupConnection();
-		const room = new Room('test-room', ['word']);
+		const room = new Room(
+			'test-room',
+			{ mode: RaceModeEnum.WORDS, wordCount: 10 },
+			['word'],
+		);
 		room.addParticipant('h1', 'host');
 		mockWs.roomId = 'test-room';
 		mockWs.userId = 'h1';
 
 		// biome-ignore lint/suspicious/noExplicitAny: needed
-		(mockRoomManager.getRoom as any).mockReturnValue(room);
+		(mockRoomService.get as any).mockResolvedValue(room);
 		// biome-ignore lint/suspicious/noExplicitAny: needed
-		(mockRoomManager.updateRoomConfig as any).mockReturnValue(true);
+		(mockRoomService.updateRoomConfig as any).mockResolvedValue(true);
 		// biome-ignore lint/suspicious/noExplicitAny: needed
 		(mockWss.clients as any).add(mockWs);
 
-		messageHandler(
+		await messageHandler(
 			JSON.stringify({
 				type: 'UPDATE_SETTINGS',
-				payload: { mode: 1, wordCount: 50 },
+				payload: { mode: RaceModeEnum.WORDS, wordCount: 50 },
 			}),
 		);
 
-		expect(mockRoomManager.updateRoomConfig).toHaveBeenCalled();
+		expect(mockRoomService.updateRoomConfig).toHaveBeenCalled();
 	});
 
-	it('should handle TRANSFER_HOST', () => {
+	it('should handle TRANSFER_HOST', async () => {
 		const messageHandler = setupConnection();
-		const room = new Room('test-room', ['word']);
+		const room = new Room(
+			'test-room',
+			{ mode: RaceModeEnum.WORDS, wordCount: 10 },
+			['word'],
+		);
 		room.addParticipant('h1', 'host');
 		room.addParticipant('u1', 'user');
 		mockWs.roomId = 'test-room';
 		mockWs.userId = 'h1';
 
 		// biome-ignore lint/suspicious/noExplicitAny: needed
-		(mockRoomManager.getRoom as any).mockReturnValue(room);
+		(mockRoomService.get as any).mockResolvedValue(room);
 		// biome-ignore lint/suspicious/noExplicitAny: needed
 		(mockWss.clients as any).add(mockWs);
 
-		messageHandler(
+		await messageHandler(
 			JSON.stringify({
 				type: 'TRANSFER_HOST',
 				payload: { targetId: 'u1' },
@@ -230,7 +252,11 @@ describe('SocketManager', () => {
 
 	it('should handle SUBMIT_RESULT', async () => {
 		const messageHandler = setupConnection();
-		const room = new Room('test-room', ['hello']);
+		const room = new Room(
+			'test-room',
+			{ mode: RaceModeEnum.WORDS, wordCount: 1 },
+			['hello'],
+		);
 		room.addParticipant('u1', 'user1');
 		room.startRacing();
 
@@ -238,7 +264,7 @@ describe('SocketManager', () => {
 		mockWs.userId = 'u1';
 		mockWs.dbUserId = 123;
 		// biome-ignore lint/suspicious/noExplicitAny: needed
-		(mockRoomManager.getRoom as any).mockReturnValue(room);
+		(mockRoomService.get as any).mockResolvedValue(room);
 
 		await messageHandler(
 			JSON.stringify({
@@ -263,20 +289,24 @@ describe('SocketManager', () => {
 		);
 	});
 
-	it('should handle RESTART_GAME', () => {
+	it('should handle RESTART_GAME', async () => {
 		const messageHandler = setupConnection();
-		const room = new Room('test-room', ['word']);
+		const room = new Room(
+			'test-room',
+			{ mode: RaceModeEnum.WORDS, wordCount: 10 },
+			['word'],
+		);
 		room.addParticipant('h1', 'host');
 		room.finishRacing();
 
 		mockWs.roomId = 'test-room';
 		mockWs.userId = 'h1';
 		// biome-ignore lint/suspicious/noExplicitAny: needed
-		(mockRoomManager.getRoom as any).mockReturnValue(room);
+		(mockRoomService.get as any).mockResolvedValue(room);
 		// biome-ignore lint/suspicious/noExplicitAny: needed
 		(mockWss.clients as any).add(mockWs);
 
-		messageHandler(
+		await messageHandler(
 			JSON.stringify({
 				type: 'RESTART_GAME',
 				payload: {},
@@ -286,30 +316,34 @@ describe('SocketManager', () => {
 		expect(room.status()).toBe('LOBBY');
 	});
 
-	it('should handle LOAD_MORE_WORDS', () => {
+	it('should handle LOAD_MORE_WORDS', async () => {
 		const messageHandler = setupConnection();
-		const room = new Room('test-room', ['word']);
+		const room = new Room(
+			'test-room',
+			{ mode: RaceModeEnum.WORDS, wordCount: 10 },
+			['word'],
+		);
 		mockWs.roomId = 'test-room';
 		mockWs.userId = 'u1';
 
 		// biome-ignore lint/suspicious/noExplicitAny: needed
-		(mockRoomManager.getRoom as any).mockReturnValue(room);
+		(mockRoomService.get as any).mockResolvedValue(room);
 		// biome-ignore lint/suspicious/noExplicitAny: needed
-		(mockRoomManager.appendWordsToRoom as any).mockReturnValue([
+		(mockRoomService.appendWordsToRoom as any).mockResolvedValue([
 			'new',
 			'words',
 		]);
 		// biome-ignore lint/suspicious/noExplicitAny: needed
 		(mockWss.clients as any).add(mockWs);
 
-		messageHandler(
+		await messageHandler(
 			JSON.stringify({
 				type: 'LOAD_MORE_WORDS',
 				payload: {},
 			}),
 		);
 
-		expect(mockRoomManager.appendWordsToRoom).toHaveBeenCalledWith(
+		expect(mockRoomService.appendWordsToRoom).toHaveBeenCalledWith(
 			'test-room',
 			20,
 		);
@@ -318,7 +352,7 @@ describe('SocketManager', () => {
 		);
 	});
 
-	it('should handle client disconnect', () => {
+	it('should handle client disconnect', async () => {
 		setupConnection();
 
 		// biome-ignore lint/suspicious/noExplicitAny: needed
@@ -327,19 +361,23 @@ describe('SocketManager', () => {
 			(call: any[]) => call[0] === 'close',
 		)[1];
 
-		const room = new Room('test-room', ['word']);
+		const room = new Room(
+			'test-room',
+			{ mode: RaceModeEnum.WORDS, wordCount: 10 },
+			['word'],
+		);
 		room.addParticipant('u1', 'user1');
 
 		mockWs.roomId = 'test-room';
 		mockWs.userId = 'u1';
 		// biome-ignore lint/suspicious/noExplicitAny: needed
-		(mockRoomManager.getRoom as any).mockReturnValue(room);
+		(mockRoomService.get as any).mockResolvedValue(room);
 		// biome-ignore lint/suspicious/noExplicitAny: needed
 		(mockWss.clients as any).add(mockWs);
 
-		closeHandler();
+		await closeHandler();
 
 		expect(room.participants().has('u1')).toBe(false);
-		expect(mockRoomManager.deleteRoom).toHaveBeenCalledWith('test-room');
+		expect(mockRoomService.delete).toHaveBeenCalledWith('test-room');
 	});
 });

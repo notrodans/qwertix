@@ -1,12 +1,17 @@
+import { RaceModeEnum } from '@qwertix/room-contracts';
 import { describe, expect, it, vi } from 'vitest';
-import { RaceModeEnum, Room } from '../../src/domain/room';
+import { Room } from '../../src/domain/room.aggregate';
 
 describe('Room Domain Logic', () => {
 	const createRoom = () =>
-		new Room('TEST01', ['hello', 'world'], {
-			mode: RaceModeEnum.WORDS,
-			wordCount: 2,
-		});
+		new Room(
+			'TEST01',
+			{
+				mode: RaceModeEnum.WORDS,
+				wordCount: 2,
+			},
+			['hello', 'world'],
+		);
 
 	it('should calculate final stats correctly', async () => {
 		const room = createRoom();
@@ -99,12 +104,12 @@ describe('Room Domain Logic', () => {
 		room.startRacing();
 
 		// "hello world" is 11 chars
-		room.updateProgress('user-1', 5.5); // 50%
+		room.updateParticipantProgress('user-1', 5.5); // 50%
 
 		const participant = room.participants().get('user-1');
 
-		expect(participant?.progress).toBe(50);
-		expect(participant?.wpm).toBeDefined();
+		expect(participant?.stats().progress).toBe(50);
+		expect(participant?.stats().wpm).toBeDefined();
 	});
 
 	it('should restart room correctly', () => {
@@ -112,13 +117,13 @@ describe('Room Domain Logic', () => {
 
 		room.addParticipant('u1', 'user1');
 		room.startRacing();
-		room.updateProgress('u1', 5);
+		room.updateParticipantProgress('u1', 5);
 		room.finishRacing();
 		room.restart();
 
 		expect(room.status()).toBe('LOBBY');
 		expect(room.raceStartTime()).toBeNull();
-		expect(room.participants().get('u1')?.progress).toBe(0);
+		expect(room.participants().get('u1')?.stats().progress).toBe(0);
 	});
 
 	it('should convert to DTO correctly', () => {
