@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
 	calculateBackspace,
 	calculateCursorIndex,
 	TextDisplay,
 	useCursorPositioning,
 } from '@/entities/typing-text';
+import { formatTime } from '../domain/format';
 
 interface ReplayVisualizerProps {
 	targetText: string;
@@ -24,7 +25,6 @@ export function ReplayVisualizer({
 }: ReplayVisualizerProps) {
 	const [isPlaying, setIsPlaying] = useState(false);
 	const [playbackTime, setPlaybackTime] = useState(0);
-	const [userTyped, setUserTyped] = useState('');
 	const [caretPos, setCaretPos] = useState({ left: 0, top: 0 });
 
 	const containerRef = useRef<HTMLDivElement>(null);
@@ -32,17 +32,12 @@ export function ReplayVisualizer({
 	const requestRef = useRef<number | undefined>(undefined);
 	const lastTimeRef = useRef<number | undefined>(undefined);
 
-	const totalDuration = useMemo(() => {
-		if (!replayData.length) return 0;
-		return replayData[replayData.length - 1]?.timestamp ?? 0;
-	}, [replayData]);
-
 	// Compute text state for a given timestamp
-	const computeStateAtTime = (time: number) => {
+	const userTyped = useMemo(() => {
 		let currentText = '';
 
 		for (const event of replayData) {
-			if (event.timestamp > time) break;
+			if (event.timestamp > playbackTime) break;
 
 			if (event.key === 'Backspace') {
 				currentText = calculateBackspace(
@@ -55,7 +50,12 @@ export function ReplayVisualizer({
 			}
 		}
 		return currentText;
-	};
+	}, [playbackTime, replayData]);
+
+	const totalDuration = useMemo(() => {
+		if (!replayData.length) return 0;
+		return replayData[replayData.length - 1]?.timestamp ?? 0;
+	}, [replayData]);
 
 	// Animation Loop
 	const animate = (time: number) => {
@@ -92,20 +92,11 @@ export function ReplayVisualizer({
 		};
 	}, [isPlaying, totalDuration]);
 
-	// Sync UI with playbackTime
-	useEffect(() => {
-		const text = computeStateAtTime(playbackTime);
-		setUserTyped(text);
-
-		// Update cursor
-		// Note: We need to do this in an effect or layout effect to ensure DOM is ready
-		// But calculateCursorIndex is purely math, so we can do it here.
-		// However, updateCursor reads DOM.
-		requestAnimationFrame(() => {
-			const index = calculateCursorIndex(targetText, text);
-			updateCursor(index);
-		});
-	}, [playbackTime, replayData, targetText, updateCursor]);
+	// Sync cursor with userTyped
+	useLayoutEffect(() => {
+		const index = calculateCursorIndex(targetText, userTyped);
+		updateCursor(index);
+	}, [userTyped, targetText, updateCursor]);
 
 	const togglePlay = () => {
 		if (playbackTime >= totalDuration) {
@@ -117,13 +108,6 @@ export function ReplayVisualizer({
 	const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
 		setPlaybackTime(Number(e.target.value));
 		// if playing, it continues from there
-	};
-
-	const formatTime = (ms: number) => {
-		const s = Math.floor(ms / 1000);
-		const m = Math.floor(s / 60);
-		const rs = s % 60;
-		return `${m}:${rs.toString().padStart(2, '0')}`;
 	};
 
 	return (
