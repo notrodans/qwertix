@@ -6,11 +6,12 @@ import { PresetController } from './controllers/preset.controller';
 import { ResultController } from './controllers/result.controller';
 import { RoomController } from './controllers/room.controller';
 import { DataBase } from './db';
-import { RoomManager } from './managers/room.manager';
 import { SocketManager } from './managers/socket.manager';
+import { InMemoryRoomRepository } from './repositories/memory-room.repository';
 import { AuthService } from './services/auth.service';
 import { PresetService } from './services/preset.service';
 import { ResultService } from './services/result.service';
+import { RoomService } from './services/room.service';
 import { WordService } from './services/word-service';
 
 export const container = createContainer({
@@ -23,12 +24,13 @@ export function setupContainer(
 ) {
 	container.register({
 		db: asClass(DataBase).singleton(),
-		roomManager: asClass(RoomManager).singleton(),
 		wordService: asClass(WordService).singleton(),
+		roomRepo: asClass(InMemoryRoomRepository).singleton(),
 		socketManager: asClass(SocketManager).singleton(),
 		authService: asClass(AuthService).singleton(),
 		presetService: asClass(PresetService).singleton(),
 		resultService: asClass(ResultService).singleton(),
+		roomService: asClass(RoomService).singleton(),
 
 		authController: asClass(AuthController).singleton(),
 		presetController: asClass(PresetController).singleton(),
