@@ -160,7 +160,6 @@ export class Room {
 		const now = Date.now();
 		const totalLen = this._text.join(' ').length;
 
-		// Делегируем расчет прогресса стратегии
 		const progress = this._strategy.calculateProgress(
 			typedLength,
 			totalLen,
@@ -169,9 +168,8 @@ export class Room {
 		const wpm = calculateWPM(typedLength, this._raceStartTime, now);
 
 		participant.updateProgress(progress);
-		participant.updateStats(wpm, participant.stats().accuracy); // Обновляем WPM
+		participant.updateStats(wpm, participant.stats().accuracy);
 
-		// Проверяем условие победы через стратегию
 		if (
 			this._strategy.isFinished(
 				participant.stats(),

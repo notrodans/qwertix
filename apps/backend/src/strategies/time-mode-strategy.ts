@@ -10,7 +10,6 @@ export class TimeModeStrategy implements IRaceRulesStrategy {
 		_totalLength: number,
 		startTime: number,
 	): number {
-		// В режиме времени прогресс - это прошедшее время
 		const elapsed = (Date.now() - startTime) / 1000;
 		return Math.min((elapsed / this.timeLimitSeconds) * 100, 100);
 	}
