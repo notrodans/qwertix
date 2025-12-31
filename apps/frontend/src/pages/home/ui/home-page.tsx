@@ -33,6 +33,7 @@ export function HomePage() {
 									isHost: true,
 									progress: 100,
 									wpm: results.wpm,
+									accuracy: results.accuracy,
 									rank: 1,
 									finishedAt: Date.now(),
 								},
@@ -51,7 +52,7 @@ export function HomePage() {
 					>
 						<span>⚔️</span>
 						<span>Create Multiplayer Room</span>
-						<span className="opacity-0 group-hover:translate-x-1 transition-all opacity-100">
+						<span className="group-hover:translate-x-1 transition-all opacity-100">
 							→
 						</span>
 					</button>

@@ -55,11 +55,11 @@ export function TextDisplay({
 		<div
 			ref={wrapperRef}
 			className="relative overflow-hidden"
-			style={{ height: '5.2rem' }} // Approx 3 lines with 2xl leading-relaxed
+			style={{ height: '7.3125rem' }} // Exactly 3 lines (3 * 2.4375rem)
 		>
 			<div
 				ref={containerRef}
-				className={`font-mono text-2xl leading-relaxed wrap-break-word relative transition-transform duration-200 ${className}`}
+				className={`flex flex-wrap font-mono text-2xl leading-relaxed relative transition-transform duration-200 ${className}`}
 				style={{ transform: `translateY(-${scrollOffset}px)` }}
 				data-testid="text-display"
 				{...props}
@@ -156,12 +156,12 @@ export function TextDisplay({
 					}
 
 					return (
-						<span key={wordIndex}>
+						<div key={wordIndex} className="flex whitespace-nowrap">
 							<Word index={wordIndex} state={wordState} hasError={hasError}>
 								{chars}
 							</Word>
 							{spaceEl}
-						</span>
+						</div>
 					);
 				})}
 			</div>

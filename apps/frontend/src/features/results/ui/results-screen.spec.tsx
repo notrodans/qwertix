@@ -20,6 +20,7 @@ describe('ResultsScreen', () => {
 			rank: 1,
 			isHost: true,
 			progress: 100,
+			accuracy: 100,
 			finishedAt: Date.now(),
 		},
 	];

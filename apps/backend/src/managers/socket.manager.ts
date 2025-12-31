@@ -1,4 +1,9 @@
-import { RaceModeEnum, type RoomConfig } from '@qwertix/room-contracts';
+import {
+	RaceModeEnum,
+	type ReplayEvent,
+	type RoomConfig,
+	type SocketAction,
+} from '@qwertix/room-contracts';
 import type { FastifyBaseLogger, FastifyInstance } from 'fastify';
 import { v4 as uuid } from 'uuid';
 import { WebSocket, WebSocketServer } from 'ws';
@@ -19,10 +24,11 @@ interface ResultPayload {
 	raw: number;
 	accuracy: number;
 	consistency: number;
-	replayData: { key: string; timestamp: number }[]; // Data structure for replay events
+	replayData: ReplayEvent[]; // Data structure for replay events
 }
 
 export class SocketManager {
+	// ... existing constructor and connection logic ...
 	constructor(
 		private wss: WebSocketServer,
 		private roomManager: RoomManager,
@@ -40,7 +46,7 @@ export class SocketManager {
 
 			ws.on('message', (data) => {
 				try {
-					const message = JSON.parse(data.toString());
+					const message = JSON.parse(data.toString()) as SocketAction;
 					this.handleMessage(ws, message);
 				} catch (e) {
 					this.logger.error(e, 'Failed to parse message');
@@ -54,32 +60,28 @@ export class SocketManager {
 		});
 	}
 
-	private handleMessage(ws: ExtendedWebSocket, message: unknown) {
-		const msg = message as { type: string; payload: unknown };
+	private handleMessage(ws: ExtendedWebSocket, msg: SocketAction) {
 		switch (msg.type) {
 			case 'JOIN_ROOM':
-				this.handleJoinRoom(
-					ws,
-					msg.payload as { roomId: string; username: string; token?: string },
-				);
+				this.handleJoinRoom(ws, msg.payload);
 				break;
 			case 'START_RACE':
 				this.handleStartRace(ws);
 				break;
 			case 'UPDATE_PROGRESS':
-				this.handleUpdateProgress(ws, msg.payload as { typedLength: number });
+				this.handleUpdateProgress(ws, msg.payload);
 				break;
 			case 'UPDATE_SETTINGS':
-				this.handleUpdateSettings(ws, msg.payload as RoomConfig);
+				this.handleUpdateSettings(ws, msg.payload);
 				break;
 			case 'TRANSFER_HOST':
-				this.handleTransferHost(ws, msg.payload as { targetId: string });
+				this.handleTransferHost(ws, msg.payload);
 				break;
 			case 'LOAD_MORE_WORDS':
 				this.handleLoadMoreWords(ws);
 				break;
 			case 'SUBMIT_RESULT':
-				this.handleSubmitResult(ws, msg.payload as ResultPayload);
+				this.handleSubmitResult(ws, msg.payload);
 				break;
 			case 'LEAVE_ROOM':
 				this.handleDisconnect(ws);
@@ -200,11 +202,12 @@ export class SocketManager {
 		}
 
 		room.startRace(); // Sets status to COUNTDOWN
+		const countdownStartTime = Date.now(); // Use current time for frontend calculation
 		this.broadcastToRoom(room, 'COUNTDOWN_START', {
-			startTime: Date.now() + 5000,
-		}); // 5s countdown
+			startTime: countdownStartTime,
+		});
 
-		// Start timer for actual start
+		// Start timer for actual start (3 seconds later)
 		setTimeout(() => {
 			room.startRacing();
 			this.broadcastToRoom(room, 'RACE_START', {});
@@ -216,7 +219,7 @@ export class SocketManager {
 					this.terminateRace(room);
 				}, config.duration * 1000);
 			}
-		}, 5000);
+		}, 3000); // 3-second countdown
 	}
 
 	private terminateRace(room: Room) {
@@ -246,18 +249,9 @@ export class SocketManager {
 			Array.from(room.participants().values()),
 		);
 
+		// If ANY player finishes, end the race for everyone immediately
 		if (room.participants().get(ws.userId)?.finishedAt) {
-			const allFinished = Array.from(room.participants().values()).every(
-				(p) => p.finishedAt !== null,
-			);
-			if (allFinished) {
-				room.finishRacing();
-				this.broadcastToRoom(room, 'RACE_FINISHED', {
-					leaderboard: Array.from(room.participants().values()).sort(
-						(a, b) => (a.rank || 999) - (b.rank || 999),
-					),
-				});
-			}
+			this.terminateRace(room);
 		}
 	}
 	private async handleSubmitResult(
@@ -284,6 +278,15 @@ export class SocketManager {
 				return;
 			}
 
+			// Update participant in room with authoritative stats
+			room.updateParticipantStats(ws.userId, {
+				wpm: stats.wpm,
+				accuracy: stats.accuracy,
+			});
+
+			// Broadcast update to everyone so they see the final authoritative stats
+			this.broadcastToRoom(room, 'ROOM_UPDATE', room.toDTO());
+
 			await this.resultService.saveResult(
 				ws.dbUserId || null,
 				room.presetId() || null,
@@ -293,7 +296,14 @@ export class SocketManager {
 				payload.consistency,
 				payload.replayData,
 			);
-			this.send(ws, 'RESULT_SAVED', { success: true });
+			this.send(ws, 'RESULT_SAVED', {
+				success: true,
+				stats: {
+					wpm: stats.wpm,
+					accuracy: stats.accuracy,
+					raw: stats.raw,
+				},
+			});
 		} catch (e) {
 			this.logger.error(e, 'Failed to save result');
 			this.send(ws, 'ERROR', { message: 'Failed to save result' });

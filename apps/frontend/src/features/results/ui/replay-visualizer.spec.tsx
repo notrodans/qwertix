@@ -1,4 +1,4 @@
-import { act, render } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { ReplayVisualizer } from './replay-visualizer';
 
@@ -8,6 +8,7 @@ vi.mock('@/entities/typing-text', () => ({
 		<div data-testid="user-typed">{userTyped}</div>
 	),
 	calculateCursorIndex: vi.fn(),
+	calculateBackspace: vi.fn((curr) => curr.slice(0, -1)), // Simple mock
 	useCursorPositioning: vi.fn(() => vi.fn()),
 }));
 
@@ -29,19 +30,24 @@ describe('ReplayVisualizer', () => {
 		// Initial empty
 		expect(getByTestId('user-typed').textContent).toBe('');
 
-		// Move to first char (100ms)
+		// Click Play
 		await act(async () => {
-			vi.advanceTimersByTime(100);
+			fireEvent.click(screen.getByText('▶'));
+		});
+
+		// Move to first char (100ms timestamp) - advance slightly past it
+		await act(async () => {
+			vi.advanceTimersByTime(150);
 		});
 		expect(getByTestId('user-typed').textContent).toBe('h');
 
-		// Move to second char (200ms)
+		// Move to second char (200ms timestamp) - advance another 100ms -> 250ms total
 		await act(async () => {
 			vi.advanceTimersByTime(100);
 		});
 		expect(getByTestId('user-typed').textContent).toBe('he');
 
-		// Move to third char (300ms)
+		// Move to third char (300ms timestamp) - advance another 100ms -> 350ms total
 		await act(async () => {
 			vi.advanceTimersByTime(100);
 		});
@@ -62,12 +68,15 @@ describe('ReplayVisualizer', () => {
 			/>,
 		);
 
-		// We have 3 events. Need to advance 3 times to trigger all effects.
-		for (let i = 0; i < replayData.length + 1; i++) {
-			await act(async () => {
-				vi.advanceTimersByTime(500);
-			});
-		}
+		// Click Play
+		await act(async () => {
+			fireEvent.click(screen.getByText('▶'));
+		});
+
+		// Advance past end
+		await act(async () => {
+			vi.advanceTimersByTime(1000);
+		});
 
 		expect(onComplete).toHaveBeenCalled();
 		vi.useRealTimers();

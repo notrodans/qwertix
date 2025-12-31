@@ -322,3 +322,34 @@ We strictly follow the **Test Pyramid** and **TDD** principles.
 ---
 
 ### **9. Monorepo Workflow**
+
+*   **Workspaces:** Use `bun` workspaces to manage dependencies.
+*   **Shared Libraries:** Place shared code (contracts, utilities, UI kits) in `libs/*`.
+*   **Cross-Import:** Applications can import from `libs/*` but NOT from other `apps/*`.
+
+---
+
+### **10. Emerging Best Practices (Refined)**
+
+These practices have emerged from recent refactoring and performance optimization tasks
+
+#### **10.1. State Management & Effects**
+*   **No Synchronization Effects:** Never use `useEffect` to synchronize state or refs (e.g., `useEffect(() => { ref.current = val }, [val])`).
+    *   **Solution (Render-Phase Updates):** Update refs synchronously during render: `ref.current = props.value`. This ensures the ref is always up-to-date for event handlers without causing extra commits or lag.
+*   **Atomic Updates:** Group related state into a single object when they need to be updated together (e.g., typing cursor, text, and timestamp). Use functional updates `setState(prev => ...)` to access the latest state inside stable callbacks without stale closures.
+*   **Event-Driven vs Effect-Driven:** Trigger logic (like "Game Finished") directly from event handlers (e.g., `onType`, `onSocketMessage`) rather than watching state changes with `useEffect`. State should be a result of events, not a trigger for logic.
+
+#### **10.2. Architecture Layers**
+*   **Presentational Components (View):** UI components (like `MultiplayerBoard`) must be "dumb". They receive data and callbacks via props and have **zero** business logic, side effects, or internal state that isn't purely visual.
+*   **Feature Hooks (Model):** Encapsulate all logic (timers, socket events, game state) in custom hooks (e.g., `useMultiplayerGame`). These hooks expose a clean API (methods like `startTimer`, `forceFinish`) to the consumer.
+*   **Mediators (Compose):** Connect the Model (Hooks) to the View (Components) and Transport (Sockets).
+*   **Transport Layer (API):** Encapsulate WebSocket connections in dedicated API functions (e.g., `connectToRoom`) that take callbacks. Do not put `socket.on(...)` logic directly inside React components or hooks.
+
+#### **10.3. Performance & Optimization**
+*   **Stable Handlers:** Event listeners (keydown, socket events) must be stable. Do not recreate them on every render. Use `useRef` to hold mutable dependencies (like current text or config) accessed inside these stable handlers.
+*   **Throttling:** Network-heavy updates (like `onProgress`) must be throttled (e.g., `useThrottledCallback`) to prevent server congestion.
+*   **Animation:** Use `requestAnimationFrame` for high-frequency visual updates (cursor movement) to decouple them from React's render cycle where possible.
+
+#### **10.4. Reliability & Security**
+*   **Authoritative Server:** Never trust the client for game-critical calculations (WPM, Accuracy, Win Condition). Send raw events (`replayData`) to the backend, calculate stats there, and broadcast the result.
+*   **Contracts:** Use shared TypeScript interfaces (`libs/room-contracts`) for **all** WebSocket messages (`SocketAction`, `SocketEvent`). This guarantees type safety across the full stack.

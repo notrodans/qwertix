@@ -1,4 +1,3 @@
-export * from './domain/metrics';
 export * from './domain/typing-engine';
 export * from './model/queries';
 export * from './model/use-cursor-positioning';

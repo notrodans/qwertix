@@ -72,11 +72,23 @@ export class Room {
 			isHost,
 			progress: 0,
 			wpm: 0,
+			accuracy: 100,
 			rank: null,
 			finishedAt: null,
 		};
 		this._participants.set(id, participant);
 		return participant;
+	}
+
+	public updateParticipantStats(
+		socketId: string,
+		stats: { wpm: number; accuracy: number },
+	) {
+		const participant = this._participants.get(socketId);
+		if (!participant) return;
+
+		participant.wpm = stats.wpm;
+		participant.accuracy = stats.accuracy;
 	}
 
 	removeParticipant(id: string): void {
@@ -115,7 +127,12 @@ export class Room {
 
 	public getParticipantFinalStats(
 		socketId: string,
-		replayData: { key: string; timestamp: number }[],
+		replayData: {
+			key: string;
+			timestamp: number;
+			ctrlKey?: boolean;
+			confirmedIndex?: number;
+		}[],
 	) {
 		const participant = this._participants.get(socketId);
 		if (!participant || !this._raceStartTime) return null;
@@ -124,7 +141,47 @@ export class Room {
 		let reconstructedTypedText = '';
 		for (const event of replayData) {
 			if (event.key === 'Backspace') {
-				reconstructedTypedText = reconstructedTypedText.slice(0, -1);
+				const isCtrl = !!event.ctrlKey;
+				const confirmedIndex = event.confirmedIndex ?? 0;
+
+				if (reconstructedTypedText.length > confirmedIndex) {
+					if (isCtrl) {
+						const textAfterConfirmed =
+							reconstructedTypedText.slice(confirmedIndex);
+						const trimmed = textAfterConfirmed.trimEnd();
+						const diff = textAfterConfirmed.length - trimmed.length;
+
+						if (diff === 0) {
+							const lastSpace = trimmed.lastIndexOf(' ');
+							if (lastSpace === -1) {
+								reconstructedTypedText = reconstructedTypedText.slice(
+									0,
+									confirmedIndex,
+								);
+							} else {
+								reconstructedTypedText = reconstructedTypedText.slice(
+									0,
+									confirmedIndex + lastSpace + 1,
+								);
+							}
+						} else {
+							const lastSpace = trimmed.lastIndexOf(' ');
+							if (lastSpace === -1) {
+								reconstructedTypedText = reconstructedTypedText.slice(
+									0,
+									confirmedIndex,
+								);
+							} else {
+								reconstructedTypedText = reconstructedTypedText.slice(
+									0,
+									confirmedIndex + lastSpace + 1,
+								);
+							}
+						}
+					} else {
+						reconstructedTypedText = reconstructedTypedText.slice(0, -1);
+					}
+				}
 			} else if (event.key.length === 1) {
 				reconstructedTypedText += event.key;
 			}
@@ -171,6 +228,7 @@ export class Room {
 		for (const p of this._participants.values()) {
 			p.progress = 0;
 			p.wpm = 0;
+			p.accuracy = 100;
 			p.rank = null;
 			p.finishedAt = null;
 		}
@@ -215,9 +273,10 @@ export class Room {
 	private calculateAccuracy(typedText: string, targetText: string): number {
 		if (typedText.length === 0) return 100;
 		let correct = 0;
-		const length = Math.min(typedText.length, targetText.length);
-		for (let i = 0; i < length; i++) {
-			if (typedText[i] === targetText[i]) correct++;
+		for (let i = 0; i < typedText.length; i++) {
+			if (i < targetText.length && typedText[i] === targetText[i]) {
+				correct++;
+			}
 		}
 		return Math.round((correct / typedText.length) * 100);
 	}
@@ -234,6 +293,7 @@ export class Room {
 			participants: Array.from(this._participants.values()),
 			config: this._config,
 			text: this._text,
+			startTime: this._raceStartTime || undefined,
 		};
 	}
 }

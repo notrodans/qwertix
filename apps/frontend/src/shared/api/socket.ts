@@ -1,10 +1,13 @@
-export type SocketPayload = unknown;
-export type MessageHandler<T = SocketPayload> = (payload: T) => void;
+import type { SocketAction, SocketEvent } from '@qwertix/room-contracts';
+
+export type MessageHandler<T> = (payload: T) => void;
+
+type EventType = SocketEvent['type'];
+type ActionType = SocketAction['type'];
 
 export class SocketService {
 	private socket: WebSocket | null = null;
 	// We have to use 'any' internally in the Map because it holds handlers for DIFFERENT types.
-	// This is a necessary "container of unknowns".
 	// biome-ignore lint/suspicious/noExplicitAny: internal storage for generic handlers
 	private listeners: Map<string, Set<MessageHandler<any>>> = new Map();
 
@@ -20,7 +23,7 @@ export class SocketService {
 
 		this.socket.onmessage = (event) => {
 			try {
-				const { type, payload } = JSON.parse(event.data);
+				const { type, payload } = JSON.parse(event.data) as SocketEvent;
 				this.dispatch(type, payload);
 			} catch (e) {
 				console.error('WS Parse Error', e);
@@ -45,7 +48,10 @@ export class SocketService {
 		}
 	}
 
-	send<T>(type: string, payload: T) {
+	send<T extends ActionType>(
+		type: T,
+		payload: Extract<SocketAction, { type: T }>['payload'],
+	) {
 		if (this.connected()) {
 			this.socket?.send(JSON.stringify({ type, payload }));
 		} else {
@@ -53,7 +59,14 @@ export class SocketService {
 		}
 	}
 
-	on<T>(type: string, handler: MessageHandler<T>) {
+	on<T extends EventType | 'CONNECTED' | 'DISCONNECTED'>(
+		type: T,
+		handler: MessageHandler<
+			T extends EventType
+				? Extract<SocketEvent, { type: T }>['payload']
+				: unknown
+		>,
+	) {
 		if (!this.listeners.has(type)) {
 			this.listeners.set(type, new Set());
 		}

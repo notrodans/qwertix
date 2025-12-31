@@ -102,27 +102,82 @@ describe('SocketManager', () => {
 		);
 	});
 
-	it('should handle UPDATE_PROGRESS', () => {
+	it('should handle START_RACE with 3s countdown', () => {
+		const messageHandler = setupConnection();
+		const room = new Room('test-room', ['word']);
+		room.addParticipant('h1', 'host');
+		mockWs.roomId = 'test-room';
+		mockWs.userId = 'h1';
+
+		// biome-ignore lint/suspicious/noExplicitAny: needed
+		(mockRoomManager.getRoom as any).mockReturnValue(room);
+		// biome-ignore lint/suspicious/noExplicitAny: needed
+		(mockWss.clients as any).add(mockWs);
+
+		vi.useFakeTimers();
+		messageHandler(
+			JSON.stringify({
+				type: 'START_RACE',
+				payload: {},
+			}),
+		);
+
+		// Expect countdown start
+		expect(room.status()).toBe('COUNTDOWN');
+		expect(mockWs.send).toHaveBeenCalledWith(
+			expect.stringContaining('COUNTDOWN_START'),
+		);
+
+		// Advance 3 seconds
+		vi.advanceTimersByTime(3000);
+
+		// Expect race start
+		expect(room.status()).toBe('RACING');
+		expect(mockWs.send).toHaveBeenCalledWith(
+			expect.stringContaining('RACE_START'),
+		);
+		vi.useRealTimers();
+	});
+
+	it('should terminate race immediately when ONE player finishes', () => {
 		const messageHandler = setupConnection();
 		const room = new Room('test-room', ['hello']);
 		room.addParticipant('u1', 'user1');
+		room.addParticipant('u2', 'user2');
 		room.startRacing();
 
 		mockWs.roomId = 'test-room';
 		mockWs.userId = 'u1';
 		// biome-ignore lint/suspicious/noExplicitAny: needed
 		(mockRoomManager.getRoom as any).mockReturnValue(room);
+
+		// Setup broadcast mock
+		const client2 = {
+			...mockWs,
+			userId: 'u2',
+			roomId: 'test-room',
+			readyState: WebSocket.OPEN,
+			send: vi.fn(),
+		};
 		// biome-ignore lint/suspicious/noExplicitAny: needed
 		(mockWss.clients as any).add(mockWs);
+		// biome-ignore lint/suspicious/noExplicitAny: needed
+		(mockWss.clients as any).add(client2);
 
 		messageHandler(
 			JSON.stringify({
 				type: 'UPDATE_PROGRESS',
-				payload: { typedLength: 5 },
+				payload: { typedLength: 5 }, // "hello" length is 5 -> 100%
 			}),
 		);
 
-		expect(room.participants().get('u1')?.progress).toBe(100);
+		expect(room.status()).toBe('FINISHED');
+		expect(mockWs.send).toHaveBeenCalledWith(
+			expect.stringContaining('RACE_FINISHED'),
+		);
+		expect(client2.send).toHaveBeenCalledWith(
+			expect.stringContaining('RACE_FINISHED'),
+		);
 	});
 
 	it('should handle UPDATE_SETTINGS by host', () => {

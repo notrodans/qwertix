@@ -1,14 +1,8 @@
-import { env } from '@env';
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
-import {
-	type Participant,
-	RaceModeEnum,
-	type Room,
-	type RoomConfig,
-	roomQueries,
-} from '@/entities/room';
+import { useEffect, useRef, useState } from 'react';
+import { type Room, type RoomConfig, roomQueries } from '@/entities/room';
 import { socketService } from '@/shared/api/socket';
+import { connectToRoom } from '../api/room-socket';
 
 export function useMultiplayerRoom(
 	roomId: string,
@@ -16,6 +10,8 @@ export function useMultiplayerRoom(
 	options?: {
 		onWordsAppended?: (words: string[]) => void;
 		onHostPromoted?: (message: string) => void;
+		onRaceStart?: () => void;
+		onRaceFinished?: () => void;
 	},
 ) {
 	const [room, setRoom] = useState<Room | null>(null);
@@ -27,122 +23,91 @@ export function useMultiplayerRoom(
 		enabled: !!roomId,
 	});
 
+	// Stable reference for options to prevent reconnects on every render if parent creates new object
+	const optionsRef = useRef(options);
+	useEffect(() => {
+		optionsRef.current = options;
+	}, [options]);
+
 	useEffect(() => {
 		if (!roomId) return;
 
-		// Connect WS
-		socketService.connect(env.VITE_WS_URL);
-
-		const handleRoomState = (payload: Room) => {
-			setRoom(payload);
-		};
-
-		const handlePlayerJoined = (payload: Participant) => {
-			setRoom((prev) => {
-				if (!prev) return null;
-				const exists = prev.participants.find(
-					(p) => p.socketId === payload.socketId,
+		const cleanup = connectToRoom(roomId, username, {
+			onRoomState: (payload) => setRoom(payload),
+			onPlayerJoined: (payload) => {
+				setRoom((prev) => {
+					if (!prev) return null;
+					const exists = prev.participants.find(
+						(p) => p.socketId === payload.socketId,
+					);
+					if (exists) return prev;
+					return {
+						...prev,
+						participants: [...prev.participants, payload],
+					};
+				});
+			},
+			onPlayerLeft: (payload) => {
+				setRoom((prev) => {
+					if (!prev) return null;
+					return {
+						...prev,
+						participants: prev.participants.filter(
+							(p) => p.socketId !== payload.userId,
+						),
+					};
+				});
+			},
+			onCountdown: (payload) => {
+				setRoom((prev) =>
+					prev
+						? { ...prev, status: 'COUNTDOWN', startTime: payload.startTime }
+						: null,
 				);
-				if (exists) return prev;
-				return {
-					...prev,
-					participants: [...prev.participants, payload],
-				};
-			});
-		};
+			},
+			onRaceStart: () => {
+				setRoom((prev) => (prev ? { ...prev, status: 'RACING' } : null));
+				optionsRef.current?.onRaceStart?.();
+			},
+			onProgressUpdate: (payload) => {
+				setRoom((prev) => {
+					if (!prev) return null;
+					return { ...prev, participants: payload };
+				});
+			},
+			onRaceFinished: (payload) => {
+				setRoom((prev) => {
+					if (!prev) return null;
+					return {
+						...prev,
+						status: 'FINISHED',
+						participants: payload.leaderboard,
+					};
+				});
+				optionsRef.current?.onRaceFinished?.();
+			},
+			onWordsAppended: (payload) => {
+				setRoom((prev) => {
+					if (!prev) return null;
+					return {
+						...prev,
+						text: [...prev.text, ...payload.words],
+					};
+				});
+				optionsRef.current?.onWordsAppended?.(payload.words);
+			},
+			onHostPromoted: (payload) => {
+				optionsRef.current?.onHostPromoted?.(payload.message);
+			},
+			onError: (payload) => {
+				setError(payload.message);
+			},
+			onResultSaved: (_payload) => {
+				// Result saved confirmation, currently handled by board
+			},
+		});
 
-		const handlePlayerLeft = (payload: { userId: string }) => {
-			setRoom((prev) => {
-				if (!prev) return null;
-				return {
-					...prev,
-					participants: prev.participants.filter(
-						(p) => p.socketId !== payload.userId,
-					),
-				};
-			});
-		};
-
-		const handleCountdown = (_payload: { startTime: number }) => {
-			setRoom((prev) => (prev ? { ...prev, status: 'COUNTDOWN' } : null));
-		};
-
-		const handleRaceStart = () => {
-			setRoom((prev) => (prev ? { ...prev, status: 'RACING' } : null));
-		};
-
-		const handleProgressUpdate = (payload: Participant[]) => {
-			setRoom((prev) => {
-				if (!prev) return null;
-				return { ...prev, participants: payload };
-			});
-		};
-
-		const handleRaceFinished = (payload: { leaderboard: Participant[] }) => {
-			setRoom((prev) => {
-				if (!prev) return null;
-				return {
-					...prev,
-					status: 'FINISHED',
-					participants: payload.leaderboard,
-				};
-			});
-		};
-
-		const handleWordsAppended = (payload: { words: string[] }) => {
-			setRoom((prev) => {
-				if (!prev) return null;
-				// If we want to clear what was written (performance optimization for Time mode)
-				// we replace the text instead of appending.
-				const isTimeMode = prev.config.mode === RaceModeEnum.TIME;
-
-				return {
-					...prev,
-					text: isTimeMode ? payload.words : [...prev.text, ...payload.words],
-				};
-			});
-			options?.onWordsAppended?.(payload.words);
-		};
-
-		const handleHostPromoted = (payload: { message: string }) => {
-			options?.onHostPromoted?.(payload.message);
-		};
-
-		const handleError = (payload: { message: string }) => {
-			setError(payload.message);
-		};
-
-		// Listeners
-
-		const unsubs = [
-			socketService.on('ROOM_STATE', handleRoomState),
-			socketService.on('PLAYER_JOINED', handlePlayerJoined),
-			socketService.on('PLAYER_LEFT', handlePlayerLeft),
-			socketService.on('COUNTDOWN_START', handleCountdown),
-			socketService.on('RACE_START', handleRaceStart),
-			socketService.on('PROGRESS_UPDATE', handleProgressUpdate),
-			socketService.on('RACE_FINISHED', handleRaceFinished),
-			socketService.on('WORDS_APPENDED', handleWordsAppended),
-			socketService.on('HOST_PROMOTED', handleHostPromoted),
-			socketService.on('ROOM_UPDATE', handleRoomState),
-			socketService.on('ERROR', handleError),
-		];
-
-		// Join Room once connected
-		const joinRoom = () => {
-			socketService.send('JOIN_ROOM', { roomId, username });
-		};
-
-		if (socketService.connected()) {
-			joinRoom();
-		} else {
-			unsubs.push(socketService.on('CONNECTED', joinRoom));
-		}
-
-		return () => {
-			socketService.disconnect();
-			for (const unsub of unsubs) unsub();
-		};
+		return cleanup;
 	}, [roomId, username]);
 
 	const startRace = () => {

@@ -5,48 +5,30 @@ Allows users to create game sessions, invite others via a unique link, and compe
 
 ## 2. Terminology
 - **Room**: A dedicated session for a group of players.
-- **Host**: The room creator with authority to start the race and manage settings.
-- **Participant**: Any player currently in the room.
-- **State**: Lifecycle of a race (`LOBBY`, `COUNTDOWN`, `RACING`, `FINISHED`).
+- **State**: Lifecycle of a race (`LOBBY`, `RACING`, `FINISHED`). **Note: Countdown phase is removed for instant action.**
 
 ## 3. Room Features
 
-### 3.1 Configuration (Presets & Settings)
-- **Modes**:
-  - **WORDS**: Race ends after typing a specific number of words.
-  - **TIME**: Race ends after a set duration. Text is infinite.
-- **Presets**: Pre-defined configurations.
-- **Real-time Synchronization**: Room settings (mode, duration, word count) are mutable by the host and must be synchronized across all participants instantly upon change.
+### 3.1 Configuration
+- **WORDS Mode**: Fixed word count.
+- **TIME Mode**: Fixed duration. Text is infinite.
+- **Real-time Synchronization**: Room settings are mutable by the host.
 
-### 3.2 Dynamic Racing
-- **Infinite Scrolling**: Text replenishes automatically. 
-- **Live Progress**: Real-time broadcast of player metrics.
+### 3.2 Win Conditions
+- **WORDS Mode**: The race ends immediately for **ALL** participants as soon as **ONE** player finishes the text.
+- **TIME Mode**: The race ends for all participants when the timer expires.
 
-### 3.3 Host Management
-- **Automatic Succession**: If a host leaves, the system promotes another participant and notifies them.
-- **Host Transfer**: Support for explicit transfer of host privileges between users.
+## 4. Performance & Validation
 
-## 4. Results & Performance
+### 4.1 Authoritative Metrics
+- **Strict Server-Side Calculation**: The frontend MUST NOT calculate WPM or Accuracy. It sends raw keystroke data (replay) to the server.
+- The server calculates final metrics and broadcasts them back.
 
-### 4.1 Metrics
-- **WPM**, **Accuracy**, **Consistency**, **Raw WPM**.
-
-### 4.2 Replays
-- Precision recording of keystroke events for post-race visualization.
-
-### 4.3 Persistence
-- Stats are stored for authenticated users; ephemeral results for guests.
+### 4.2 Replay Data
+- Frontend provides controls for replay playback: Play, Pause, Scrubbing/Rewind, and Time display.
 
 ## 5. API & Protocol
 
-### 5.1 Actions
-- Create/Join Room.
-- **Update Settings**: Modify room configuration in real-time (Host only).
-- Start Race.
-- **Transfer Host**: New action to change room ownership.
-- Submit Results.
-
-### 5.2 Events
-- Participant join/leave notifications.
-- **Host Promoted**: Specific event to notify a user they are now the host.
-- Live progress and race completion events.
+### 5.1 Socket Events
+- `COUNTDOWN_START` is deprecated/removed. `RACE_START` is sent immediately after the host starts the game.
+- `RACE_FINISHED` is sent when the win condition is met.

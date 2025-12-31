@@ -84,4 +84,31 @@ describe('useMultiplayerRoom', () => {
 
 		expect(result.current.room?.participants).toHaveLength(2);
 	});
+
+	it('should append words on WORDS_APPENDED event', () => {
+		const { result } = renderHook(() => useMultiplayerRoom('room1', 'user1'), {
+			wrapper,
+		});
+
+		act(() => {
+			if (handlers.ROOM_STATE) {
+				handlers.ROOM_STATE({
+					id: 'room1',
+					participants: [],
+					text: ['word1'],
+					config: { mode: 0, duration: 30 }, // RaceModeEnum.TIME
+				});
+			}
+		});
+
+		expect(result.current.room?.text).toEqual(['word1']);
+
+		act(() => {
+			if (handlers.WORDS_APPENDED) {
+				handlers.WORDS_APPENDED({ words: ['word2', 'word3'] });
+			}
+		});
+
+		expect(result.current.room?.text).toEqual(['word1', 'word2', 'word3']);
+	});
 });
