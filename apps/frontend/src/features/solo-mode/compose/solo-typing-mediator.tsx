@@ -1,4 +1,3 @@
-import { RaceModeEnum } from '@qwertix/room-contracts';
 import { type ReactNode } from 'react';
 import {
 	RestartButton,
@@ -30,6 +29,7 @@ export function SoloTypingMediator({ renderResults }: SoloTypingMediatorProps) {
 		wordCount,
 		timeLeft,
 		results,
+		isSaving,
 		text,
 		userTyped,
 		caretPos,
@@ -37,12 +37,25 @@ export function SoloTypingMediator({ renderResults }: SoloTypingMediatorProps) {
 		restart,
 	} = useSoloGame();
 
-	if (status === 'RESULT' && results) {
-		return renderResults ? (
-			renderResults(results, restart)
-		) : (
-			<div>Run complete!</div>
-		);
+	if (status === 'RESULT') {
+		if (isSaving) {
+			return (
+				<div className="flex flex-col items-center justify-center h-64 gap-4">
+					<TypingStatusIndicator state="loading" />
+					<div className="text-zinc-400 font-medium">
+						Calculating results...
+					</div>
+				</div>
+			);
+		}
+
+		if (results) {
+			return renderResults ? (
+				renderResults(results, restart)
+			) : (
+				<div>Run complete!</div>
+			);
+		}
 	}
 
 	const typedWordsCount = userTyped.split(' ').length - 1;
