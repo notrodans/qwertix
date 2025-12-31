@@ -1,6 +1,6 @@
 import fastifyPassport from '@fastify/passport';
+import type { RoomConfig } from '@qwertix/room-contracts';
 import type { FastifyInstance } from 'fastify';
-import type { RoomConfig } from '@/domain/room';
 import { PresetService } from '../services/preset.service';
 
 export class PresetController {

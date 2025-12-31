@@ -22,7 +22,7 @@ export class ResultController {
 			return await this.resultService.getUserResults(parseInt(userId));
 		});
 
-		app.post('/results', async (req, reply) => {
+		app.post('/results', async (req, _reply) => {
 			const body = req.body as {
 				userId?: number;
 				presetId?: number;
@@ -39,7 +39,11 @@ export class ResultController {
 			};
 
 			const reconstructed = reconstructText(body.replayData);
-			const wpm = calculateWPM(reconstructed.length, body.startTime, body.endTime);
+			const wpm = calculateWPM(
+				reconstructed.length,
+				body.startTime,
+				body.endTime,
+			);
 			const accuracy = calculateAccuracy(reconstructed, body.targetText);
 
 			const savedResult = await this.resultService.saveResult(

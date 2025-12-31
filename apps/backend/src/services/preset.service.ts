@@ -1,7 +1,7 @@
+import type { RoomConfig } from '@qwertix/room-contracts';
 import { eq } from 'drizzle-orm';
 import { DataBase } from '@/db';
 import { presets } from '@/db/schema';
-import type { RoomConfig } from '@/domain/room';
 
 export class PresetService {
 	constructor(private db: DataBase) {}

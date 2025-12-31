@@ -1,11 +1,11 @@
+import type { RoomConfig } from '@qwertix/room-contracts';
 import type { FastifyInstance } from 'fastify';
-import type { RoomConfig } from '../domain/room';
-import { RoomManager } from '../managers/room.manager';
 import { PresetService } from '../services/preset.service';
+import { RoomService } from '../services/room.service';
 
 export class RoomController {
 	constructor(
-		private roomManager: RoomManager,
+		private roomService: RoomService,
 		private presetService: PresetService,
 	) {}
 
@@ -19,13 +19,13 @@ export class RoomController {
 				if (preset) config = preset.config as RoomConfig;
 			}
 
-			const room = this.roomManager.createRoom(config);
+			const room = await this.roomService.createRoom(config, body?.presetId);
 			return reply.send({ roomId: room.id() });
 		});
 
 		app.get('/rooms/:roomId', async (req, reply) => {
 			const { roomId } = req.params as { roomId: string };
-			const room = this.roomManager.getRoom(roomId);
+			const room = await this.roomService.get(roomId);
 
 			if (!room) {
 				return reply.status(404).send({ error: 'Room not found' });

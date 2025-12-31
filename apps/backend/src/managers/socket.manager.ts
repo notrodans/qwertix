@@ -7,9 +7,9 @@ import {
 import type { FastifyBaseLogger, FastifyInstance } from 'fastify';
 import { v4 as uuid } from 'uuid';
 import { WebSocket, WebSocketServer } from 'ws';
-import { Room } from '../domain/room';
+import { Room as Room } from '@/domain/room/room.aggregate';
+import { RoomService } from '@/services/room.service';
 import { ResultService } from '../services/result.service';
-import { RoomManager } from './room.manager';
 
 interface ExtendedWebSocket extends WebSocket {
 	roomId?: string;
@@ -31,7 +31,7 @@ export class SocketManager {
 	// ... existing constructor and connection logic ...
 	constructor(
 		private wss: WebSocketServer,
-		private roomManager: RoomManager,
+		private roomService: RoomService,
 		private logger: FastifyBaseLogger,
 		private resultService: ResultService,
 		private app: FastifyInstance,
@@ -92,9 +92,9 @@ export class SocketManager {
 		}
 	}
 
-	private handleRestartGame(ws: ExtendedWebSocket) {
+	private async handleRestartGame(ws: ExtendedWebSocket) {
 		if (!ws.roomId || !ws.userId) return;
-		const room = this.roomManager.getRoom(ws.roomId);
+		const room = await this.roomService.get(ws.roomId);
 		if (!room) return;
 
 		const participant = room.participants().get(ws.userId);
@@ -104,13 +104,16 @@ export class SocketManager {
 		}
 
 		// Reset room state
-		room.restart(); // Need to implement this in Room class
+		room.restart();
 		this.broadcastToRoom(room, 'ROOM_UPDATE', room.toDTO());
 	}
 
-	private handleUpdateSettings(ws: ExtendedWebSocket, config: RoomConfig) {
+	private async handleUpdateSettings(
+		ws: ExtendedWebSocket,
+		config: RoomConfig,
+	) {
 		if (!ws.roomId || !ws.userId) return;
-		const room = this.roomManager.getRoom(ws.roomId);
+		const room = await this.roomService.get(ws.roomId);
 		if (!room) return;
 
 		const participant = room.participants().get(ws.userId);
@@ -119,17 +122,17 @@ export class SocketManager {
 			return;
 		}
 
-		if (this.roomManager.updateRoomConfig(ws.roomId, config)) {
+		if (await this.roomService.updateRoomConfig(ws.roomId, config)) {
 			this.broadcastToRoom(room, 'ROOM_UPDATE', room.toDTO());
 		}
 	}
 
-	private handleTransferHost(
+	private async handleTransferHost(
 		ws: ExtendedWebSocket,
 		payload: { targetId: string },
 	) {
 		if (!ws.roomId || !ws.userId) return;
-		const room = this.roomManager.getRoom(ws.roomId);
+		const room = await this.roomService.get(ws.roomId);
 		if (!room) return;
 
 		const sender = room.participants().get(ws.userId);
@@ -152,12 +155,12 @@ export class SocketManager {
 		}
 	}
 
-	private handleJoinRoom(
+	private async handleJoinRoom(
 		ws: ExtendedWebSocket,
 		payload: { roomId: string; username: string; token?: string },
 	) {
 		const { roomId, username, token } = payload;
-		const room = this.roomManager.getRoom(roomId);
+		const room = await this.roomService.get(roomId);
 
 		if (!room) {
 			this.send(ws, 'ERROR', { message: 'Room not found' });
@@ -187,12 +190,12 @@ export class SocketManager {
 		this.send(ws, 'ROOM_STATE', room.toDTO());
 
 		// Broadcast to others
-		this.broadcastToRoom(room, 'PLAYER_JOINED', participant);
+		this.broadcastToRoom(room, 'PLAYER_JOINED', participant.toDTO());
 	}
 
-	private handleStartRace(ws: ExtendedWebSocket) {
+	private async handleStartRace(ws: ExtendedWebSocket) {
 		if (!ws.roomId || !ws.userId) return;
-		const room = this.roomManager.getRoom(ws.roomId);
+		const room = await this.roomService.get(ws.roomId);
 		if (!room) return;
 
 		const participant = room.participants().get(ws.userId);
@@ -227,26 +230,26 @@ export class SocketManager {
 
 		room.finishRacing();
 		this.broadcastToRoom(room, 'RACE_FINISHED', {
-			leaderboard: Array.from(room.participants().values()).sort(
-				(a, b) => (a.rank || 999) - (b.rank || 999),
-			),
+			leaderboard: Array.from(room.participants().values())
+				.map((p) => p.toDTO())
+				.sort((a, b) => (a.rank || 999) - (b.rank || 999)),
 		});
 	}
 
-	private handleUpdateProgress(
+	private async handleUpdateProgress(
 		ws: ExtendedWebSocket,
 		payload: { typedLength: number },
 	) {
 		if (!ws.roomId || !ws.userId) return;
-		const room = this.roomManager.getRoom(ws.roomId);
+		const room = await this.roomService.get(ws.roomId);
 		if (!room || room.status() !== 'RACING') return;
 
-		room.updateProgress(ws.userId, payload.typedLength);
+		room.updateParticipantProgress(ws.userId, payload.typedLength);
 
 		this.broadcastToRoom(
 			room,
 			'PROGRESS_UPDATE',
-			Array.from(room.participants().values()),
+			Array.from(room.participants().values()).map((p) => p.toDTO()),
 		);
 
 		// If ANY player finishes, end the race for everyone immediately
@@ -259,7 +262,7 @@ export class SocketManager {
 		payload: ResultPayload,
 	) {
 		try {
-			const room = ws.roomId ? this.roomManager.getRoom(ws.roomId) : null;
+			const room = ws.roomId ? await this.roomService.get(ws.roomId) : null;
 			if (!room || !ws.userId) {
 				this.send(ws, 'ERROR', {
 					message: 'Room not found for result submission',
@@ -310,28 +313,28 @@ export class SocketManager {
 		}
 	}
 
-	private handleLoadMoreWords(ws: ExtendedWebSocket) {
+	private async handleLoadMoreWords(ws: ExtendedWebSocket) {
 		if (!ws.roomId || !ws.userId) return;
-		const room = this.roomManager.getRoom(ws.roomId);
+		const room = await this.roomService.get(ws.roomId);
 		if (!room) return;
 
-		const newWords = this.roomManager.appendWordsToRoom(ws.roomId, 20);
+		const newWords = await this.roomService.appendWordsToRoom(ws.roomId, 20);
 
 		if (newWords) {
 			this.broadcastToRoom(room, 'WORDS_APPENDED', { words: newWords });
 		}
 	}
 
-	private handleDisconnect(ws: ExtendedWebSocket) {
+	private async handleDisconnect(ws: ExtendedWebSocket) {
 		if (ws.roomId && ws.userId) {
-			const room = this.roomManager.getRoom(ws.roomId);
+			const room = await this.roomService.get(ws.roomId);
 			if (room) {
 				const wasHost = room.participants().get(ws.userId)?.isHost;
 				room.removeParticipant(ws.userId);
 				this.broadcastToRoom(room, 'PLAYER_LEFT', { userId: ws.userId });
 
 				if (room.participants().size === 0) {
-					this.roomManager.deleteRoom(ws.roomId);
+					await this.roomService.delete(ws.roomId);
 				} else {
 					this.broadcastToRoom(room, 'ROOM_UPDATE', room.toDTO());
 
