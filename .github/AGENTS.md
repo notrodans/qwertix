@@ -118,6 +118,21 @@ function PresetPage() {
 
 `useEffect` is a synchronization tool, not a state setter. Overusing it causes extra renders, complexity, and bugs. **Strongly prefer explicit behavior** (direct function calls, event handlers) over implicit synchronization via `useEffect`. Logic should be easy to trace; `useEffect` often obscures the trigger of an action.
 
+**Core Rules:**
+*   **Source of Truth Cache Segregation:** Do not combine cache and source of truth in a single state.
+*   **Raw Data Storage:** Store the most raw data possible; all transformations and derived values must happen during the render phase.
+*   **Unidirectional Flow:** Use unidirectional data flow instead of `useEffect` for internal logic.
+*   **No Infrastructure Effects:** Never use `useEffect` inside infrastructure-related code.
+*   **Encapsulation:** Hide all "normal" `useEffect` calls inside specialized custom hooks.
+
+**When `useEffect` IS appropriate:**
+1.  **Cache Synchronization:** Keeping a local cache in sync with an external source.
+2.  **Lifecycle Notifications:** Knowing when a component has **mounted** or **unmounted**.
+3.  **Animations:** Starting or controlling animations.
+4.  **Logging:** Performing side-effectful logging or analytics.
+5.  **Local State -> External API:** Syncing local state to DOM/Browser APIs or LocalStorage.
+6.  **External Source -> Local State:** Syncing Server APIs or WebSockets to local state.
+
 **A. Derived State**
 Do not use state for data that can be calculated from props or other state.
 
@@ -336,8 +351,12 @@ These practices have emerged from recent refactoring and performance optimizatio
 #### **10.1. State Management & Effects**
 *   **No Synchronization Effects:** Never use `useEffect` to synchronize state or refs (e.g., `useEffect(() => { ref.current = val }, [val])`).
     *   **Solution (Render-Phase Updates):** Update refs synchronously during render: `ref.current = props.value`. This ensures the ref is always up-to-date for event handlers without causing extra commits or lag.
+*   **Source of Truth Segregation:** Do not mix cache and source of truth in one state object.
+*   **Raw Data Preference:** Store raw data and perform all transformations in render.
+*   **Unidirectional Flow:** Prefer unidirectional data flow over `useEffect`.
 *   **Atomic Updates:** Group related state into a single object when they need to be updated together (e.g., typing cursor, text, and timestamp). Use functional updates `setState(prev => ...)` to access the latest state inside stable callbacks without stale closures.
 *   **Event-Driven vs Effect-Driven:** Trigger logic (like "Game Finished") directly from event handlers (e.g., `onType`, `onSocketMessage`) rather than watching state changes with `useEffect`. State should be a result of events, not a trigger for logic.
+*   **Hook Encapsulation:** All good `useEffect` usages must be hidden within custom hooks. Never use `useEffect` inside infrastructure layers.
 
 #### **10.2. Architecture Layers**
 *   **Presentational Components (View):** UI components (like `MultiplayerBoard`) must be "dumb". They receive data and callbacks via props and have **zero** business logic, side effects, or internal state that isn't purely visual.
