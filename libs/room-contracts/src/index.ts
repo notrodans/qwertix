@@ -1,6 +1,6 @@
 export type RoomStatus = 'LOBBY' | 'COUNTDOWN' | 'RACING' | 'FINISHED';
 
-export interface Participant {
+export interface ParticipantDTO {
 	socketId: string;
 	username: string;
 	isHost: boolean;
@@ -29,7 +29,7 @@ export type RoomConfig =
 export interface RoomDTO {
 	id: string;
 	status: RoomStatus;
-	participants: Participant[];
+	participants: ParticipantDTO[];
 	config: RoomConfig;
 	text: string[];
 	startTime?: number;
@@ -75,12 +75,12 @@ export type SocketAction =
 export type SocketEvent =
 	| { type: 'ROOM_STATE'; payload: RoomDTO }
 	| { type: 'ROOM_UPDATE'; payload: RoomDTO }
-	| { type: 'PLAYER_JOINED'; payload: Participant }
+	| { type: 'PLAYER_JOINED'; payload: ParticipantDTO }
 	| { type: 'PLAYER_LEFT'; payload: { userId: string } }
 	| { type: 'COUNTDOWN_START'; payload: { startTime: number } }
 	| { type: 'RACE_START'; payload: Record<string, never> }
-	| { type: 'RACE_FINISHED'; payload: { leaderboard: Participant[] } }
-	| { type: 'PROGRESS_UPDATE'; payload: Participant[] }
+	| { type: 'RACE_FINISHED'; payload: { leaderboard: ParticipantDTO[] } }
+	| { type: 'PROGRESS_UPDATE'; payload: ParticipantDTO[] }
 	| { type: 'WORDS_APPENDED'; payload: { words: string[] } }
 	| { type: 'HOST_PROMOTED'; payload: { message: string } }
 	| { type: 'ERROR'; payload: { message: string } }
