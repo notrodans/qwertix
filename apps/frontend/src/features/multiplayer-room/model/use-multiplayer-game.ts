@@ -33,6 +33,7 @@ export function useMultiplayerGame({
 }: UseMultiplayerGameProps) {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const [submitted, setSubmitted] = useState(false);
+	const [isResultSaved, setIsResultSaved] = useState(false);
 	const [timeLeft, setTimeLeft] = useState<number | null>(null);
 	const [startTimeLocal, setStartTimeLocal] = useState<number | null>(null);
 
@@ -55,6 +56,12 @@ export function useMultiplayerGame({
 		},
 		[submitted, onSubmit, text],
 	);
+
+	const handleResultSaved = useCallback((payload: { success: boolean }) => {
+		if (payload.success) {
+			setIsResultSaved(true);
+		}
+	}, []);
 
 	const { userTyped, caretPos, replayData, startTime } = useTyping(
 		text,
@@ -110,7 +117,7 @@ export function useMultiplayerGame({
 			const remaining = Math.max(0, config.duration - elapsed);
 			setTimeLeft(Math.ceil(remaining));
 		},
-		isTimerRunning ? 1000 : null,
+		isTimerRunning ? 1000 : 0,
 	);
 
 	return {
@@ -120,5 +127,7 @@ export function useMultiplayerGame({
 		containerRef,
 		forceFinish,
 		startTimer,
+		handleResultSaved,
+		isResultSaved,
 	};
 }

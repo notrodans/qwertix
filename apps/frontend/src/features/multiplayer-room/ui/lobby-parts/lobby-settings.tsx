@@ -105,7 +105,8 @@ export function LobbySettings({
 										})
 									}
 									className={`w-10 h-10 rounded-full text-xs font-bold transition-all ${
-										config.mode === RaceModeEnum.TIME && config.duration === seconds
+										config.mode === RaceModeEnum.TIME &&
+										config.duration === seconds
 											? 'bg-emerald-500 text-black'
 											: 'bg-gray-700 text-gray-400 hover:bg-gray-600'
 									}`}

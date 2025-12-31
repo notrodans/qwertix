@@ -1,6 +1,6 @@
 import { RaceModeEnum } from '@qwertix/room-contracts';
-import { useState } from 'react';
 import type { RefObject } from 'react';
+import { useState } from 'react';
 import type { Participant, RoomConfig } from '@/entities/room';
 import { TextDisplay } from '@/entities/typing-text';
 import { useInterval } from '@/shared/lib';
@@ -51,7 +51,7 @@ export function MultiplayerBoard({
 				setCountdown(Math.ceil(remaining));
 			}
 		},
-		status === 'COUNTDOWN' ? 100 : null,
+		status === 'COUNTDOWN' ? 100 : 0,
 	);
 
 	return (

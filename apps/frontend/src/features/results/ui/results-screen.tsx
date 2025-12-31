@@ -33,7 +33,10 @@ export function ResultsScreen({
 
 				<div className="flex gap-8">
 					<LeaderboardSection participants={participants} />
-					<ReplaySection targetText={targetText} replayData={stats.replayData} />
+					<ReplaySection
+						targetText={targetText}
+						replayData={stats.replayData}
+					/>
 				</div>
 
 				<div className="flex justify-center gap-4 pt-4">

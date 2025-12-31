@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { type Room, type RoomConfig, roomQueries } from '@/entities/room';
 import { socketService } from '@/shared/api/socket';
 import { connectToRoom } from '../api/room-socket';
@@ -12,6 +12,7 @@ export function useMultiplayerRoom(
 		onHostPromoted?: (message: string) => void;
 		onRaceStart?: () => void;
 		onRaceFinished?: () => void;
+		onResultSaved?: (payload: { success: boolean }) => void;
 	},
 ) {
 	const [room, setRoom] = useState<Room | null>(null);
@@ -25,7 +26,7 @@ export function useMultiplayerRoom(
 
 	// Stable reference for options to prevent reconnects on every render if parent creates new object
 	const optionsRef = useRef(options);
-	useEffect(() => {
+	useLayoutEffect(() => {
 		optionsRef.current = options;
 	}, [options]);
 
@@ -102,8 +103,8 @@ export function useMultiplayerRoom(
 			onError: (payload) => {
 				setError(payload.message);
 			},
-			onResultSaved: (_payload) => {
-				// Result saved confirmation, currently handled by board
+			onResultSaved: (payload) => {
+				optionsRef.current?.onResultSaved?.(payload);
 			},
 		});
 

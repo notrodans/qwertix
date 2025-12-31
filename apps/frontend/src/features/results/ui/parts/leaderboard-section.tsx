@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import type { Participant } from '@/entities/room';
 import { formatWPM } from '../../domain/format';
 
@@ -6,7 +7,10 @@ interface LeaderboardSectionProps {
 }
 
 export function LeaderboardSection({ participants }: LeaderboardSectionProps) {
-	const sorted = [...participants].sort((a, b) => (a.rank || 99) - (b.rank || 99));
+	const sorted = useMemo(
+		() => [...participants].sort((a, b) => (a.rank || 99) - (b.rank || 99)),
+		[participants],
+	);
 
 	return (
 		<div className="flex-1 space-y-4">

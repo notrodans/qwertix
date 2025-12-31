@@ -3,10 +3,7 @@ interface CountdownOverlayProps {
 	countdown: number | null;
 }
 
-export function CountdownOverlay({
-	status,
-	countdown,
-}: CountdownOverlayProps) {
+export function CountdownOverlay({ status, countdown }: CountdownOverlayProps) {
 	if (status !== 'COUNTDOWN') return null;
 
 	return (

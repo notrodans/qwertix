@@ -1,7 +1,10 @@
 /**
  * Calculates the number of remaining words based on the target text and user input.
  */
-export function calculateRemainingWords(text: string, userTyped: string): number {
+export function calculateRemainingWords(
+	text: string,
+	userTyped: string,
+): number {
 	if (!text) return 0;
 	const targetCount = text.split(' ').length;
 	const typedCount = userTyped.split(' ').length;

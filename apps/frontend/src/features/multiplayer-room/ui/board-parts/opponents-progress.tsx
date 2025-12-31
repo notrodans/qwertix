@@ -9,7 +9,9 @@ export function OpponentsProgress({
 	participants,
 	currentUser,
 }: OpponentsProgressProps) {
-	const others = participants.filter((p) => p.socketId !== currentUser?.socketId);
+	const others = participants.filter(
+		(p) => p.socketId !== currentUser?.socketId,
+	);
 
 	return (
 		<div className="space-y-2 bg-gray-900/50 p-4 rounded-lg">

@@ -1,4 +1,8 @@
-import { formatAccuracy, formatConsistency, formatWPM } from '../../domain/format';
+import {
+	formatAccuracy,
+	formatConsistency,
+	formatWPM,
+} from '../../domain/format';
 
 interface StatsGridProps {
 	stats: {
@@ -22,11 +26,7 @@ export function StatsGrid({ stats }: StatsGridProps) {
 				value={formatAccuracy(stats.accuracy)}
 				color="text-yellow-400"
 			/>
-			<StatBox
-				label="RAW"
-				value={formatWPM(stats.raw)}
-				color="text-zinc-400"
-			/>
+			<StatBox label="RAW" value={formatWPM(stats.raw)} color="text-zinc-400" />
 			<StatBox
 				label="CONS"
 				value={formatConsistency(stats.consistency)}

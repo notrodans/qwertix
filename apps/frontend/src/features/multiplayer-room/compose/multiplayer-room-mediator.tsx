@@ -1,5 +1,5 @@
 import { RaceModeEnum } from '@qwertix/room-contracts';
-import { type ReactNode, useState } from 'react';
+import { type ReactNode, useMemo, useState } from 'react';
 import { type Participant } from '@/entities/room';
 import { useMultiplayerGame } from '../model/use-multiplayer-game';
 import { useMultiplayerRoom } from '../model/use-multiplayer-room';
@@ -64,6 +64,9 @@ export function MultiplayerRoomMediator({
 		forceFinish: () => {
 			// Placeholder, populated later
 		},
+		handleResultSaved: (_payload: { success: boolean }) => {
+			// Placeholder, populated later
+		},
 	};
 
 	const {
@@ -87,12 +90,28 @@ export function MultiplayerRoomMediator({
 		onRaceFinished: () => {
 			gameControlsRef.forceFinish();
 		},
+		onResultSaved: (payload) => {
+			gameControlsRef.handleResultSaved(payload);
+		},
 	});
 
 	const handleSubmitResult = (stats: LocalResult & { fullText: string }) => {
 		submitResult(stats);
 		setLocalStats(stats);
 	};
+
+	// Merge local stats with server-side calculated stats
+	const finalStats = useMemo(() => {
+		if (!localStats) return null;
+		if (!currentUser) return localStats;
+
+		return {
+			...localStats,
+			wpm: currentUser.wpm > 0 ? currentUser.wpm : localStats.wpm,
+			accuracy:
+				currentUser.accuracy > 0 ? currentUser.accuracy : localStats.accuracy,
+		};
+	}, [localStats, currentUser]);
 
 	// Initialize game hook only if room exists (or pass defaults)
 	const game = useMultiplayerGame({
@@ -106,6 +125,7 @@ export function MultiplayerRoomMediator({
 	// Link game methods to the ref so 'useMultiplayerRoom' callbacks can call them
 	gameControlsRef.startTimer = game.startTimer;
 	gameControlsRef.forceFinish = game.forceFinish;
+	gameControlsRef.handleResultSaved = game.handleResultSaved;
 
 	if (error) {
 		return (
@@ -123,53 +143,53 @@ export function MultiplayerRoomMediator({
 	}
 
 	return (
-		<>
-			<RoomLayout
-				lobby={
-					room.status === 'LOBBY' ||
-					(room.status === 'FINISHED' && !localStats) ? (
-						<Lobby
-							roomId={roomId}
-							participants={room.participants}
-							config={room.config}
-							isHost={currentUser?.isHost ?? false}
-							status={room.status}
-							onStart={startRace}
-							onRestart={restartGame}
-							onTransferHost={transferHost}
-							onUpdateSettings={updateSettings}
-						/>
-					) : null
-				}
-				board={
-					room.status === 'COUNTDOWN' ||
-					room.status === 'RACING' ||
-					(room.status === 'FINISHED' && localStats) ? (
-						<MultiplayerBoard
-							text={room.text.join(' ')}
-							config={room.config}
-							status={room.status}
-							startTime={room.startTime}
-							participants={room.participants}
-							currentUser={currentUser}
-							// Game State
-							userTyped={game.userTyped}
-							caretPos={game.caretPos}
-							timeLeft={game.timeLeft}
-							containerRef={game.containerRef}
-						/>
-					) : null
-				}
-			/>
-			{localStats &&
-				renderResults?.({
-					stats: localStats,
-					text: localStats.fullText,
-					participants: room.participants,
-					isHost: currentUser?.isHost ?? false,
-					onRestart: restartGame,
-					onClose: () => setLocalStats(null),
-				})}
-		</>
+		<RoomLayout
+			lobby={
+				room.status === 'LOBBY' ||
+				(room.status === 'FINISHED' && !localStats) ? (
+					<Lobby
+						roomId={roomId}
+						participants={room.participants}
+						config={room.config}
+						isHost={currentUser?.isHost ?? false}
+						status={room.status}
+						onStart={startRace}
+						onRestart={restartGame}
+						onTransferHost={transferHost}
+						onUpdateSettings={updateSettings}
+					/>
+				) : null
+			}
+			board={
+				(room.status === 'COUNTDOWN' || room.status === 'RACING') &&
+				!finalStats ? (
+					<MultiplayerBoard
+						text={room.text.join(' ')}
+						config={room.config}
+						status={room.status}
+						startTime={room.startTime}
+						participants={room.participants}
+						currentUser={currentUser}
+						// Game State
+						userTyped={game.userTyped}
+						caretPos={game.caretPos}
+						timeLeft={game.timeLeft}
+						containerRef={game.containerRef}
+					/>
+				) : null
+			}
+			results={
+				finalStats
+					? renderResults?.({
+							stats: finalStats,
+							text: finalStats.fullText,
+							participants: room.participants,
+							isHost: currentUser?.isHost ?? false,
+							onRestart: restartGame,
+							onClose: () => setLocalStats(null),
+						})
+					: null
+			}
+		/>
 	);
 }
