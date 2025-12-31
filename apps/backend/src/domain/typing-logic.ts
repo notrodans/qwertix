@@ -10,7 +10,10 @@ export function calculateWPM(
 	return words / timeMinutes;
 }
 
-export function calculateAccuracy(typedText: string, targetText: string): number {
+export function calculateAccuracy(
+	typedText: string,
+	targetText: string,
+): number {
 	if (typedText.length === 0) return 100;
 	let correct = 0;
 	const minLength = Math.min(typedText.length, targetText.length);
@@ -38,23 +41,36 @@ export function reconstructText(
 
 			if (reconstructedTypedText.length > confirmedIndex) {
 				if (isCtrl) {
-					const textAfterConfirmed = reconstructedTypedText.slice(confirmedIndex);
+					const textAfterConfirmed =
+						reconstructedTypedText.slice(confirmedIndex);
 					const trimmed = textAfterConfirmed.trimEnd();
 					const diff = textAfterConfirmed.length - trimmed.length;
 
 					if (diff === 0) {
 						const lastSpace = trimmed.lastIndexOf(' ');
 						if (lastSpace === -1) {
-							reconstructedTypedText = reconstructedTypedText.slice(0, confirmedIndex);
+							reconstructedTypedText = reconstructedTypedText.slice(
+								0,
+								confirmedIndex,
+							);
 						} else {
-							reconstructedTypedText = reconstructedTypedText.slice(0, confirmedIndex + lastSpace + 1);
+							reconstructedTypedText = reconstructedTypedText.slice(
+								0,
+								confirmedIndex + lastSpace + 1,
+							);
 						}
 					} else {
 						const lastSpace = trimmed.lastIndexOf(' ');
 						if (lastSpace === -1) {
-							reconstructedTypedText = reconstructedTypedText.slice(0, confirmedIndex);
+							reconstructedTypedText = reconstructedTypedText.slice(
+								0,
+								confirmedIndex,
+							);
 						} else {
-							reconstructedTypedText = reconstructedTypedText.slice(0, confirmedIndex + lastSpace + 1);
+							reconstructedTypedText = reconstructedTypedText.slice(
+								0,
+								confirmedIndex + lastSpace + 1,
+							);
 						}
 					}
 				} else {
