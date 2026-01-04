@@ -5,6 +5,7 @@ import {
 	TypingSessionLayout,
 	TypingStatusIndicator,
 } from '@/entities/typing-text';
+import { SoloStatusEnum } from '../model/store';
 import { useSoloGame } from '../model/use-solo-game';
 import { SoloIndicators } from '../ui/solo-indicators';
 import { SoloToolbar } from '../ui/solo-toolbar';
@@ -37,7 +38,7 @@ export function SoloTypingMediator({ renderResults }: SoloTypingMediatorProps) {
 		restart,
 	} = useSoloGame();
 
-	if (status === 'RESULT') {
+	if (status === SoloStatusEnum.RESULT) {
 		if (isSaving) {
 			return (
 				<div className="flex flex-col items-center justify-center h-64 gap-4">
@@ -82,7 +83,6 @@ export function SoloTypingMediator({ renderResults }: SoloTypingMediatorProps) {
 						userTyped={userTyped}
 						caretPos={caretPos}
 						containerRef={containerRef}
-						className=""
 					/>
 				}
 				controls={<RestartButton onReset={restart} />}

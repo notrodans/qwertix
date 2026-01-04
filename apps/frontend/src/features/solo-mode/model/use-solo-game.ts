@@ -1,10 +1,11 @@
 import { RaceModeEnum, type ReplayEvent } from '@qwertix/room-contracts';
 import { useQuery } from '@tanstack/react-query';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { useSessionStore } from '@/entities/session';
 import { useTyping, wordQueries } from '@/entities/typing-text';
 import { useInterval } from '@/shared/lib';
-import { useSoloModeStore } from './store';
+import { SoloStatusEnum, useSoloModeStore } from './store';
+import { useSaveSoloResult } from './use-save-solo-result';
 
 export interface SoloGameResult {
 	wpm: number;
@@ -28,8 +29,9 @@ export function useSoloGame() {
 	const { user } = useSessionStore();
 	const [timeLeft, setTimeLeft] = useState<number | null>(null);
 	const [results, setResults] = useState<SoloGameResult | null>(null);
-	const [isSaving, setIsSaving] = useState(false);
 	const [extraWords, setExtraWords] = useState<string[]>([]);
+
+	const { mutate: saveResult, isPending: isSaving } = useSaveSoloResult();
 
 	const containerRef = useRef<HTMLDivElement>(null);
 
@@ -38,8 +40,10 @@ export function useSoloGame() {
 		wordQueries.list(initialCount),
 	);
 
-	const allWords = [...initialWords, ...extraWords];
-	const text = allWords.join(' ');
+	const text = useMemo(
+		() => [...initialWords, ...extraWords].join(' '),
+		[initialWords, extraWords],
+	);
 
 	const loadMoreWords = async () => {
 		try {
@@ -54,55 +58,46 @@ export function useSoloGame() {
 	};
 
 	const handleFinish = useCallback(
-		async (currentTyped: string, replay: ReplayEvent[], startTime: number) => {
-			if (status === 'RESULT') return;
-			setIsSaving(true);
-			setStatus('RESULT');
+		(currentTyped: string, replay: ReplayEvent[], startTime: number) => {
+			if (status !== SoloStatusEnum.TYPING) return;
+			setStatus(SoloStatusEnum.RESULT);
 
-			try {
-				const response = await fetch('/api/results', {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({
-						userId: user?.id,
-						targetText: text,
-						replayData: replay,
-						startTime: startTime,
-						endTime: Date.now(),
-						consistency: 100,
-					}),
-				});
-
-				if (response.ok) {
-					const savedResult = await response.json();
-					if (savedResult) {
+			saveResult(
+				{
+					userId: user?.id,
+					targetText: text,
+					replayData: replay,
+					startTime: startTime,
+					endTime: Date.now(),
+					consistency: 100,
+				},
+				{
+					onSuccess: (savedResult) => {
+						if (savedResult) {
+							setResults({
+								wpm: savedResult.wpm,
+								raw: savedResult.raw,
+								accuracy: savedResult.accuracy,
+								consistency: savedResult.consistency,
+								replayData: replay,
+								fullText: text,
+							});
+						}
+					},
+					onError: () => {
 						setResults({
-							wpm: savedResult.wpm,
-							raw: savedResult.raw,
-							accuracy: savedResult.accuracy,
-							consistency: savedResult.consistency,
+							wpm: 0,
+							raw: 0,
+							accuracy: 0,
+							consistency: 100,
 							replayData: replay,
 							fullText: text,
 						});
-					}
-				} else {
-					// Fallback if server fails?
-					setResults({
-						wpm: 0,
-						raw: 0,
-						accuracy: 0,
-						consistency: 100,
-						replayData: replay,
-						fullText: text,
-					});
-				}
-			} catch (e) {
-				console.error('Failed to save solo result', e);
-			} finally {
-				setIsSaving(false);
-			}
+					},
+				},
+			);
 		},
-		[setStatus, text, user, status],
+		[status, setStatus, saveResult, text, user],
 	);
 
 	const {
@@ -113,7 +108,7 @@ export function useSoloGame() {
 		startTime: typingStartTime,
 	} = useTyping(text, containerRef, {
 		onStart: () => {
-			setStatus('TYPING');
+			setStatus(SoloStatusEnum.TYPING);
 			if (mode === RaceModeEnum.TIME) setTimeLeft(duration);
 		},
 		onType: (nextTyped, updatedReplayData) => {
@@ -132,12 +127,14 @@ export function useSoloGame() {
 		},
 	});
 
-	// 4. Timer Logic
-	const isTimeModeRunning =
-		status === 'TYPING' &&
-		mode === RaceModeEnum.TIME &&
-		!!typingStartTime &&
-		!!duration;
+	const isTimeModeRunning = useMemo(
+		() =>
+			status === SoloStatusEnum.TYPING &&
+			mode === RaceModeEnum.TIME &&
+			!!typingStartTime &&
+			!!duration,
+		[status, mode, typingStartTime, duration],
+	);
 
 	useInterval(
 		() => {
@@ -157,7 +154,6 @@ export function useSoloGame() {
 		isTimeModeRunning ? 100 : 0,
 	);
 
-	// 5. Restart Logic
 	const restart = () => {
 		refetch();
 		setExtraWords([]);
