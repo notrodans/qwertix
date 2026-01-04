@@ -1,4 +1,4 @@
-import { type ParticipantDTO } from '@qwertix/room-contracts';
+import { type ParticipantDTO, SocketActionEnum } from '@qwertix/room-contracts';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import {
@@ -111,23 +111,23 @@ export function useMultiplayerRoom(roomId: string, username: string) {
 	}, [roomId, username]);
 
 	const startRace = () => {
-		socketService.send('START_RACE', {});
+		socketService.send(SocketActionEnum.START_RACE, {});
 	};
 
 	const updateProgress = (typedLength: number) => {
-		socketService.send('UPDATE_PROGRESS', { typedLength });
+		socketService.send(SocketActionEnum.UPDATE_PROGRESS, { typedLength });
 	};
 
 	const updateSettings = (config: RoomConfig) => {
-		socketService.send('UPDATE_SETTINGS', config);
+		socketService.send(SocketActionEnum.UPDATE_SETTINGS, config);
 	};
 
 	const transferHost = (targetId: string) => {
-		socketService.send('TRANSFER_HOST', { targetId });
+		socketService.send(SocketActionEnum.TRANSFER_HOST, { targetId });
 	};
 
 	const loadMoreWords = () => {
-		socketService.send('LOAD_MORE_WORDS', {});
+		socketService.send(SocketActionEnum.LOAD_MORE_WORDS, {});
 	};
 
 	const submitResult = (stats: {
@@ -137,11 +137,11 @@ export function useMultiplayerRoom(roomId: string, username: string) {
 		consistency: number;
 		replayData: { key: string; timestamp: number }[];
 	}) => {
-		socketService.send('SUBMIT_RESULT', stats);
+		socketService.send(SocketActionEnum.SUBMIT_RESULT, stats);
 	};
 
 	const restartGame = () => {
-		socketService.send('RESTART_GAME', {});
+		socketService.send(SocketActionEnum.RESTART_GAME, {});
 	};
 
 	return {

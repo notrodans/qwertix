@@ -1,5 +1,10 @@
-import type { SocketAction } from '@qwertix/room-contracts';
-import { RaceModeEnum, RoomStatusEnum } from '@qwertix/room-contracts';
+import {
+	RaceModeEnum,
+	RoomStatusEnum,
+	type SocketAction,
+	SocketActionEnum,
+	SocketEventEnum,
+} from '@qwertix/room-contracts';
 import type { FastifyInstance } from 'fastify';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SocketManager } from '../../src/managers/SocketManager';
@@ -54,7 +59,7 @@ describe('SocketManager Integration', () => {
 
 	const sendMessage = (
 		ws: FakeWebSocket,
-		type: string,
+		type: SocketActionEnum,
 		payload: SocketAction['payload'],
 	) => {
 		ws.emit('message', JSON.stringify({ type, payload }));
@@ -68,7 +73,7 @@ describe('SocketManager Integration', () => {
 			});
 			const ws = connectClient();
 
-			sendMessage(ws, 'JOIN_ROOM', {
+			sendMessage(ws, SocketActionEnum.JOIN_ROOM, {
 				roomId: room.id(),
 				username: 'User1',
 			});
@@ -81,7 +86,7 @@ describe('SocketManager Integration', () => {
 
 			// Check that ROOM_STATE was sent at some point
 			const roomStateMsg = ws.sentMessages.find((m) =>
-				m.includes('ROOM_STATE'),
+				m.includes(SocketEventEnum.ROOM_STATE),
 			);
 			expect(roomStateMsg).toBeDefined();
 
@@ -92,21 +97,21 @@ describe('SocketManager Integration', () => {
 
 		it('should fail if room does not exist', async () => {
 			const ws = connectClient();
-			sendMessage(ws, 'JOIN_ROOM', {
+			sendMessage(ws, SocketActionEnum.JOIN_ROOM, {
 				roomId: 'INVALID',
 				username: 'User1',
 			});
 			await new Promise(process.nextTick);
 
 			const lastMsg = ws.sentMessages[ws.sentMessages.length - 1];
-			expect(lastMsg).toContain('ERROR');
+			expect(lastMsg).toContain(SocketEventEnum.ERROR);
 		});
 
 		it('should authenticate with token', async () => {
 			const room = await roomService.createRoom();
 			const ws = connectClient();
 
-			sendMessage(ws, 'JOIN_ROOM', {
+			sendMessage(ws, SocketActionEnum.JOIN_ROOM, {
 				roomId: room.id(),
 				username: 'User1',
 				token: 'valid_token',
@@ -126,14 +131,17 @@ describe('SocketManager Integration', () => {
 			const ws = connectClient();
 
 			// Join
-			sendMessage(ws, 'JOIN_ROOM', { roomId: room.id(), username: 'Host' });
+			sendMessage(ws, SocketActionEnum.JOIN_ROOM, {
+				roomId: room.id(),
+				username: 'Host',
+			});
 			await new Promise(process.nextTick);
 
 			// Start Race
 			vi.useFakeTimers();
 			vi.setSystemTime(10000); // Start at t=10000 to avoid Date.now()=0 issues
 
-			sendMessage(ws, 'START_RACE', {});
+			sendMessage(ws, SocketActionEnum.START_RACE, {});
 			await new Promise(process.nextTick);
 
 			expect(room.status()).toBe(RoomStatusEnum.COUNTDOWN);
@@ -141,7 +149,7 @@ describe('SocketManager Integration', () => {
 			expect(room.status()).toBe(RoomStatusEnum.RACING);
 
 			// Update Progress (send substantial amount to ensure > 0 progress)
-			sendMessage(ws, 'UPDATE_PROGRESS', { typedLength: 10 });
+			sendMessage(ws, SocketActionEnum.UPDATE_PROGRESS, { typedLength: 10 });
 			await new Promise(process.nextTick);
 
 			const p = room.participants().get(ws.userId!);
@@ -149,7 +157,9 @@ describe('SocketManager Integration', () => {
 
 			// Finish
 			const totalLen = room.text().join(' ').length;
-			sendMessage(ws, 'UPDATE_PROGRESS', { typedLength: totalLen });
+			sendMessage(ws, SocketActionEnum.UPDATE_PROGRESS, {
+				typedLength: totalLen,
+			});
 			await new Promise(process.nextTick);
 
 			expect(room.status()).toBe(RoomStatusEnum.FINISHED);
@@ -163,7 +173,7 @@ describe('SocketManager Integration', () => {
 			const room = await roomService.createRoom();
 			const ws = connectClient();
 
-			sendMessage(ws, 'JOIN_ROOM', {
+			sendMessage(ws, SocketActionEnum.JOIN_ROOM, {
 				roomId: room.id(),
 				username: 'User1',
 				token: 'valid', // Authenticated
@@ -172,7 +182,7 @@ describe('SocketManager Integration', () => {
 
 			// Need to START RACE for stats to be calculated
 			vi.useFakeTimers();
-			sendMessage(ws, 'START_RACE', {});
+			sendMessage(ws, SocketActionEnum.START_RACE, {});
 			await new Promise(process.nextTick);
 			vi.advanceTimersByTime(3000); // Countdown
 			expect(room.status()).toBe(RoomStatusEnum.RACING);
@@ -190,7 +200,7 @@ describe('SocketManager Integration', () => {
 			];
 			// 1 word in 1 second = 60 WPM.
 
-			sendMessage(ws, 'SUBMIT_RESULT', {
+			sendMessage(ws, SocketActionEnum.SUBMIT_RESULT, {
 				wpm: 60, // Ignored by server
 				raw: 60,
 				accuracy: 100,

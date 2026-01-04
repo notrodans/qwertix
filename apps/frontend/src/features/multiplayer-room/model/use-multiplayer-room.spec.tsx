@@ -1,3 +1,4 @@
+import { SocketEventEnum } from '@qwertix/room-contracts';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -44,8 +45,8 @@ describe('useMultiplayerRoom', () => {
 
 		// Initial state from socket (ROOM_STATE)
 		act(() => {
-			if (handlers.ROOM_STATE) {
-				handlers.ROOM_STATE({
+			if (handlers[SocketEventEnum.ROOM_STATE]) {
+				handlers[SocketEventEnum.ROOM_STATE]({
 					id: 'room1',
 					participants: [{ socketId: 'id1', username: 'user1', isHost: true }],
 					text: ['hello'],
@@ -56,8 +57,8 @@ describe('useMultiplayerRoom', () => {
 
 		// New player joins (backend sends socketId)
 		act(() => {
-			if (handlers.PLAYER_JOINED) {
-				handlers.PLAYER_JOINED({
+			if (handlers[SocketEventEnum.PLAYER_JOINED]) {
+				handlers[SocketEventEnum.PLAYER_JOINED]({
 					socketId: 'id2',
 					username: 'user2',
 					isHost: false,
@@ -71,8 +72,8 @@ describe('useMultiplayerRoom', () => {
 
 		// Same player joins again (e.g. re-dispatch or logic error)
 		act(() => {
-			if (handlers.PLAYER_JOINED) {
-				handlers.PLAYER_JOINED({
+			if (handlers[SocketEventEnum.PLAYER_JOINED]) {
+				handlers[SocketEventEnum.PLAYER_JOINED]({
 					socketId: 'id2',
 					username: 'user2',
 					isHost: false,
@@ -91,8 +92,8 @@ describe('useMultiplayerRoom', () => {
 		});
 
 		act(() => {
-			if (handlers.ROOM_STATE) {
-				handlers.ROOM_STATE({
+			if (handlers[SocketEventEnum.ROOM_STATE]) {
+				handlers[SocketEventEnum.ROOM_STATE]({
 					id: 'room1',
 					participants: [],
 					text: ['word1'],
@@ -104,8 +105,8 @@ describe('useMultiplayerRoom', () => {
 		expect(result.current.room?.text).toEqual(['word1']);
 
 		act(() => {
-			if (handlers.WORDS_APPENDED) {
-				handlers.WORDS_APPENDED({ words: ['word2', 'word3'] });
+			if (handlers[SocketEventEnum.WORDS_APPENDED]) {
+				handlers[SocketEventEnum.WORDS_APPENDED]({ words: ['word2', 'word3'] });
 			}
 		});
 

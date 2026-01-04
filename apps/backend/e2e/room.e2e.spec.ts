@@ -1,3 +1,4 @@
+import { SocketActionEnum, SocketEventEnum } from '@qwertix/room-contracts';
 import type { AddressInfo } from 'net';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -31,7 +32,7 @@ describe('Room E2E', () => {
 			client.on('open', () => {
 				client.send(
 					JSON.stringify({
-						type: 'JOIN_ROOM',
+						type: SocketActionEnum.JOIN_ROOM,
 						payload: { roomId, username: 'test-user' },
 					}),
 				);
@@ -39,7 +40,7 @@ describe('Room E2E', () => {
 
 			client.on('message', (data) => {
 				const msg = JSON.parse(data.toString());
-				if (msg.type === 'ROOM_STATE') {
+				if (msg.type === SocketEventEnum.ROOM_STATE) {
 					resolve(msg);
 					client.close();
 				}
@@ -50,7 +51,7 @@ describe('Room E2E', () => {
 			});
 		});
 
-		expect(receivedMessage.type).toBe('ROOM_STATE');
+		expect(receivedMessage.type).toBe(SocketEventEnum.ROOM_STATE);
 
 		const payload = receivedMessage.payload as {
 			id: string;

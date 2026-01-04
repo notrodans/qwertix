@@ -3,6 +3,8 @@ import {
 	type RoomConfig,
 	RoomStatusEnum,
 	type SocketAction,
+	SocketActionEnum,
+	SocketEventEnum,
 } from '@qwertix/room-contracts';
 import type { FastifyBaseLogger, FastifyInstance } from 'fastify';
 import { v4 as uuid } from 'uuid';
@@ -51,31 +53,31 @@ export class SocketManager {
 
 	private async handleMessage(ws: Socket, msg: SocketAction) {
 		switch (msg.type) {
-			case 'JOIN_ROOM':
+			case SocketActionEnum.JOIN_ROOM:
 				await this.handleJoinRoom(ws, msg.payload);
 				break;
-			case 'START_RACE':
+			case SocketActionEnum.START_RACE:
 				await this.handleStartRace(ws);
 				break;
-			case 'UPDATE_PROGRESS':
+			case SocketActionEnum.UPDATE_PROGRESS:
 				await this.handleUpdateProgress(ws, msg.payload);
 				break;
-			case 'UPDATE_SETTINGS':
+			case SocketActionEnum.UPDATE_SETTINGS:
 				await this.handleUpdateSettings(ws, msg.payload);
 				break;
-			case 'TRANSFER_HOST':
+			case SocketActionEnum.TRANSFER_HOST:
 				await this.handleTransferHost(ws, msg.payload);
 				break;
-			case 'LOAD_MORE_WORDS':
+			case SocketActionEnum.LOAD_MORE_WORDS:
 				await this.handleLoadMoreWords(ws);
 				break;
-			case 'SUBMIT_RESULT':
+			case SocketActionEnum.SUBMIT_RESULT:
 				await this.handleSubmitResult(ws, msg.payload);
 				break;
-			case 'LEAVE_ROOM':
+			case SocketActionEnum.LEAVE_ROOM:
 				await this.handleDisconnect(ws);
 				break;
-			case 'RESTART_GAME':
+			case SocketActionEnum.RESTART_GAME:
 				await this.handleRestartGame(ws);
 				break;
 		}
@@ -92,7 +94,9 @@ export class SocketManager {
 
 		const participant = room.participants().get(ws.userId);
 		if (!participant?.isHost) {
-			this.send(ws, 'ERROR', { message: 'Only host can restart game' });
+			this.send(ws, SocketEventEnum.ERROR, {
+				message: 'Only host can restart game',
+			});
 			return;
 		}
 
@@ -101,7 +105,11 @@ export class SocketManager {
 			// Get updated room to broadcast new text
 			const updatedRoom = await this.roomService.get(ws.roomId);
 			if (updatedRoom) {
-				this.broadcastToRoom(updatedRoom, 'ROOM_UPDATE', updatedRoom.toDTO());
+				this.broadcastToRoom(
+					updatedRoom,
+					SocketEventEnum.ROOM_UPDATE,
+					updatedRoom.toDTO(),
+				);
 			}
 		}
 	}
@@ -117,12 +125,14 @@ export class SocketManager {
 
 		const participant = room.participants().get(ws.userId);
 		if (!participant?.isHost) {
-			this.send(ws, 'ERROR', { message: 'Only host can change settings' });
+			this.send(ws, SocketEventEnum.ERROR, {
+				message: 'Only host can change settings',
+			});
 			return;
 		}
 
 		if (await this.roomService.updateRoomConfig(ws.roomId, config)) {
-			this.broadcastToRoom(room, 'ROOM_UPDATE', room.toDTO());
+			this.broadcastToRoom(room, SocketEventEnum.ROOM_UPDATE, room.toDTO());
 		}
 	}
 
@@ -137,18 +147,20 @@ export class SocketManager {
 
 		const sender = room.participants().get(ws.userId);
 		if (!sender?.isHost) {
-			this.send(ws, 'ERROR', { message: 'Only host can transfer role' });
+			this.send(ws, SocketEventEnum.ERROR, {
+				message: 'Only host can transfer role',
+			});
 			return;
 		}
 
 		if (room.transferHost(payload.targetId)) {
-			this.broadcastToRoom(room, 'ROOM_UPDATE', room.toDTO());
+			this.broadcastToRoom(room, SocketEventEnum.ROOM_UPDATE, room.toDTO());
 			// Optionally send individual notification
 			const targetWs = Array.from(this.wss.clients).find(
 				(c) => c.userId === payload.targetId,
 			);
 			if (targetWs) {
-				this.send(targetWs, 'HOST_PROMOTED', {
+				this.send(targetWs, SocketEventEnum.HOST_PROMOTED, {
 					message: 'You are now the host',
 				});
 			}
@@ -167,7 +179,7 @@ export class SocketManager {
 		const room = await this.roomService.get(roomId);
 
 		if (!room) {
-			this.send(ws, 'ERROR', { message: 'Room not found' });
+			this.send(ws, SocketEventEnum.ERROR, { message: 'Room not found' });
 			return;
 		}
 
@@ -189,10 +201,14 @@ export class SocketManager {
 		const participant = room.addParticipant(userId, username);
 
 		// Notify user of success and current state
-		this.send(ws, 'ROOM_STATE', room.toDTO());
+		this.send(ws, SocketEventEnum.ROOM_STATE, room.toDTO());
 
 		// Broadcast to others
-		this.broadcastToRoom(room, 'PLAYER_JOINED', participant.toDTO());
+		this.broadcastToRoom(
+			room,
+			SocketEventEnum.PLAYER_JOINED,
+			participant.toDTO(),
+		);
 	}
 
 	/**
@@ -206,20 +222,22 @@ export class SocketManager {
 
 		const participant = room.participants().get(ws.userId);
 		if (!participant?.isHost) {
-			this.send(ws, 'ERROR', { message: 'Only host can start race' });
+			this.send(ws, SocketEventEnum.ERROR, {
+				message: 'Only host can start race',
+			});
 			return;
 		}
 
 		room.startRace(); // Sets status to COUNTDOWN
 		const countdownStartTime = Date.now(); // Use current time for frontend calculation
-		this.broadcastToRoom(room, 'COUNTDOWN_START', {
+		this.broadcastToRoom(room, SocketEventEnum.COUNTDOWN_START, {
 			startTime: countdownStartTime,
 		});
 
 		// Start timer for actual start (3 seconds later)
 		setTimeout(() => {
 			room.startRacing();
-			this.broadcastToRoom(room, 'RACE_START', {});
+			this.broadcastToRoom(room, SocketEventEnum.RACE_START, {});
 
 			// Handle automatic termination for TIME mode
 			const config = room.config();
@@ -249,7 +267,7 @@ export class SocketManager {
 
 		this.broadcastToRoom(
 			room,
-			'PROGRESS_UPDATE',
+			SocketEventEnum.PROGRESS_UPDATE,
 			Array.from(room.participants().values()).map((p) => p.toDTO()),
 		);
 
@@ -276,7 +294,7 @@ export class SocketManager {
 	}
 
 	private broadcastFinish(room: Room) {
-		this.broadcastToRoom(room, 'RACE_FINISHED', {
+		this.broadcastToRoom(room, SocketEventEnum.RACE_FINISHED, {
 			leaderboard: Array.from(room.participants().values())
 				.map((p) => p.toDTO())
 				.sort((a, b) => (a.rank || 999) - (b.rank || 999)),
@@ -291,7 +309,7 @@ export class SocketManager {
 		try {
 			const room = ws.roomId ? await this.roomService.get(ws.roomId) : null;
 			if (!room || !ws.userId) {
-				this.send(ws, 'ERROR', {
+				this.send(ws, SocketEventEnum.ERROR, {
 					message: 'Room not found for result submission',
 				});
 				return;
@@ -304,7 +322,9 @@ export class SocketManager {
 			);
 
 			if (!stats) {
-				this.send(ws, 'ERROR', { message: 'Failed to calculate stats' });
+				this.send(ws, SocketEventEnum.ERROR, {
+					message: 'Failed to calculate stats',
+				});
 				return;
 			}
 
@@ -315,7 +335,7 @@ export class SocketManager {
 			});
 
 			// Broadcast update to everyone so they see the final authoritative stats
-			this.broadcastToRoom(room, 'ROOM_UPDATE', room.toDTO());
+			this.broadcastToRoom(room, SocketEventEnum.ROOM_UPDATE, room.toDTO());
 
 			await this.resultService.saveResult(
 				ws.dbUserId || null,
@@ -327,7 +347,7 @@ export class SocketManager {
 				payload.replayData,
 				room.text().join(' '),
 			);
-			this.send(ws, 'RESULT_SAVED', {
+			this.send(ws, SocketEventEnum.RESULT_SAVED, {
 				success: true,
 				stats: {
 					wpm: stats.wpm,
@@ -337,7 +357,9 @@ export class SocketManager {
 			});
 		} catch (e) {
 			this.logger.error(e, 'Failed to save result');
-			this.send(ws, 'ERROR', { message: 'Failed to save result' });
+			this.send(ws, SocketEventEnum.ERROR, {
+				message: 'Failed to save result',
+			});
 		}
 	}
 
@@ -353,7 +375,9 @@ export class SocketManager {
 		const newWords = await this.roomService.appendWordsToRoom(ws.roomId, 20);
 
 		if (newWords) {
-			this.broadcastToRoom(room, 'WORDS_APPENDED', { words: newWords });
+			this.broadcastToRoom(room, SocketEventEnum.WORDS_APPENDED, {
+				words: newWords,
+			});
 		}
 	}
 
@@ -367,12 +391,14 @@ export class SocketManager {
 			if (room) {
 				const wasHost = room.participants().get(ws.userId)?.isHost;
 				room.removeParticipant(ws.userId);
-				this.broadcastToRoom(room, 'PLAYER_LEFT', { userId: ws.userId });
+				this.broadcastToRoom(room, SocketEventEnum.PLAYER_LEFT, {
+					userId: ws.userId,
+				});
 
 				if (room.participants().size === 0) {
 					await this.roomService.delete(ws.roomId);
 				} else {
-					this.broadcastToRoom(room, 'ROOM_UPDATE', room.toDTO());
+					this.broadcastToRoom(room, SocketEventEnum.ROOM_UPDATE, room.toDTO());
 
 					// Notify new host if role changed
 					if (wasHost) {
@@ -384,7 +410,7 @@ export class SocketManager {
 								(c) => c.userId === newHost.socketId,
 							);
 							if (hostWs) {
-								this.send(hostWs, 'HOST_PROMOTED', {
+								this.send(hostWs, SocketEventEnum.HOST_PROMOTED, {
 									message: 'You are now the host',
 								});
 							}
@@ -395,13 +421,13 @@ export class SocketManager {
 		}
 	}
 
-	private send(ws: Socket, type: string, payload: unknown) {
+	private send(ws: Socket, type: SocketEventEnum, payload: unknown) {
 		if (ws.readyState === WebSocket.OPEN) {
 			ws.send(JSON.stringify({ type, payload }));
 		}
 	}
 
-	private broadcastToRoom(room: Room, type: string, payload: unknown) {
+	private broadcastToRoom(room: Room, type: SocketEventEnum, payload: unknown) {
 		for (const client of this.wss.clients) {
 			if (client.roomId === room.id() && client.readyState === WebSocket.OPEN) {
 				client.send(JSON.stringify({ type, payload }));
