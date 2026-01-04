@@ -1,15 +1,15 @@
 import { env } from '@env';
-import type { Participant, RoomDTO } from '@qwertix/room-contracts';
+import type { ParticipantDTO, RoomDTO } from '@qwertix/room-contracts';
 import { socketService } from '@/shared/api/socket';
 
 export interface RoomSocketCallbacks {
 	onRoomState: (room: RoomDTO) => void;
-	onPlayerJoined: (participant: Participant) => void;
+	onPlayerJoined: (participant: ParticipantDTO) => void;
 	onPlayerLeft: (payload: { userId: string }) => void;
 	onCountdown: (payload: { startTime: number }) => void;
 	onRaceStart: () => void;
-	onProgressUpdate: (participants: Participant[]) => void;
-	onRaceFinished: (payload: { leaderboard: Participant[] }) => void;
+	onProgressUpdate: (participants: ParticipantDTO[]) => void;
+	onRaceFinished: (payload: { leaderboard: ParticipantDTO[] }) => void;
 	onWordsAppended: (payload: { words: string[] }) => void;
 	onHostPromoted: (payload: { message: string }) => void;
 	onError: (payload: { message: string }) => void;

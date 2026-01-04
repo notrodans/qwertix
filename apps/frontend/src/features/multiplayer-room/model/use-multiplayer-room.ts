@@ -1,7 +1,7 @@
+import { type ParticipantDTO } from '@qwertix/room-contracts';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import {
-	type Participant,
 	type Room,
 	type RoomConfig,
 	RoomStatusEnum,
@@ -29,11 +29,11 @@ export function useMultiplayerRoom(roomId: string, username: string) {
 				setRoom(payload);
 				setIsResultSaved(false);
 			},
-			onPlayerJoined: (payload) => {
+			onPlayerJoined: (payload: ParticipantDTO) => {
 				setRoom((prev: Room | null) => {
 					if (!prev) return null;
 					const exists = prev.participants.find(
-						(p) => p.socketId === payload.socketId,
+						(p: ParticipantDTO) => p.socketId === payload.socketId,
 					);
 					if (exists) return prev;
 					return {
@@ -42,18 +42,18 @@ export function useMultiplayerRoom(roomId: string, username: string) {
 					};
 				});
 			},
-			onPlayerLeft: (payload) => {
+			onPlayerLeft: (payload: { userId: string }) => {
 				setRoom((prev: Room | null) => {
 					if (!prev) return null;
 					return {
 						...prev,
 						participants: prev.participants.filter(
-							(p) => p.socketId !== payload.userId,
+							(p: ParticipantDTO) => p.socketId !== payload.userId,
 						),
 					};
 				});
 			},
-			onCountdown: (payload) => {
+			onCountdown: (payload: { startTime: number }) => {
 				setRoom((prev: Room | null) =>
 					prev
 						? {
@@ -69,13 +69,13 @@ export function useMultiplayerRoom(roomId: string, username: string) {
 					prev ? { ...prev, status: RoomStatusEnum.RACING } : null,
 				);
 			},
-			onProgressUpdate: (payload) => {
+			onProgressUpdate: (payload: ParticipantDTO[]) => {
 				setRoom((prev: Room | null) => {
 					if (!prev) return null;
 					return { ...prev, participants: payload };
 				});
 			},
-			onRaceFinished: (payload) => {
+			onRaceFinished: (payload: { leaderboard: ParticipantDTO[] }) => {
 				setRoom((prev: Room | null) => {
 					if (!prev) return null;
 					return {
@@ -85,7 +85,7 @@ export function useMultiplayerRoom(roomId: string, username: string) {
 					};
 				});
 			},
-			onWordsAppended: (payload) => {
+			onWordsAppended: (payload: { words: string[] }) => {
 				setRoom((prev: Room | null) => {
 					if (!prev) return null;
 					return {
@@ -94,13 +94,13 @@ export function useMultiplayerRoom(roomId: string, username: string) {
 					};
 				});
 			},
-			onHostPromoted: (payload) => {
+			onHostPromoted: (payload: { message: string }) => {
 				alert(payload.message);
 			},
-			onError: (payload) => {
+			onError: (payload: { message: string }) => {
 				setError(payload.message);
 			},
-			onResultSaved: (payload) => {
+			onResultSaved: (payload: { success: boolean }) => {
 				if (payload.success) {
 					setIsResultSaved(true);
 				}
@@ -156,7 +156,7 @@ export function useMultiplayerRoom(roomId: string, username: string) {
 		submitResult,
 		restartGame,
 		currentUser: room?.participants.find(
-			(p: Participant) => p.username === username,
+			(p: ParticipantDTO) => p.username === username,
 		),
 	};
 }

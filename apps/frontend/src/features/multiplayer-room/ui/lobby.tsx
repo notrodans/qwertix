@@ -1,5 +1,4 @@
-import type { RoomStatus } from '@qwertix/room-contracts';
-import type { Participant, RoomConfig } from '@/entities/room';
+import type { Participant, RoomConfig, RoomStatus } from '@/entities/room';
 import { LobbyActions } from './lobby-parts/lobby-actions';
 import { LobbyHeader } from './lobby-parts/lobby-header';
 import { LobbyInvite } from './lobby-parts/lobby-invite';

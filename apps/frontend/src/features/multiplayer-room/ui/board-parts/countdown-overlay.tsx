@@ -1,10 +1,12 @@
+import { type RoomStatus, RoomStatusEnum } from '@/entities/room';
+
 interface CountdownOverlayProps {
-	status: string;
+	status: RoomStatus;
 	countdown: number | null;
 }
 
 export function CountdownOverlay({ status, countdown }: CountdownOverlayProps) {
-	if (status !== 'COUNTDOWN') return null;
+	if (status !== RoomStatusEnum.COUNTDOWN) return null;
 
 	return (
 		<div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">

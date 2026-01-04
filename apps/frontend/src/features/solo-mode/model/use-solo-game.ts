@@ -58,7 +58,7 @@ export function useSoloGame() {
 	};
 
 	const handleFinish = useCallback(
-		(currentTyped: string, replay: ReplayEvent[], startTime: number) => {
+		(_currentTyped: string, replay: ReplayEvent[], startTime: number) => {
 			if (status !== SoloStatusEnum.TYPING) return;
 			setStatus(SoloStatusEnum.RESULT);
 

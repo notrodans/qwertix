@@ -7,8 +7,8 @@ import {
 
 export type {
 	ParticipantDTO as Participant,
-	RoomDTO as Room,
 	RoomConfig,
 	RoomStatusEnum as RoomStatus,
 };
+export type Room = RoomDTO;
 export { RaceModeEnum, RoomStatusEnum } from '@qwertix/room-contracts';

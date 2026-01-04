@@ -325,6 +325,7 @@ export class SocketManager {
 				stats.accuracy,
 				Math.round(payload.consistency),
 				payload.replayData,
+				room.text().join(' '),
 			);
 			this.send(ws, 'RESULT_SAVED', {
 				success: true,

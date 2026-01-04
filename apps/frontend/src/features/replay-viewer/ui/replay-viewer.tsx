@@ -63,11 +63,13 @@ export function ReplayViewer({ replay }: ReplayViewerProps) {
 	const duration =
 		events && events.length > 0
 			? Math.max(
-					events[events.length - 1].timestamp - events[0].timestamp,
+					(events[events.length - 1]?.timestamp ?? 0) -
+						(events[0]?.timestamp ?? 0),
 					1000,
 				)
 			: 1000;
-	const firstTimestamp = events && events.length > 0 ? events[0].timestamp : 0;
+	const firstTimestamp =
+		events && events.length > 0 ? (events[0]?.timestamp ?? 0) : 0;
 
 	// Memoized function to update text based on progress
 	const updateText = useCallback(

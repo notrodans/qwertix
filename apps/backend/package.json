@@ -6,7 +6,7 @@
 		"dev": "tsx watch src/main.ts",
 		"build": "tsup",
 		"start": "node dist/main.mjs",
-		"lint": "biome check .",
+		"lint": "tsc --noEmit -p tsconfig.json && biome check .",
 		"lint:fix": "biome check --write .",
 		"format": "biome format --write .",
 		"typecheck": "tsc --noEmit",

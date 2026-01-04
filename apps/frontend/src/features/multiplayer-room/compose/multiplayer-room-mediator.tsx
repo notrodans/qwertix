@@ -36,6 +36,11 @@ export function MultiplayerRoomMediator({
 	);
 	const [localResult, setLocalResult] = useState<LocalResult | null>(null);
 
+	const handleSubmitResult = (stats: LocalResult & { fullText: string }) => {
+		submitResult(stats);
+		setLocalResult(stats);
+	};
+
 	const {
 		room,
 		error,
@@ -48,11 +53,6 @@ export function MultiplayerRoomMediator({
 		submitResult,
 		restartGame,
 	} = useMultiplayerRoom(roomId, username);
-
-	const handleSubmitResult = (stats: LocalResult & { fullText: string }) => {
-		submitResult(stats);
-		setLocalResult(stats);
-	};
 
 	// Initialize game hook second, passing state and methods from useMultiplayerRoom
 	const game = useMultiplayerGame({

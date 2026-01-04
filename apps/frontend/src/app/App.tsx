@@ -11,7 +11,7 @@ import { SandboxPage } from '@/pages/sandbox';
 import { SetupPage } from '@/pages/setup';
 import { queryClient } from '@/shared/api/query/client';
 
-function AppContent() {
+function AppRouter() {
 	const { data: setupStatus, isLoading } = useSetupStatus();
 
 	if (isLoading) {
@@ -47,7 +47,7 @@ function App() {
 		<StrictMode>
 			<QueryClientProvider client={queryClient}>
 				<BrowserRouter>
-					<AppContent />
+					<AppRouter />
 				</BrowserRouter>
 			</QueryClientProvider>
 		</StrictMode>

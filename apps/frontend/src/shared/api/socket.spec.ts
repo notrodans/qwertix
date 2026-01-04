@@ -12,10 +12,12 @@ describe('SocketService', () => {
 
 	it('should NOT duplicate message dispatches', () => {
 		const handler = vi.fn();
-		service.on('TEST', handler);
+		// biome-ignore lint/suspicious/noExplicitAny: Needed for testing internal event dispatch
+		service.on('TEST' as any, handler);
 
 		// @ts-ignore - trigger private dispatch
-		service.dispatch('TEST', { data: 1 });
+		// biome-ignore lint/suspicious/noExplicitAny: Needed for testing internal event dispatch
+		service.dispatch('TEST' as any, { data: 1 });
 
 		expect(handler).toHaveBeenCalledTimes(1);
 	});

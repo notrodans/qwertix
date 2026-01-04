@@ -35,7 +35,7 @@ export function useMultiplayerGame({
 	text,
 	config,
 	status,
-	startTime,
+	startTime: _startTime,
 	onProgress,
 	onLoadMore,
 	onSubmit,

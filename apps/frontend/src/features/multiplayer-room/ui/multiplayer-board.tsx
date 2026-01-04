@@ -1,7 +1,12 @@
 import { RaceModeEnum } from '@qwertix/room-contracts';
 import type { RefObject } from 'react';
 import { useState } from 'react';
-import type { Participant, RoomConfig } from '@/entities/room';
+import {
+	type Participant,
+	type RoomConfig,
+	type RoomStatus,
+	RoomStatusEnum,
+} from '@/entities/room';
 import { TextDisplay } from '@/entities/typing-text';
 import { useInterval } from '@/shared/lib';
 import { calculateRemainingWords } from '../domain/game-logic';
@@ -12,7 +17,7 @@ import { OpponentsProgress } from './board-parts/opponents-progress';
 interface MultiplayerBoardProps {
 	text: string;
 	config: RoomConfig;
-	status: 'COUNTDOWN' | 'RACING' | 'FINISHED';
+	status: RoomStatus;
 	startTime?: number; // Server's race start time
 	participants: Participant[];
 	currentUser: Participant | undefined;
@@ -47,13 +52,13 @@ export function MultiplayerBoard({
 	const [countdown, setCountdown] = useState<number | null>(null);
 	useInterval(
 		() => {
-			if (status === 'COUNTDOWN' && startTime) {
+			if (status === RoomStatusEnum.COUNTDOWN && startTime) {
 				const elapsed = (Date.now() - startTime) / 1000;
 				const remaining = Math.max(0, 3 - elapsed);
 				setCountdown(Math.ceil(remaining));
 			}
 		},
-		status === 'COUNTDOWN' ? 100 : 0,
+		status === RoomStatusEnum.COUNTDOWN ? 100 : 0,
 	);
 
 	return (
@@ -71,7 +76,7 @@ export function MultiplayerBoard({
 			/>
 
 			<div
-				className={`transition-opacity duration-300 ${status === 'COUNTDOWN' ? 'opacity-50 blur-sm' : 'opacity-100'}`}
+				className={`transition-opacity duration-300 ${status === RoomStatusEnum.COUNTDOWN ? 'opacity-50 blur-sm' : 'opacity-100'}`}
 			>
 				<TextDisplay
 					targetText={text}
