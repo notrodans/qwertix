@@ -1,7 +1,31 @@
 {
-	"name": "qwertix",
-	"description": "An app for typing competitions between people",
+	"license": "MIT",
 	"private": true,
+	"name": "qwertix",
+	"author": "notrodans@gmail.com",
+	"description": "An app for typing competitions between people",
+	"keywords": ["qwertix"],
+	"repository": {
+		"type": "git",
+		"url": "github.com/notrodans/qwertix"
+	},
+	"scripts": {
+		"dev": "bun run --filter '*' dev",
+		"dev:frontend": "bun run --filter frontend dev",
+		"dev:backend": "bun run --filter backend dev",
+		"build": "bun run --filter '*' build",
+		"start": "bun run --filter '*' start",
+		"lint": "bun run --filter '*' lint",
+		"lint:fix": "bun run --filter '*' lint:fix",
+		"format": "biome format --write .",
+		"typecheck": "bun run --filter '*' build",
+		"test": "bun run --filter '*' test",
+		"test:e2e": "bun run --filter '*' test:e2e",
+		"test:all": "bun run test && bun run test:e2e",
+		"docker": "docker compose -f docker-compose.dev.yml up -d",
+		"docker:test": "docker compose -f docker-compose.test.yml up -d db-test",
+		"docker:test:down": "docker compose -f docker-compose.test.yml down"
+	},
 	"workspaces": {
 		"packages": ["apps/*", "libs/*"],
 		"catalog": {
@@ -47,28 +71,5 @@
 		"globals": "catalog:",
 		"typescript": "catalog:",
 		"typescript-eslint": "catalog:"
-	},
-	"scripts": {
-		"dev": "bun run --filter '*' dev",
-		"dev:frontend": "bun run --filter frontend dev",
-		"dev:backend": "bun run --filter backend dev",
-		"build": "bun run --filter '*' build",
-		"start": "bun run --filter '*' start",
-		"lint": "bun run --filter '*' lint",
-		"lint:fix": "bun run --filter '*' lint:fix",
-		"format": "biome format --write .",
-		"typecheck": "bun run --filter '*' build",
-		"test": "bun run --filter '*' test",
-		"test:e2e": "bun run --filter '*' test:e2e",
-		"test:all": "bun run test && bun run test:e2e",
-		"docker:test": "docker compose -f docker-compose.test.yml up -d db-test",
-		"docker:test:down": "docker compose -f docker-compose.test.yml down"
-	},
-	"repository": {
-		"type": "git",
-		"url": "github.com/notrodans/qwertix"
-	},
-	"keywords": ["qwertix"],
-	"author": "notrodans@gmail.com",
-	"license": "MIT"
+	}
 }

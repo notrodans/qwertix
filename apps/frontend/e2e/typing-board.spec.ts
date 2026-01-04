@@ -67,6 +67,7 @@ test.describe('Typing Board Feature', () => {
 		// Construct the word
 		let word = '';
 		for (let i = 0; i < count; i++) {
+			await expect(targetChars.nth(i)).toHaveAttribute('data-char-value', /./);
 			word += await targetChars.nth(i).getAttribute('data-char-value');
 		}
 
@@ -107,6 +108,7 @@ test.describe('Typing Board Feature', () => {
 		const typeCount = Math.min(count, 3);
 		let textToType = '';
 		for (let i = 0; i < typeCount; i++) {
+			await expect(targetChars.nth(i)).toHaveAttribute('data-char-value', /./);
 			textToType += await targetChars.nth(i).getAttribute('data-char-value');
 		}
 
@@ -132,6 +134,7 @@ test.describe('Typing Board Feature', () => {
 		// Type word but wrong last char
 		let word = '';
 		for (let i = 0; i < count - 1; i++) {
+			await expect(targetChars.nth(i)).toHaveAttribute('data-char-value', /./);
 			word += await targetChars.nth(i).getAttribute('data-char-value');
 		}
 		const lastRealChar = await targetChars
@@ -176,6 +179,7 @@ test.describe('Typing Board Feature', () => {
 
 		let word = '';
 		for (let i = 0; i < count; i++) {
+			await expect(targetChars.nth(i)).toHaveAttribute('data-char-value', /./);
 			word += await targetChars.nth(i).getAttribute('data-char-value');
 		}
 		await board.type(word + ' ');
@@ -204,8 +208,12 @@ test.describe('Typing Board Feature', () => {
 	});
 
 	test('should allow backspace to return to previous word if it was incomplete', async () => {
-		// Type incomplete first word "he " (target "hello")
-		await board.type('he ');
+		// Read first two chars of first word
+		const char0 = await board.getCharText(0, 0);
+		const char1 = await board.getCharText(0, 1);
+		
+		// Type incomplete first word (2 chars) + space
+		await board.type(char0 + char1 + ' ');
 
 		// Now on second word. Verify first word has error.
 		await board.expectWordError(0, true);
@@ -222,14 +230,14 @@ test.describe('Typing Board Feature', () => {
 		// Backspace: delete space
 		await board.press('Backspace');
 
-		// Backspace: delete 'e' from "he"
+		// Backspace: delete 2nd char of first word
 		await board.press('Backspace');
 
-		// Now we should be at index 1 of word 0 (letter 'h' remains)
-		// Let's verify 'e' (index 1) is now untyped
+		// Now we should be at index 1 of word 0
+		// Let's verify index 1 is now untyped
 		await board.expectCharStatus(0, 1, 'untyped');
 
-		// And 'h' (index 0) is still correct
+		// And index 0 is still correct
 		await board.expectCharStatus(0, 0, 'correct');
 	});
 });

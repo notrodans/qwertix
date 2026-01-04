@@ -4,12 +4,12 @@ import fastifySecureSession from '@fastify/secure-session';
 import Fastify from 'fastify';
 import { WebSocketServer } from 'ws';
 import { container, setupContainer } from './container';
-import type { AuthController } from './controllers/auth.controller';
-import type { PresetController } from './controllers/preset.controller';
-import type { ResultController } from './controllers/result.controller';
-import type { RoomController } from './controllers/room.controller';
+import type { AuthController } from './controllers/AuthController';
+import type { PresetController } from './controllers/PresetController';
+import type { ResultController } from './controllers/ResultController';
+import type { RoomController } from './controllers/RoomController';
 import { env } from './env';
-import type { WordService } from './services/word-service';
+import type { WordService } from './services/WordService';
 
 export const app = Fastify({
 	logger: {

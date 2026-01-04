@@ -19,6 +19,7 @@ interface MultiplayerBoardProps {
 
 	// Game State from Hook
 	userTyped: string;
+	validLength: number;
 	caretPos: { left: number; top: number };
 	timeLeft: number | null;
 	containerRef: RefObject<HTMLDivElement | null>;
@@ -32,13 +33,14 @@ export function MultiplayerBoard({
 	participants,
 	currentUser,
 	userTyped,
+	validLength,
 	caretPos,
 	timeLeft,
 	containerRef,
 }: MultiplayerBoardProps) {
 	const remainingWords =
 		config.mode === RaceModeEnum.WORDS
-			? calculateRemainingWords(text, userTyped)
+			? calculateRemainingWords(text, validLength)
 			: null;
 
 	// Countdown logic for the overlay

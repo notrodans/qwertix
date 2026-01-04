@@ -315,7 +315,7 @@ export const UserRepository = {
 
 ### **8. Testing Guidelines**
 
-We strictly follow the **Test Pyramid** and **TDD** principles.
+We strictly follow the **Test Pyramid** and **TDD** principles. We prefer the **Detroit (Classic) School of Testing**, emphasizing state-based verification and testing units of behavior rather than strict isolation of classes via mocks.
 
 #### **8.1. Strategies**
 *   **Unit (Vitest):** Isolate logic. Mock dependencies. Focus on `domain` and `model` layers.
@@ -331,8 +331,40 @@ We strictly follow the **Test Pyramid** and **TDD** principles.
 *   **Bug Fixing:** Found a bug? **Stop.** Write a test that reproduces the bug (it must fail). Fix the bug. Verify the test passes.
 *   **Mandatory Verification:** Every solved problem, bug fix, or new feature MUST be accompanied by at least one relevant test to ensure the solution works as intended and to prevent future regressions.
 *   **Quality:** Treat test code as production code. Maintain readability.
-*   **Antipatterns:**
-    *   **White Box Testing:** Avoid testing internal implementation details. Tests should focus on behavior and public APIs. Only use White Box testing if absolutely necessary and after user confirmation.
+
+#### **8.3. Built-in Fake Objects**
+*   **Concept:** Instead of using mocking frameworks (like Mockito or generic Jest mocks) to create complex mock objects on the fly, use **Built-in Fake Objects**.
+*   **Implementation:** Create "Fake" implementations of your interfaces or classes that reside next to the real code (e.g., in a `__mocks__` folder or exported with a `Fake` prefix).
+*   **Benefits:**
+    *   **Simpler Setup:** Tests become shorter and more readable because you instantiate a `FakeUser` instead of mocking 10 methods.
+    *   **Reusability:** Fakes are reusable across multiple tests.
+    *   **Maintainability:** When the interface changes, you update the Fake once, not every single test that mocks it.
+*   **Rule:** If a unit test requires mocking more than a couple of methods or objects, consider creating a reusable Fake object instead.
+
+#### **8.4. Anti-Patterns to Avoid**
+*   **The Mockery:** Excessive use of mocks to the point where you are testing the mocks, not the system. **Solution:** Use Fakes.
+*   **The Inspector (Anal Probe):** Testing private methods or internal state using reflection or loopholes. **Rule:** Only test public behavior (API).
+*   **The Slow Poke:** Unit tests that run slowly. **Rule:** Unit tests must be instant (milliseconds). If it touches the DB/File System/Network, it's an integration test.
+*   **The Giant:** Huge test classes or methods. **Rule:** Keep tests focused and small.
+*   **The Happy Path:** Only testing the "success" case. **Rule:** Explicitly test edge cases and error handling.
+*   **The Local Hero:** Tests that only pass on your machine (dependent on local env/config).
+*   **The Cuckoo:** Tests that sit in the wrong place or test the wrong thing (e.g., testing `ArrayList` inside `UserTest`).
+*   **The Liar:** Tests that always pass but don't check the result.
+*   **The Conjoined Twins:** Tests that are not isolated and depend on each other.
+*   **The Generous Leftovers:** Tests that leave dirty state (files, DB records) for other tests.
+*   **The Nitpicker:** Tests that compare the entire output when only a specific part matters.
+*   **The Secret Catcher:** Tests that rely on exceptions being thrown without explicit assertions.
+*   **The Dodger:** Tests that check for side effects but ignore the main behavior.
+*   **The Loudmouth:** Tests that clutter the console with logs.
+*   **The Greedy Catcher:** Tests that catch exceptions and swallow them.
+*   **The Sequencer:** Tests that depend on execution order.
+*   **The Enumerator:** Tests named `test1`, `test2`, etc., without semantic meaning.
+*   **The Free Ride:** Adding assertions to an existing test instead of writing a new one.
+*   **The Excessive Setup:** Tests where setup takes more lines than the actual test logic.
+*   **The Line Hitter:** Tests written solely to increase code coverage metrics.
+*   **The Forty-Foot Pole:** Tests that are too far removed from the code they are testing (testing through too many layers).
+*   **Test-per-Method:** Creating a test for every single method. **Rule:** Test behaviors, not methods.
+*   **White Box Testing:** Avoid testing internal implementation details. Tests should focus on behavior and public APIs. Only use White Box testing if absolutely necessary and after user confirmation.
 
 ---
 

@@ -3,9 +3,10 @@ import {
 	type ReplayEvent,
 	type RoomConfig,
 } from '@qwertix/room-contracts';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTyping } from '@/entities/typing-text';
 import { useInterval, useThrottledCallback } from '@/shared/lib';
+import { useEventCallback } from '@/shared/lib/hooks/use-event-callback';
 
 interface TypingStats {
 	wpm: number;
@@ -37,6 +38,8 @@ export function useMultiplayerGame({
 	const [timeLeft, setTimeLeft] = useState<number | null>(null);
 	const [startTimeLocal, setStartTimeLocal] = useState<number | null>(null);
 
+	const onSubmitCb = useEventCallback(onSubmit);
+
 	// Throttled progress updater
 	const throttledProgress = useThrottledCallback(onProgress, 200);
 
@@ -44,8 +47,9 @@ export function useMultiplayerGame({
 		(_typed: string, replay: ReplayEvent[]) => {
 			if (submitted) return;
 
-			onSubmit({
-				wpm: 0, // Calculated on backend
+			// Calculated on backend
+			onSubmitCb({
+				wpm: 0,
 				raw: 0,
 				accuracy: 0,
 				consistency: 100,
@@ -63,34 +67,26 @@ export function useMultiplayerGame({
 		}
 	}, []);
 
-	const { userTyped, caretPos, replayData, startTime } = useTyping(
-		text,
-		containerRef,
-		{
-			onType: (nextTyped, updatedReplayData) => {
+	const { userTyped, validLength, caretPos, replayData, startTime, reset } =
+		useTyping(text, containerRef, {
+			onType: (nextTyped) => {
 				if (submitted) return; // Prevent typing after submit
 
-				throttledProgress(nextTyped.length);
-
-				// Infinite scroll
-				if (
-					config.mode === RaceModeEnum.TIME &&
-					text.length - nextTyped.length < 150
-				) {
+				// Infinite scroll (Load more if cursor is near end, regardless of errors)
+				// Use nextTyped.length (cursor position) to check buffer end.
+				if (text.length - nextTyped.length < 150) {
 					onLoadMore();
 				}
-
-				// Completion for WORDS mode
-				if (
-					config.mode === RaceModeEnum.WORDS &&
-					nextTyped.length === text.length &&
-					text.length > 0
-				) {
-					handleFinish(nextTyped, updatedReplayData);
-				}
 			},
-		},
-	);
+		});
+
+	// Effect to trigger progress update when validLength changes
+	// We do this in effect/render because validLength comes from state
+	useEffect(() => {
+		if (startTime && !submitted) {
+			throttledProgress(validLength);
+		}
+	}, [validLength, startTime, submitted, throttledProgress]);
 
 	// Public methods for external control (e.g. from socket events)
 	const forceFinish = useCallback(() => {
@@ -120,6 +116,14 @@ export function useMultiplayerGame({
 		isTimerRunning ? 1000 : 0,
 	);
 
+	const resetGame = useCallback(() => {
+		setSubmitted(false);
+		setIsResultSaved(false);
+		setTimeLeft(null);
+		setStartTimeLocal(null);
+		reset();
+	}, [reset]);
+
 	return {
 		userTyped,
 		caretPos,
@@ -129,5 +133,6 @@ export function useMultiplayerGame({
 		startTimer,
 		handleResultSaved,
 		isResultSaved,
+		resetGame,
 	};
 }

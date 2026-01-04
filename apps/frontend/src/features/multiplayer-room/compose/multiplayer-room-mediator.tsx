@@ -1,5 +1,5 @@
 import { RaceModeEnum } from '@qwertix/room-contracts';
-import { type ReactNode, useMemo, useState } from 'react';
+import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { type Participant } from '@/entities/room';
 import { useMultiplayerGame } from '../model/use-multiplayer-game';
 import { useMultiplayerRoom } from '../model/use-multiplayer-room';
@@ -67,6 +67,9 @@ export function MultiplayerRoomMediator({
 		handleResultSaved: (_payload: { success: boolean }) => {
 			// Placeholder, populated later
 		},
+		resetGame: () => {
+			// Placeholder, populated later
+		},
 	};
 
 	const {
@@ -126,6 +129,15 @@ export function MultiplayerRoomMediator({
 	gameControlsRef.startTimer = game.startTimer;
 	gameControlsRef.forceFinish = game.forceFinish;
 	gameControlsRef.handleResultSaved = game.handleResultSaved;
+	gameControlsRef.resetGame = game.resetGame;
+
+	// Reset local stats if room goes back to LOBBY
+	useEffect(() => {
+		if (room?.status === 'LOBBY') {
+			setLocalStats(null);
+			game.resetGame();
+		}
+	}, [room?.status, game.resetGame]);
 
 	if (error) {
 		return (
@@ -135,11 +147,6 @@ export function MultiplayerRoomMediator({
 
 	if (!room) {
 		return <RoomLayout loading={<div>Loading Room...</div>} />;
-	}
-
-	// Reset local stats if room goes back to LOBBY or COUNTDOWN
-	if ((room.status === 'LOBBY' || room.status === 'COUNTDOWN') && localStats) {
-		setLocalStats(null);
 	}
 
 	return (
@@ -172,6 +179,7 @@ export function MultiplayerRoomMediator({
 						currentUser={currentUser}
 						// Game State
 						userTyped={game.userTyped}
+						validLength={game.validLength}
 						caretPos={game.caretPos}
 						timeLeft={game.timeLeft}
 						containerRef={game.containerRef}

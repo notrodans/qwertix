@@ -62,10 +62,8 @@ export class TypingBoardPage {
 	}
 
 	async getCharText(wordIndex: number, charIndex: number) {
-		return (
-			(await this.getChar(wordIndex, charIndex).getAttribute(
-				'data-char-value',
-			)) || ''
-		);
+		const char = this.getChar(wordIndex, charIndex);
+		await expect(char).toHaveAttribute('data-char-value', /./);
+		return (await char.getAttribute('data-char-value')) || '';
 	}
 }

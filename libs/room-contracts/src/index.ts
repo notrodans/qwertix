@@ -1,4 +1,9 @@
-export type RoomStatus = 'LOBBY' | 'COUNTDOWN' | 'RACING' | 'FINISHED';
+export enum RoomStatusEnum {
+	LOBBY,
+	COUNTDOWN,
+	RACING,
+	FINISHED,
+}
 
 export interface ParticipantDTO {
 	socketId: string;
@@ -28,7 +33,7 @@ export type RoomConfig =
 
 export interface RoomDTO {
 	id: string;
-	status: RoomStatus;
+	status: RoomStatusEnum;
 	participants: ParticipantDTO[];
 	config: RoomConfig;
 	text: string[];

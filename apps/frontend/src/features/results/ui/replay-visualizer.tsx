@@ -23,7 +23,7 @@ export function ReplayVisualizer({
 	replayData,
 	onComplete,
 }: ReplayVisualizerProps) {
-	const [isPlaying, setIsPlaying] = useState(false);
+	const [playing, setPlaying] = useState(false);
 	const [playbackTime, setPlaybackTime] = useState(0);
 	const [caretPos, setCaretPos] = useState({ left: 0, top: 0 });
 
@@ -64,20 +64,20 @@ export function ReplayVisualizer({
 			setPlaybackTime((prev) => {
 				const nextTime = Math.min(prev + deltaTime, totalDuration);
 				if (nextTime >= totalDuration) {
-					setIsPlaying(false);
+					setPlaying(false);
 					onComplete?.();
 				}
 				return nextTime;
 			});
 		}
 		lastTimeRef.current = time;
-		if (isPlaying) {
+		if (playing) {
 			requestRef.current = requestAnimationFrame(animate);
 		}
 	};
 
 	useEffect(() => {
-		if (isPlaying) {
+		if (playing) {
 			lastTimeRef.current = undefined; // Reset delta tracking
 			requestRef.current = requestAnimationFrame(animate);
 		} else {
@@ -90,7 +90,7 @@ export function ReplayVisualizer({
 				cancelAnimationFrame(requestRef.current);
 			}
 		};
-	}, [isPlaying, totalDuration]);
+	}, [playing, totalDuration]);
 
 	// Sync cursor with userTyped
 	useLayoutEffect(() => {
@@ -102,7 +102,8 @@ export function ReplayVisualizer({
 		if (playbackTime >= totalDuration) {
 			setPlaybackTime(0);
 		}
-		setIsPlaying(!isPlaying);
+
+		setPlaying((prev) => !prev);
 	};
 
 	const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -127,7 +128,7 @@ export function ReplayVisualizer({
 					onClick={togglePlay}
 					className="w-10 h-10 flex items-center justify-center rounded-full bg-yellow-500 hover:bg-yellow-400 text-black font-bold transition-colors"
 				>
-					{isPlaying ? '⏸' : '▶'}
+					{playing ? '⏸' : '▶'}
 				</button>
 
 				<span className="font-mono text-sm text-zinc-400 min-w-[4ch]">

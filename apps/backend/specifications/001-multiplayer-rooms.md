@@ -5,7 +5,7 @@ Allows users to create game sessions, invite others via a unique link, and compe
 
 ## 2. Terminology
 - **Room**: A dedicated session for a group of players.
-- **State**: Lifecycle of a race (`LOBBY`, `RACING`, `FINISHED`). **Note: Countdown phase is removed for instant action.**
+- **State**: Lifecycle of a race (`LOBBY`, `COUNTDOWN`, `RACING`, `FINISHED`).
 
 ## 3. Room Features
 
@@ -30,5 +30,6 @@ Allows users to create game sessions, invite others via a unique link, and compe
 ## 5. API & Protocol
 
 ### 5.1 Socket Events
-- `COUNTDOWN_START` is deprecated/removed. `RACE_START` is sent immediately after the host starts the game.
+- `COUNTDOWN_START` initiates the race sequence.
+- `RACE_START` is sent when the countdown finishes.
 - `RACE_FINISHED` is sent when the win condition is met.
