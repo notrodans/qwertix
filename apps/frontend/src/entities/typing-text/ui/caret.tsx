@@ -6,13 +6,13 @@ interface CaretProps {
 export function Caret({ left, top }: CaretProps) {
 	return (
 		<div
-			className="absolute w-0.5 h-[1.5em] bg-[#e2b714]"
+			className="absolute w-[2.5px] h-[1.5em] bg-[#e2b714] rounded-4xl"
 			data-testid="cursor"
 			style={{
 				left,
 				top,
 				transition:
-					'left 0.2s cubic-bezier(0.4, 1, 0.5, 1), top 0.2s cubic-bezier(0.4, 1, 0.5, 1)',
+					'left 0.1s cubic-bezier(1, 1, 1, 1), top 0.1s cubic-bezier(1, 1, 1, 1)',
 			}}
 		/>
 	);

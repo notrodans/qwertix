@@ -2,12 +2,14 @@ import {
 	type RefObject,
 	useCallback,
 	useEffect,
+	useLayoutEffect,
 	useRef,
 	useState,
 } from 'react';
 import {
 	appendCharacter,
 	calculateBackspace,
+	calculateCorrectChars,
 	calculateCursorIndex,
 	checkWordCompletion,
 } from '../domain/typing-engine';
@@ -43,128 +45,127 @@ export function useTyping(
 	options: UseTypingOptions = {},
 ) {
 	const [state, setState] = useState<TypingState>(INITIAL_STATE);
+	const stateRef = useRef<TypingState>(INITIAL_STATE);
 	const [caretPos, setCaretPos] = useState({ left: 0, top: 0 });
 
-	// Keep latest props in refs to avoid recreating the event listener on every render.
-	// Updating them during render is safe and eliminates the need for useEffect.
 	const targetTextRef = useRef(targetText);
-	targetTextRef.current = targetText;
+	useLayoutEffect(() => {
+		targetTextRef.current = targetText;
+	}, [targetText]);
 
 	const optionsRef = useRef(options);
-	optionsRef.current = options;
+	useLayoutEffect(() => {
+		optionsRef.current = options;
+	}, [options]);
 
 	const updateCursor = useCursorPositioning(containerRef, setCaretPos);
 
-	// Stable event handler using functional state updates
 	const handleKeyDown = useCallback(
 		(event: KeyboardEvent) => {
 			if (event.altKey) return;
 			if ((event.ctrlKey || event.metaKey) && event.key !== 'Backspace') return;
 
-			setState((prev) => {
-				const currentTargetText = targetTextRef.current;
-				const currentOptions = optionsRef.current;
-				const nextState = { ...prev };
-				let shouldUpdate = false;
+			const prev = stateRef.current;
+			const currentTargetText = targetTextRef.current;
+			const currentOptions = optionsRef.current;
 
-				// Start Timer Logic
-				if (!prev.startTime) {
-					const now = Date.now();
-					nextState.startTime = now;
-					currentOptions.onStart?.();
+			const nextState = { ...prev };
+			let shouldUpdate = false;
+			let typeEventTriggered = false;
+
+			// Start Timer Logic
+			if (!prev.startTime) {
+				const now = Date.now();
+				nextState.startTime = now;
+				currentOptions.onStart?.();
+				shouldUpdate = true;
+			}
+
+			const timestamp = Date.now() - (nextState.startTime || Date.now());
+
+			// Backspace Logic
+			if (event.key === 'Backspace') {
+				const isCtrl = event.ctrlKey || event.metaKey;
+
+				nextState.replayData = [
+					...prev.replayData,
+					{
+						key: 'Backspace',
+						timestamp,
+						ctrlKey: isCtrl,
+						confirmedIndex: prev.confirmedIndex,
+					},
+				];
+
+				const nextTyped = calculateBackspace(
+					prev.userTyped,
+					prev.confirmedIndex,
+					isCtrl,
+				);
+
+				if (nextTyped !== prev.userTyped) {
+					nextState.userTyped = nextTyped;
+					typeEventTriggered = true;
+					shouldUpdate = true;
+				} else {
+					// Even if typed text didn't change (empty), replay data did.
 					shouldUpdate = true;
 				}
-
-				const timestamp = Date.now() - (nextState.startTime || Date.now());
-
-				// Backspace Logic
-				if (event.key === 'Backspace') {
-					const isCtrl = event.ctrlKey || event.metaKey;
-
-					nextState.replayData = [
-						...prev.replayData,
-						{
-							key: 'Backspace',
-							timestamp,
-							ctrlKey: isCtrl,
-							confirmedIndex: prev.confirmedIndex,
-						},
-					];
-
-					const nextTyped = calculateBackspace(
-						prev.userTyped,
-						prev.confirmedIndex,
-						isCtrl,
-					);
-
-					if (nextTyped !== prev.userTyped) {
-						nextState.userTyped = nextTyped;
-						currentOptions.onType?.(nextTyped, nextState.replayData);
-
-						// Schedule cursor update (side effect outside of render cycle)
-						requestAnimationFrame(() => {
-							const nextIndex = calculateCursorIndex(
-								currentTargetText,
-								nextTyped,
-							);
-							updateCursor(nextIndex);
-						});
-
-						return nextState;
-					}
-					// If nothing changed (e.g. at start), we might still want to record replay data?
-					// Original logic implied yes. But if we return same object, React bails out.
-					// Let's force update if replay data changed.
-					return nextState;
+			}
+			// Typing Logic
+			else if (event.key.length === 1) {
+				if (event.key === ' ') {
+					event.preventDefault();
 				}
 
-				// Typing Logic
-				if (event.key.length === 1) {
+				nextState.replayData = [
+					...prev.replayData,
+					{
+						key: event.key,
+						timestamp,
+					},
+				];
+
+				const nextTyped = appendCharacter(prev.userTyped, event.key);
+
+				if (nextTyped !== prev.userTyped) {
+					nextState.userTyped = nextTyped;
+					typeEventTriggered = true;
+					shouldUpdate = true;
+
+					// Word Completion Check
 					if (event.key === ' ') {
-						event.preventDefault();
-					}
-
-					nextState.replayData = [
-						...prev.replayData,
-						{
-							key: event.key,
-							timestamp,
-						},
-					];
-
-					const nextTyped = appendCharacter(prev.userTyped, event.key);
-
-					if (nextTyped !== prev.userTyped) {
-						nextState.userTyped = nextTyped;
-						currentOptions.onType?.(nextTyped, nextState.replayData);
-
-						// Word Completion Check
-						if (event.key === ' ') {
-							const newConfirmedIndex = checkWordCompletion(
-								nextTyped,
-								currentTargetText,
-							);
-							if (newConfirmedIndex !== -1) {
-								nextState.confirmedIndex = newConfirmedIndex;
-							}
+						const newConfirmedIndex = checkWordCompletion(
+							nextTyped,
+							currentTargetText,
+						);
+						if (newConfirmedIndex !== -1) {
+							nextState.confirmedIndex = newConfirmedIndex;
 						}
-
-						// Schedule cursor update
-						requestAnimationFrame(() => {
-							const nextIndex = calculateCursorIndex(
-								currentTargetText,
-								nextTyped,
-							);
-							updateCursor(nextIndex);
-						});
-
-						return nextState;
 					}
+				} else {
+					// Replay data changed
+					shouldUpdate = true;
 				}
+			}
 
-				// Return previous state if no changes to avoid rerender
-				return shouldUpdate ? nextState : prev;
-			});
+			if (shouldUpdate) {
+				stateRef.current = nextState;
+				setState(nextState);
+
+				if (typeEventTriggered) {
+					currentOptions.onType?.(nextState.userTyped, nextState.replayData);
+
+					// Schedule cursor update
+					requestAnimationFrame(() => {
+						const nextIndex = calculateCursorIndex(
+							currentTargetText,
+							nextState.userTyped,
+						);
+						updateCursor(nextIndex);
+					});
+				}
+			}
 		},
 		[updateCursor],
 	);
@@ -175,19 +176,38 @@ export function useTyping(
 	}, [handleKeyDown]);
 
 	const reset = useCallback(() => {
+		stateRef.current = INITIAL_STATE;
 		setState(INITIAL_STATE);
 		requestAnimationFrame(() => updateCursor(0));
 	}, [updateCursor]);
 
+	const validLength = calculateCorrectChars(
+		targetTextRef.current,
+		state.userTyped,
+		state.confirmedIndex,
+	);
+
 	return {
 		userTyped: state.userTyped,
+		validLength,
 		caretPos,
 		reset,
 		replayData: state.replayData,
-		setUserTyped: (val: string) => setState((s) => ({ ...s, userTyped: val })),
+		setUserTyped: (val: string) => {
+			const nextState = { ...stateRef.current, userTyped: val };
+			stateRef.current = nextState;
+			setState(nextState);
+		},
 		setReplayData: (
 			fn: (prev: TypingState['replayData']) => TypingState['replayData'],
-		) => setState((s) => ({ ...s, replayData: fn(s.replayData) })),
+		) => {
+			const nextState = {
+				...stateRef.current,
+				replayData: fn(stateRef.current.replayData),
+			};
+			stateRef.current = nextState;
+			setState(nextState);
+		},
 		startTime: state.startTime,
 	};
 }

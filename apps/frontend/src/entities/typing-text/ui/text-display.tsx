@@ -89,7 +89,7 @@ export function TextDisplay({
 								charToRender = userChar;
 								color = '#7e2a33';
 								charType = 'extra';
-								charStatus = 'extra'; // Or incorrect?
+								charStatus = 'extra';
 							}
 						} else {
 							// Untyped part of target

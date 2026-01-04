@@ -128,3 +128,28 @@ export function calculateCursorIndex(
 
 	return calculatedIndex;
 }
+
+/**
+ * Calculates the number of correctly typed characters.
+ * Counts all characters in confirmed (completed) words plus matching characters in the current active word.
+ */
+export function calculateCorrectChars(
+	targetText: string,
+	userTyped: string,
+	confirmedIndex: number,
+): number {
+	const currentTyped = userTyped.slice(confirmedIndex);
+	const currentTarget = targetText.slice(confirmedIndex);
+
+	// Find common prefix length
+	let i = 0;
+	while (
+		i < currentTyped.length &&
+		i < currentTarget.length &&
+		currentTyped[i] === currentTarget[i]
+	) {
+		i++;
+	}
+
+	return confirmedIndex + i;
+}
