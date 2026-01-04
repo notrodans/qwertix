@@ -1,0 +1,1 @@
+ALTER TABLE "replays" ADD COLUMN "target_text" text NOT NULL;

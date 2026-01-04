@@ -1,3 +1,4 @@
+import type { InferSelectModel } from 'drizzle-orm';
 import {
 	boolean,
 	integer,
@@ -16,6 +17,7 @@ export const users = pgTable('users', {
 	passwordHash: text('password_hash').notNull(), // For local auth
 	createdAt: timestamp('created_at').defaultNow().notNull(),
 });
+export type User = InferSelectModel<typeof users>;
 
 export const presets = pgTable('presets', {
 	id: serial('id').primaryKey(),
@@ -25,6 +27,7 @@ export const presets = pgTable('presets', {
 	createdBy: integer('created_by').references(() => users.id),
 	createdAt: timestamp('created_at').defaultNow().notNull(),
 });
+export type Preset = InferSelectModel<typeof presets>;
 
 export const results = pgTable('results', {
 	id: serial('id').primaryKey(),
@@ -36,12 +39,15 @@ export const results = pgTable('results', {
 	consistency: integer('consistency').notNull(),
 	createdAt: timestamp('created_at').defaultNow().notNull(),
 });
+export type Result = InferSelectModel<typeof results>;
 
 export const replays = pgTable('replays', {
 	id: serial('id').primaryKey(),
 	resultId: integer('result_id')
-		.references(() => results.id)
+		.references(() => results.id, { onDelete: 'cascade' })
 		.notNull(),
 	data: jsonb('data').notNull(), // Array of keystroke events
+	targetText: text('target_text').notNull(),
 	createdAt: timestamp('created_at').defaultNow().notNull(),
 });
+export type Replay = InferSelectModel<typeof replays>;
