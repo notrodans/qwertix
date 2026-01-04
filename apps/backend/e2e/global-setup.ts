@@ -1,24 +1,29 @@
 import { sql } from 'drizzle-orm';
-import { migrate } from 'drizzle-orm/node-postgres/migrator';
-import path from 'path';
+import { execSync } from 'child_process';
 
 export async function setup() {
-	// Ensure test environment variables are set BEFORE importing anything that uses env
+	// Ensure test environment variables are set
 	process.env.DB_PORT = '5433';
 	process.env.DB_NAME = 'qwertix_test';
 
-	// Dynamic import to ensure process.env is set
-	const { DataBase } = await import('../src/db');
-	const db = new DataBase();
-
 	try {
-		console.log('Running global E2E setup: Migrations...');
-		await migrate(db.source, {
-			migrationsFolder: path.resolve(__dirname, '../drizzle'),
+		console.log('Synchronizing test database schema via db:push...');
+		// Use db:push because it ensures the schema matches exactly (removes stale columns)
+		// We use execSync to run the drizzle-kit command
+		execSync('bun run db:push', {
+			env: {
+				...process.env,
+				DB_PORT: '5433',
+				DB_NAME: 'qwertix_test',
+			},
 		});
-		console.log('Global E2E setup: Migrations completed');
+		console.log('Global E2E setup: Schema synchronized');
 
-		// Initial cleanup
+		// Dynamic import to ensure process.env is set for the cleanup
+		const { DataBase } = await import('../src/db');
+		const db = new DataBase();
+
+		// Initial data cleanup
 		const tables = ['replays', 'results', 'presets', 'users'];
 		for (const table of tables) {
 			await db.source.execute(
