@@ -1,5 +1,8 @@
 # Qwertix ⌨️
 
+> [!CAUTION]
+> This is a **pet project** currently under active development. Expect **numerous bugs**, unfinished features, and occasional breaking changes.
+
 A multiplayer typing competition platform built with real-time features.
 
 ## 🚀 Features
