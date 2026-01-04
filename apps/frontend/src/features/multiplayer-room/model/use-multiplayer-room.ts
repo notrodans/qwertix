@@ -1,22 +1,19 @@
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { type Room, type RoomConfig, roomQueries } from '@/entities/room';
+import { useEffect, useState } from 'react';
+import {
+	type Participant,
+	type Room,
+	type RoomConfig,
+	RoomStatusEnum,
+	roomQueries,
+} from '@/entities/room';
 import { socketService } from '@/shared/api/socket';
 import { connectToRoom } from '../api/room-socket';
 
-export function useMultiplayerRoom(
-	roomId: string,
-	username: string,
-	options?: {
-		onWordsAppended?: (words: string[]) => void;
-		onHostPromoted?: (message: string) => void;
-		onRaceStart?: () => void;
-		onRaceFinished?: () => void;
-		onResultSaved?: (payload: { success: boolean }) => void;
-	},
-) {
+export function useMultiplayerRoom(roomId: string, username: string) {
 	const [room, setRoom] = useState<Room | null>(null);
 	const [error, setError] = useState<string | null>(null);
+	const [isResultSaved, setIsResultSaved] = useState(false);
 
 	// Initial fetch via HTTP to check room existence and get initial state
 	const { isError } = useQuery({
@@ -24,19 +21,16 @@ export function useMultiplayerRoom(
 		enabled: !!roomId,
 	});
 
-	// Stable reference for options to prevent reconnects on every render if parent creates new object
-	const optionsRef = useRef(options);
-	useLayoutEffect(() => {
-		optionsRef.current = options;
-	}, [options]);
-
 	useEffect(() => {
 		if (!roomId) return;
 
 		const cleanup = connectToRoom(roomId, username, {
-			onRoomState: (payload) => setRoom(payload),
+			onRoomState: (payload) => {
+				setRoom(payload);
+				setIsResultSaved(false);
+			},
 			onPlayerJoined: (payload) => {
-				setRoom((prev) => {
+				setRoom((prev: Room | null) => {
 					if (!prev) return null;
 					const exists = prev.participants.find(
 						(p) => p.socketId === payload.socketId,
@@ -49,7 +43,7 @@ export function useMultiplayerRoom(
 				});
 			},
 			onPlayerLeft: (payload) => {
-				setRoom((prev) => {
+				setRoom((prev: Room | null) => {
 					if (!prev) return null;
 					return {
 						...prev,
@@ -60,51 +54,56 @@ export function useMultiplayerRoom(
 				});
 			},
 			onCountdown: (payload) => {
-				setRoom((prev) =>
+				setRoom((prev: Room | null) =>
 					prev
-						? { ...prev, status: 'COUNTDOWN', startTime: payload.startTime }
+						? {
+								...prev,
+								status: RoomStatusEnum.COUNTDOWN,
+								startTime: payload.startTime,
+							}
 						: null,
 				);
 			},
 			onRaceStart: () => {
-				setRoom((prev) => (prev ? { ...prev, status: 'RACING' } : null));
-				optionsRef.current?.onRaceStart?.();
+				setRoom((prev: Room | null) =>
+					prev ? { ...prev, status: RoomStatusEnum.RACING } : null,
+				);
 			},
 			onProgressUpdate: (payload) => {
-				setRoom((prev) => {
+				setRoom((prev: Room | null) => {
 					if (!prev) return null;
 					return { ...prev, participants: payload };
 				});
 			},
 			onRaceFinished: (payload) => {
-				setRoom((prev) => {
+				setRoom((prev: Room | null) => {
 					if (!prev) return null;
 					return {
 						...prev,
-						status: 'FINISHED',
+						status: RoomStatusEnum.FINISHED,
 						participants: payload.leaderboard,
 					};
 				});
-				optionsRef.current?.onRaceFinished?.();
 			},
 			onWordsAppended: (payload) => {
-				setRoom((prev) => {
+				setRoom((prev: Room | null) => {
 					if (!prev) return null;
 					return {
 						...prev,
 						text: [...prev.text, ...payload.words],
 					};
 				});
-				optionsRef.current?.onWordsAppended?.(payload.words);
 			},
 			onHostPromoted: (payload) => {
-				optionsRef.current?.onHostPromoted?.(payload.message);
+				alert(payload.message);
 			},
 			onError: (payload) => {
 				setError(payload.message);
 			},
 			onResultSaved: (payload) => {
-				optionsRef.current?.onResultSaved?.(payload);
+				if (payload.success) {
+					setIsResultSaved(true);
+				}
 			},
 		});
 
@@ -147,7 +146,8 @@ export function useMultiplayerRoom(
 
 	return {
 		room,
-		error: isError ? 'Room not found or connection faild' : error,
+		error: isError ? 'Room not found or connection failed' : error,
+		isResultSaved,
 		startRace,
 		updateProgress,
 		updateSettings,
@@ -155,6 +155,8 @@ export function useMultiplayerRoom(
 		loadMoreWords,
 		submitResult,
 		restartGame,
-		currentUser: room?.participants.find((p) => p.username === username),
+		currentUser: room?.participants.find(
+			(p: Participant) => p.username === username,
+		),
 	};
 }

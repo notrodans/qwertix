@@ -22,4 +22,3 @@ export interface ReplayResponse {
 }
 
 export type ReplayData = ReplayEvent[]; // Keep for backward compat if needed, or remove.
-

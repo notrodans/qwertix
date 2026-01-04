@@ -1,10 +1,14 @@
 import {
-	type Participant,
+	type ParticipantDTO,
 	type RoomConfig,
 	type RoomDTO,
-	type RoomStatus,
+	RoomStatusEnum,
 } from '@qwertix/room-contracts';
 
-export type { Participant, RoomConfig, RoomStatus };
-export type Room = RoomDTO;
-export { RaceModeEnum } from '@qwertix/room-contracts';
+export type {
+	ParticipantDTO as Participant,
+	RoomDTO as Room,
+	RoomConfig,
+	RoomStatusEnum as RoomStatus,
+};
+export { RaceModeEnum, RoomStatusEnum } from '@qwertix/room-contracts';

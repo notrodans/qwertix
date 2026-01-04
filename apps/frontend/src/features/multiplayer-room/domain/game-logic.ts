@@ -17,14 +17,14 @@ export function calculateRemainingWords(
 	// "hello world" -> " world" -> ["", "world"] -> 2 (because split(' ') on " " gives ["", ""])
 	// Wait, ' world'.split(' ') -> ['', 'world']. Length 2.
 	// 'world'.split(' ') -> ['world']. Length 1.
-	
+
 	// We should trim the start to handle the space after a finished word?
 	// If validLength includes the space after "hello ", remaining is "world".
 	// If validLength is just "hello", remaining is " world".
-	
+
 	// If we are at "hello", validLength=5. Remaining=" world". Words=2. Correct (we haven't typed space yet).
 	// If we are at "hello ", validLength=6. Remaining="world". Words=1. Correct.
-	
+
 	return remainingText.split(' ').length;
 }
 

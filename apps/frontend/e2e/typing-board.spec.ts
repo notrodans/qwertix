@@ -211,7 +211,7 @@ test.describe('Typing Board Feature', () => {
 		// Read first two chars of first word
 		const char0 = await board.getCharText(0, 0);
 		const char1 = await board.getCharText(0, 1);
-		
+
 		// Type incomplete first word (2 chars) + space
 		await board.type(char0 + char1 + ' ');
 

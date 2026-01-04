@@ -1,8 +1,8 @@
-import { useResult, useReplay } from '@/entities/result';
+import { useParams } from 'react-router-dom';
+import { useReplay, useResult } from '@/entities/result';
 import { ReplayViewer } from '@/features/replay-viewer';
 import { Header } from '@/widgets/header';
 import { MainLayout } from '@/widgets/layout';
-import { useParams } from 'react-router-dom';
 
 export function ResultPage() {
 	const { resultId } = useParams<{ resultId: string }>();
@@ -13,11 +13,7 @@ export function ResultPage() {
 		isLoading: isResultLoading,
 		error: resultError,
 	} = useResult(id);
-	const {
-		data: replay,
-		isLoading: isReplayLoading,
-		error: replayError,
-	} = useReplay(id);
+	const { data: replay, isLoading: isReplayLoading } = useReplay(id);
 
 	if (isResultLoading || isReplayLoading) {
 		return (

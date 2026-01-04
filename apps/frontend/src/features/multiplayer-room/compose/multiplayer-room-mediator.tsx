@@ -1,4 +1,4 @@
-import { RaceModeEnum } from '@qwertix/room-contracts';
+import { RaceModeEnum, RoomStatusEnum } from '@qwertix/room-contracts';
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { type Participant } from '@/entities/room';
 import { useMultiplayerGame } from '../model/use-multiplayer-game';
@@ -34,43 +34,7 @@ export function MultiplayerRoomMediator({
 	const [username] = useState(
 		() => `Guest-${Math.floor(Math.random() * 1000)}`,
 	);
-	const [localStats, setLocalStats] = useState<
-		(LocalResult & { fullText: string }) | null
-	>(null);
-
-	// Game Logic Hook - lifted up to Mediator
-	// We need 'room' to initialize game, but 'useMultiplayerRoom' needs callbacks from 'game'.
-	// This cyclic dependency is solved by using stable callbacks from 'useMultiplayerGame' or refs.
-	// Since 'useMultiplayerGame' needs 'text' and 'config' which come from 'room',
-	// we have to be careful.
-	// Actually, we can use 'useMultiplayerRoom' first, get the room, and THEN use 'useMultiplayerGame'.
-	// But 'useMultiplayerRoom' needs callbacks that CALL 'useMultiplayerGame' methods.
-	// We can use a ref for the game methods or just state?
-	// Or we can define the game hook AFTER, and pass its methods to useMultiplayerRoom via a ref that gets updated?
-	// No, hooks order must be static.
-
-	// Better approach: 'useMultiplayerRoom' returns 'room'.
-	// We use 'useMultiplayerGame' with that room.
-	// We pass a ref to 'useMultiplayerRoom' that we populate with game methods?
-	// Or we use a simpler approach:
-	// The callbacks in 'useMultiplayerRoom' options can just set a flag or trigger an event?
-	// No, we want imperative control.
-
-	// Let's use a mutable ref object to link them.
-	const gameControlsRef = {
-		startTimer: () => {
-			// Placeholder, populated later
-		},
-		forceFinish: () => {
-			// Placeholder, populated later
-		},
-		handleResultSaved: (_payload: { success: boolean }) => {
-			// Placeholder, populated later
-		},
-		resetGame: () => {
-			// Placeholder, populated later
-		},
-	};
+	const [localResult, setLocalResult] = useState<LocalResult | null>(null);
 
 	const {
 		room,
@@ -83,61 +47,43 @@ export function MultiplayerRoomMediator({
 		loadMoreWords,
 		submitResult,
 		restartGame,
-	} = useMultiplayerRoom(roomId, username, {
-		onHostPromoted: (message) => {
-			alert(message);
-		},
-		onRaceStart: () => {
-			gameControlsRef.startTimer();
-		},
-		onRaceFinished: () => {
-			gameControlsRef.forceFinish();
-		},
-		onResultSaved: (payload) => {
-			gameControlsRef.handleResultSaved(payload);
-		},
-	});
+	} = useMultiplayerRoom(roomId, username);
 
 	const handleSubmitResult = (stats: LocalResult & { fullText: string }) => {
 		submitResult(stats);
-		setLocalStats(stats);
+		setLocalResult(stats);
 	};
 
-	// Merge local stats with server-side calculated stats
-	const finalStats = useMemo(() => {
-		if (!localStats) return null;
-		if (!currentUser) return localStats;
-
-		return {
-			...localStats,
-			wpm: currentUser.wpm > 0 ? currentUser.wpm : localStats.wpm,
-			accuracy:
-				currentUser.accuracy > 0 ? currentUser.accuracy : localStats.accuracy,
-		};
-	}, [localStats, currentUser]);
-
-	// Initialize game hook only if room exists (or pass defaults)
+	// Initialize game hook second, passing state and methods from useMultiplayerRoom
 	const game = useMultiplayerGame({
 		text: room?.text.join(' ') || '',
 		config: room?.config || { mode: RaceModeEnum.WORDS, wordCount: 0 },
+		status: room?.status ?? RoomStatusEnum.LOBBY,
+		startTime: room?.startTime,
 		onProgress: updateProgress,
 		onLoadMore: loadMoreWords,
 		onSubmit: handleSubmitResult,
 	});
 
-	// Link game methods to the ref so 'useMultiplayerRoom' callbacks can call them
-	gameControlsRef.startTimer = game.startTimer;
-	gameControlsRef.forceFinish = game.forceFinish;
-	gameControlsRef.handleResultSaved = game.handleResultSaved;
-	gameControlsRef.resetGame = game.resetGame;
+	// Merge local result with server-side calculated stats for display
+	const finalStats = useMemo(() => {
+		if (!localResult) return null;
+		if (!currentUser) return localResult;
 
-	// Reset local stats if room goes back to LOBBY
+		return {
+			...localResult,
+			wpm: currentUser.wpm > 0 ? currentUser.wpm : localResult.wpm,
+			accuracy:
+				currentUser.accuracy > 0 ? currentUser.accuracy : localResult.accuracy,
+		};
+	}, [localResult, currentUser]);
+
+	// Clean up local result when returning to lobby
 	useEffect(() => {
-		if (room?.status === 'LOBBY') {
-			setLocalStats(null);
-			game.resetGame();
+		if (room?.status === RoomStatusEnum.LOBBY) {
+			setLocalResult(null);
 		}
-	}, [room?.status, game.resetGame]);
+	}, [room?.status]);
 
 	if (error) {
 		return (
@@ -152,8 +98,8 @@ export function MultiplayerRoomMediator({
 	return (
 		<RoomLayout
 			lobby={
-				room.status === 'LOBBY' ||
-				(room.status === 'FINISHED' && !localStats) ? (
+				room.status === RoomStatusEnum.LOBBY ||
+				(room.status === RoomStatusEnum.FINISHED && !localResult) ? (
 					<Lobby
 						roomId={roomId}
 						participants={room.participants}
@@ -168,7 +114,8 @@ export function MultiplayerRoomMediator({
 				) : null
 			}
 			board={
-				(room.status === 'COUNTDOWN' || room.status === 'RACING') &&
+				(room.status === RoomStatusEnum.COUNTDOWN ||
+					room.status === RoomStatusEnum.RACING) &&
 				!finalStats ? (
 					<MultiplayerBoard
 						text={room.text.join(' ')}
@@ -190,11 +137,11 @@ export function MultiplayerRoomMediator({
 				finalStats
 					? renderResults?.({
 							stats: finalStats,
-							text: finalStats.fullText,
+							text: room.text.join(' '),
 							participants: room.participants,
 							isHost: currentUser?.isHost ?? false,
 							onRestart: restartGame,
-							onClose: () => setLocalStats(null),
+							onClose: () => setLocalResult(null),
 						})
 					: null
 			}

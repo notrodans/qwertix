@@ -1,5 +1,5 @@
-import { sql } from 'drizzle-orm';
 import { execSync } from 'child_process';
+import { sql } from 'drizzle-orm';
 
 export async function setup() {
 	// Ensure test environment variables are set

@@ -1,5 +1,5 @@
-import { useUserResults } from '@/entities/result';
 import { Link } from 'react-router-dom';
+import { useUserResults } from '@/entities/result';
 
 interface HistoryTableProps {
 	userId: number;

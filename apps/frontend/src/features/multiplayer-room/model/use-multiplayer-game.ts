@@ -2,11 +2,15 @@ import {
 	RaceModeEnum,
 	type ReplayEvent,
 	type RoomConfig,
+	RoomStatusEnum,
 } from '@qwertix/room-contracts';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTyping } from '@/entities/typing-text';
-import { useInterval, useThrottledCallback } from '@/shared/lib';
-import { useEventCallback } from '@/shared/lib/hooks/use-event-callback';
+import {
+	useEventCallback,
+	useInterval,
+	useThrottledCallback,
+} from '@/shared/lib';
 
 interface TypingStats {
 	wpm: number;
@@ -20,6 +24,8 @@ interface TypingStats {
 interface UseMultiplayerGameProps {
 	text: string;
 	config: RoomConfig;
+	status: RoomStatusEnum;
+	startTime?: number;
 	onProgress: (length: number) => void;
 	onLoadMore: () => void;
 	onSubmit: (stats: TypingStats) => void;
@@ -28,13 +34,14 @@ interface UseMultiplayerGameProps {
 export function useMultiplayerGame({
 	text,
 	config,
+	status,
+	startTime,
 	onProgress,
 	onLoadMore,
 	onSubmit,
 }: UseMultiplayerGameProps) {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const [submitted, setSubmitted] = useState(false);
-	const [isResultSaved, setIsResultSaved] = useState(false);
 	const [timeLeft, setTimeLeft] = useState<number | null>(null);
 	const [startTimeLocal, setStartTimeLocal] = useState<number | null>(null);
 
@@ -58,46 +65,51 @@ export function useMultiplayerGame({
 			});
 			setSubmitted(true);
 		},
-		[submitted, onSubmit, text],
+		[submitted, text, onSubmitCb],
 	);
 
-	const handleResultSaved = useCallback((payload: { success: boolean }) => {
-		if (payload.success) {
-			setIsResultSaved(true);
-		}
-	}, []);
-
-	const { userTyped, validLength, caretPos, replayData, startTime, reset } =
-		useTyping(text, containerRef, {
+	const { userTyped, validLength, caretPos, replayData, reset } = useTyping(
+		text,
+		containerRef,
+		{
 			onType: (nextTyped) => {
-				if (submitted) return; // Prevent typing after submit
+				if (submitted) return;
 
-				// Infinite scroll (Load more if cursor is near end, regardless of errors)
-				// Use nextTyped.length (cursor position) to check buffer end.
 				if (text.length - nextTyped.length < 150) {
 					onLoadMore();
 				}
 			},
-		});
+		},
+	);
+
+	// React to Room Status changes
+	useEffect(() => {
+		if (status === RoomStatusEnum.RACING && !startTimeLocal) {
+			setStartTimeLocal(Date.now());
+		} else if (status === RoomStatusEnum.FINISHED && !submitted) {
+			handleFinish(userTyped, replayData);
+		} else if (status === RoomStatusEnum.LOBBY) {
+			setSubmitted(false);
+			setTimeLeft(null);
+			setStartTimeLocal(null);
+			reset();
+		}
+	}, [
+		status,
+		startTimeLocal,
+		submitted,
+		handleFinish,
+		userTyped,
+		replayData,
+		reset,
+	]);
 
 	// Effect to trigger progress update when validLength changes
-	// We do this in effect/render because validLength comes from state
 	useEffect(() => {
-		if (startTime && !submitted) {
+		if (status === RoomStatusEnum.RACING && !submitted) {
 			throttledProgress(validLength);
 		}
-	}, [validLength, startTime, submitted, throttledProgress]);
-
-	// Public methods for external control (e.g. from socket events)
-	const forceFinish = useCallback(() => {
-		if (!submitted && startTime) {
-			handleFinish(userTyped, replayData);
-		}
-	}, [submitted, startTime, userTyped, replayData, handleFinish]);
-
-	const startTimer = useCallback(() => {
-		setStartTimeLocal(Date.now());
-	}, []);
+	}, [validLength, status, submitted, throttledProgress]);
 
 	// Timer Logic
 	const isTimerRunning = !!(
@@ -116,23 +128,11 @@ export function useMultiplayerGame({
 		isTimerRunning ? 1000 : 0,
 	);
 
-	const resetGame = useCallback(() => {
-		setSubmitted(false);
-		setIsResultSaved(false);
-		setTimeLeft(null);
-		setStartTimeLocal(null);
-		reset();
-	}, [reset]);
-
 	return {
 		userTyped,
+		validLength,
 		caretPos,
 		timeLeft,
 		containerRef,
-		forceFinish,
-		startTimer,
-		handleResultSaved,
-		isResultSaved,
-		resetGame,
 	};
 }

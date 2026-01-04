@@ -15,5 +15,10 @@ export interface ResultRepository {
 		replayData?: { key: string; timestamp: number }[],
 		targetText?: string,
 	): Promise<Result>;
-	findReplayByResultId(resultId: number): Promise<{ data: { key: string; timestamp: number }[]; targetText: string } | undefined>;
+	findReplayByResultId(
+		resultId: number,
+	): Promise<
+		| { data: { key: string; timestamp: number }[]; targetText: string }
+		| undefined
+	>;
 }
