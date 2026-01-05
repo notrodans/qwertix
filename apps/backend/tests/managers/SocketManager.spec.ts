@@ -9,19 +9,23 @@ import type { FastifyInstance } from 'fastify';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SocketManager } from '../../src/managers/SocketManager';
 import { MemoryRoomRepository } from '../../src/repositories/MemoryRoomRepository';
+import { AuthService } from '../../src/services/AuthService';
 import { ResultService } from '../../src/services/ResultService';
 import { RoomService } from '../../src/services/RoomService';
 import { WordService } from '../../src/services/WordService';
 import { FakeLogger } from '../fakes/FakeLogger';
 import { FakeResultRepository } from '../fakes/FakeResultRepository';
+import { FakeUserRepository } from '../fakes/FakeUserRepository';
 import { FakeWebSocket, FakeWebSocketServer } from '../fakes/FakeWebSocket';
 
 describe('SocketManager Integration', () => {
 	let wss: FakeWebSocketServer;
 	let roomService: RoomService;
 	let resultService: ResultService;
+	let authService: AuthService;
 	let roomRepo: MemoryRoomRepository;
 	let resultRepo: FakeResultRepository;
+	let userRepo: FakeUserRepository;
 	let logger: FakeLogger;
 	let app: Partial<FastifyInstance>;
 
@@ -29,15 +33,17 @@ describe('SocketManager Integration', () => {
 		wss = new FakeWebSocketServer();
 		roomRepo = new MemoryRoomRepository();
 		resultRepo = new FakeResultRepository();
+		userRepo = new FakeUserRepository();
 		logger = new FakeLogger();
 
 		const wordService = new WordService();
 		roomService = new RoomService(roomRepo, wordService);
 		resultService = new ResultService(resultRepo);
+		authService = new AuthService(userRepo);
 
 		app = {
 			jwt: {
-				verify: vi.fn().mockReturnValue({ id: 123 }),
+				verify: vi.fn().mockReturnValue({ id: 'user-123' }),
 				sign: vi.fn(),
 			},
 		} as unknown as FastifyInstance;
@@ -48,6 +54,7 @@ describe('SocketManager Integration', () => {
 			logger,
 			resultService,
 			app as FastifyInstance,
+			authService,
 		);
 	});
 
@@ -118,7 +125,35 @@ describe('SocketManager Integration', () => {
 			});
 			await new Promise(process.nextTick);
 
-			expect(ws.dbUserId).toBe(123); // From mock jwt
+			expect(ws.dbUserId).toBe('user-123'); // From mock jwt
+		});
+
+		it('should resolve real username from DB when token is provided', async () => {
+			// 1. Create a user in fake repo
+			const dbUser = await userRepo.create({
+				email: 'real@user.com',
+				username: 'RealUsername',
+				passwordHash: 'hash',
+			});
+
+			// 2. Mock JWT to return this user's ID
+			app.jwt!.verify = vi.fn().mockReturnValue({ id: dbUser.id });
+
+			const room = await roomService.createRoom();
+			const ws = connectClient();
+
+			// 3. Join with a DIFFERENT username in payload
+			sendMessage(ws, SocketActionEnum.JOIN_ROOM, {
+				roomId: room.id(),
+				username: 'FakeName',
+				token: 'valid_token',
+			});
+			await new Promise(process.nextTick);
+
+			// 4. Expect resolved username to be from DB
+			expect(ws.username).toBe('RealUsername');
+			const participant = room.participants().get(ws.userId!);
+			expect(participant?.username).toBe('RealUsername');
 		});
 	});
 
@@ -209,7 +244,7 @@ describe('SocketManager Integration', () => {
 			});
 			await new Promise(process.nextTick);
 
-			const results = await resultRepo.findByUserId(123);
+			const results = await resultRepo.findByUserId('user-123');
 			expect(results).toHaveLength(1);
 			expect(results[0].wpm).toBeGreaterThan(0);
 

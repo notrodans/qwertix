@@ -1,6 +1,7 @@
 import { RaceModeEnum, RoomStatusEnum } from '@qwertix/room-contracts';
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { type Participant } from '@/entities/room';
+import { useSessionStore } from '@/entities/session';
 import { useMultiplayerGame } from '../model/use-multiplayer-game';
 import { useMultiplayerRoom } from '../model/use-multiplayer-room';
 import { Lobby } from '../ui/lobby';
@@ -31,9 +32,13 @@ export function MultiplayerRoomMediator({
 	roomId,
 	renderResults,
 }: MultiplayerRoomMediatorProps) {
-	const [username] = useState(
-		() => `Guest-${Math.floor(Math.random() * 1000)}`,
-	);
+	const { user, token } = useSessionStore();
+
+	const [username] = useState(() => {
+		if (user?.username) return user.username;
+		return `Guest-${Math.floor(Math.random() * 1000)}`;
+	});
+
 	const [localResult, setLocalResult] = useState<LocalResult | null>(null);
 
 	const handleSubmitResult = (stats: LocalResult & { fullText: string }) => {
@@ -52,7 +57,7 @@ export function MultiplayerRoomMediator({
 		loadMoreWords,
 		submitResult,
 		restartGame,
-	} = useMultiplayerRoom(roomId, username);
+	} = useMultiplayerRoom(roomId, username, token);
 
 	// Initialize game hook second, passing state and methods from useMultiplayerRoom
 	const game = useMultiplayerGame({

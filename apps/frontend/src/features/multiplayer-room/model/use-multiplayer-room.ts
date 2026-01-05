@@ -10,7 +10,11 @@ import {
 import { socketService } from '@/shared/api/socket';
 import { connectToRoom } from '../api/room-socket';
 
-export function useMultiplayerRoom(roomId: string, username: string) {
+export function useMultiplayerRoom(
+	roomId: string,
+	username: string,
+	token?: string | null,
+) {
 	const [room, setRoom] = useState<Room | null>(null);
 	const [error, setError] = useState<string | null>(null);
 	const [isResultSaved, setIsResultSaved] = useState(false);
@@ -31,91 +35,96 @@ export function useMultiplayerRoom(roomId: string, username: string) {
 	useEffect(() => {
 		if (!roomId) return;
 
-		const cleanup = connectToRoom(roomId, username, {
-			onRoomState: (payload) => {
-				setRoom(payload);
-				setIsResultSaved(false);
-			},
-			onPlayerJoined: (payload: ParticipantDTO) => {
-				setRoom((prev: Room | null) => {
-					if (!prev) return null;
-					const exists = prev.participants.find(
-						(p: ParticipantDTO) => p.socketId === payload.socketId,
+		const cleanup = connectToRoom(
+			roomId,
+			username,
+			{
+				onRoomState: (payload) => {
+					setRoom(payload);
+					setIsResultSaved(false);
+				},
+				onPlayerJoined: (payload: ParticipantDTO) => {
+					setRoom((prev: Room | null) => {
+						if (!prev) return null;
+						const exists = prev.participants.find(
+							(p: ParticipantDTO) => p.socketId === payload.socketId,
+						);
+						if (exists) return prev;
+						return {
+							...prev,
+							participants: [...prev.participants, payload],
+						};
+					});
+				},
+				onPlayerLeft: (payload: { userId: string }) => {
+					setRoom((prev: Room | null) => {
+						if (!prev) return null;
+						return {
+							...prev,
+							participants: prev.participants.filter(
+								(p: ParticipantDTO) => p.socketId !== payload.userId,
+							),
+						};
+					});
+				},
+				onCountdown: (payload: { startTime: number }) => {
+					setRoom((prev: Room | null) =>
+						prev
+							? {
+									...prev,
+									status: RoomStatusEnum.COUNTDOWN,
+									startTime: payload.startTime,
+								}
+							: null,
 					);
-					if (exists) return prev;
-					return {
-						...prev,
-						participants: [...prev.participants, payload],
-					};
-				});
+				},
+				onRaceStart: () => {
+					setRoom((prev: Room | null) =>
+						prev ? { ...prev, status: RoomStatusEnum.RACING } : null,
+					);
+				},
+				onProgressUpdate: (payload: ParticipantDTO[]) => {
+					setRoom((prev: Room | null) => {
+						if (!prev) return null;
+						return { ...prev, participants: payload };
+					});
+				},
+				onRaceFinished: (payload: { leaderboard: ParticipantDTO[] }) => {
+					setRoom((prev: Room | null) => {
+						if (!prev) return null;
+						return {
+							...prev,
+							status: RoomStatusEnum.FINISHED,
+							participants: payload.leaderboard,
+						};
+					});
+				},
+				onWordsAppended: (payload: { words: string[] }) => {
+					setRoom((prev: Room | null) => {
+						if (!prev) return null;
+						return {
+							...prev,
+							text: [...prev.text, ...payload.words],
+						};
+					});
+				},
+				onHostPromoted: (payload: { message: string }) => {
+					alert(payload.message);
+				},
+				onError: (payload: { message: string }) => {
+					setError(payload.message);
+				},
+				onResultSaved: (payload: { success: boolean }) => {
+					if (payload.success) {
+						setIsResultSaved(true);
+					}
+				},
 			},
-			onPlayerLeft: (payload: { userId: string }) => {
-				setRoom((prev: Room | null) => {
-					if (!prev) return null;
-					return {
-						...prev,
-						participants: prev.participants.filter(
-							(p: ParticipantDTO) => p.socketId !== payload.userId,
-						),
-					};
-				});
-			},
-			onCountdown: (payload: { startTime: number }) => {
-				setRoom((prev: Room | null) =>
-					prev
-						? {
-								...prev,
-								status: RoomStatusEnum.COUNTDOWN,
-								startTime: payload.startTime,
-							}
-						: null,
-				);
-			},
-			onRaceStart: () => {
-				setRoom((prev: Room | null) =>
-					prev ? { ...prev, status: RoomStatusEnum.RACING } : null,
-				);
-			},
-			onProgressUpdate: (payload: ParticipantDTO[]) => {
-				setRoom((prev: Room | null) => {
-					if (!prev) return null;
-					return { ...prev, participants: payload };
-				});
-			},
-			onRaceFinished: (payload: { leaderboard: ParticipantDTO[] }) => {
-				setRoom((prev: Room | null) => {
-					if (!prev) return null;
-					return {
-						...prev,
-						status: RoomStatusEnum.FINISHED,
-						participants: payload.leaderboard,
-					};
-				});
-			},
-			onWordsAppended: (payload: { words: string[] }) => {
-				setRoom((prev: Room | null) => {
-					if (!prev) return null;
-					return {
-						...prev,
-						text: [...prev.text, ...payload.words],
-					};
-				});
-			},
-			onHostPromoted: (payload: { message: string }) => {
-				alert(payload.message);
-			},
-			onError: (payload: { message: string }) => {
-				setError(payload.message);
-			},
-			onResultSaved: (payload: { success: boolean }) => {
-				if (payload.success) {
-					setIsResultSaved(true);
-				}
-			},
-		});
+			token,
+		);
 
 		return cleanup;
-	}, [roomId, username]);
+	}, [roomId, username, token]);
 
 	const startRace = () => {
 		socketService.send(SocketActionEnum.START_RACE, {});

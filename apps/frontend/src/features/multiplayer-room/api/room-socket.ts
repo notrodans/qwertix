@@ -27,6 +27,7 @@ export function connectToRoom(
 	roomId: string,
 	username: string,
 	callbacks: RoomSocketCallbacks,
+	token?: string | null,
 ) {
 	const unsubs = [
 		socketService.on(SocketEventEnum.ROOM_STATE, callbacks.onRoomState),
@@ -46,7 +47,11 @@ export function connectToRoom(
 		socketService.on(SocketEventEnum.ERROR, callbacks.onError),
 	];
 
-	socketService.send(SocketActionEnum.JOIN_ROOM, { roomId, username });
+	socketService.send(SocketActionEnum.JOIN_ROOM, {
+		roomId,
+		username,
+		token: token ?? undefined,
+	});
 
 	return () => {
 		socketService.send(SocketActionEnum.LEAVE_ROOM, {});

@@ -12,6 +12,7 @@ import { WebSocket } from 'ws';
 import { Room } from '@/domain/room/Room';
 import type { Socket } from '@/interfaces/Socket';
 import type { SocketServer } from '@/interfaces/SocketServer';
+import { AuthService } from '@/services/AuthService';
 import { RoomService } from '@/services/RoomService';
 import { ResultService } from '../services/ResultService';
 import type { ResultPayload } from './ResultPayload';
@@ -28,6 +29,7 @@ export class SocketManager {
 		private logger: FastifyBaseLogger,
 		private resultService: ResultService,
 		private app: FastifyInstance,
+		private authService: AuthService,
 	) {
 		this.setupHeartbeat();
 		this.wss.on('connection', (ws: Socket) => {
@@ -211,10 +213,17 @@ export class SocketManager {
 			return;
 		}
 
+		let resolvedUsername = username;
+
 		if (token) {
 			try {
 				const decoded = this.app.jwt.verify<{ id: string }>(token);
 				ws.dbUserId = decoded.id;
+
+				const dbUser = await this.authService.getUserById(decoded.id);
+				if (dbUser) {
+					resolvedUsername = dbUser.username;
+				}
 			} catch {
 				this.logger.warn('Invalid token in JOIN_ROOM');
 			}
@@ -224,9 +233,9 @@ export class SocketManager {
 
 		ws.roomId = roomId;
 		ws.userId = userId;
-		ws.username = username;
+		ws.username = resolvedUsername;
 
-		const participant = room.addParticipant(userId, username);
+		const participant = room.addParticipant(userId, resolvedUsername);
 
 		// Notify user of success and current state
 		this.send(ws, SocketEventEnum.ROOM_STATE, room.toDTO());
