@@ -25,6 +25,8 @@ describe('ResultsScreen', () => {
 		},
 	];
 
+	const ReplayMock = () => <div>Replay Component</div>;
+
 	it('should render stats correctly', () => {
 		render(
 			<ResultsScreen
@@ -34,6 +36,7 @@ describe('ResultsScreen', () => {
 				onClose={() => {
 					/* noop */
 				}}
+				ReplayComponent={ReplayMock}
 			/>,
 		);
 
@@ -51,6 +54,7 @@ describe('ResultsScreen', () => {
 				onClose={() => {
 					/* noop */
 				}}
+				ReplayComponent={ReplayMock}
 			/>,
 		);
 
@@ -69,6 +73,7 @@ describe('ResultsScreen', () => {
 				targetText="abc"
 				participants={mockParticipants}
 				onClose={onClose}
+				ReplayComponent={ReplayMock}
 			/>,
 		);
 

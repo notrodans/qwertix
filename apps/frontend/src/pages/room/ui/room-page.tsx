@@ -1,5 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { MultiplayerRoomMediator } from '@/features/multiplayer-room';
+import { ReplayViewer } from '@/features/replay-viewer';
 import { ResultsScreen } from '@/features/results';
 import { Header } from '@/widgets/header';
 import { MainLayout } from '@/widgets/layout';
@@ -21,6 +22,7 @@ export function RoomPage() {
 						isHost={props.isHost}
 						onRestart={props.onRestart}
 						onClose={props.onClose}
+						ReplayComponent={ReplayViewer}
 					/>
 				)}
 			/>

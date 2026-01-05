@@ -1,5 +1,12 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import type { ReplayEvent, ReplayResponse } from '@/entities/result';
+import {
+	appendCharacter,
+	calculateBackspace,
+	calculateCursorIndex,
+	TextDisplay,
+	useCursorPositioning,
+} from '@/entities/typing-text';
 
 interface ReplayViewerProps {
 	replay: ReplayResponse;
@@ -15,36 +22,18 @@ function reconstructTextAtTime(
 
 		if (event.key === 'Backspace') {
 			const isCtrl = !!event.ctrlKey;
-			// Default confirmedIndex to 0 if missing
 			const confirmedIndex = event.confirmedIndex ?? 0;
 
-			if (reconstructedTypedText.length > confirmedIndex) {
-				if (isCtrl) {
-					// Logic from backend
-					const textAfterConfirmed =
-						reconstructedTypedText.slice(confirmedIndex);
-					const trimmed = textAfterConfirmed.trimEnd();
-					// const diff = textAfterConfirmed.length - trimmed.length;
-
-					// Simplified: find last space in trimmed part
-					const lastSpace = trimmed.lastIndexOf(' ');
-					if (lastSpace === -1) {
-						reconstructedTypedText = reconstructedTypedText.slice(
-							0,
-							confirmedIndex,
-						);
-					} else {
-						reconstructedTypedText = reconstructedTypedText.slice(
-							0,
-							confirmedIndex + lastSpace + 1,
-						);
-					}
-				} else {
-					reconstructedTypedText = reconstructedTypedText.slice(0, -1);
-				}
-			}
+			reconstructedTypedText = calculateBackspace(
+				reconstructedTypedText,
+				confirmedIndex,
+				isCtrl,
+			);
 		} else if (event.key.length === 1) {
-			reconstructedTypedText += event.key;
+			reconstructedTypedText = appendCharacter(
+				reconstructedTypedText,
+				event.key,
+			);
 		}
 	}
 	return reconstructedTypedText;
@@ -57,6 +46,10 @@ export function ReplayViewer({ replay }: ReplayViewerProps) {
 	const animationFrameRef = useRef<number>(null);
 	const startTimeRef = useRef<number>(0);
 	const lastProgressRef = useRef<number>(0); // To support pause/resume
+
+	const containerRef = useRef<HTMLDivElement>(null);
+	const [caretPos, setCaretPos] = useState({ left: 0, top: 0 });
+	const updateCursor = useCursorPositioning(containerRef, setCaretPos);
 
 	const { data: events, targetText } = replay;
 	// Calculate duration based on first and last event, or at least 1000ms
@@ -128,51 +121,22 @@ export function ReplayViewer({ replay }: ReplayViewerProps) {
 		updateText(val);
 	};
 
-	const renderText = () => {
-		if (!targetText)
-			return <div>No target text data available for replay.</div>;
-
-		return targetText.split('').map((char, index) => {
-			const typedChar = typedText[index];
-			let className = 'text-zinc-500'; // default/pending
-
-			if (typedChar !== undefined) {
-				if (typedChar === char) {
-					className = 'text-zinc-100'; // correct
-				} else {
-					className = 'text-red-500'; // incorrect
-				}
-			}
-
-			// Underline current char
-			if (index === typedText.length) {
-				return (
-					<span
-						key={index}
-						className={`${className} border-b-2 border-yellow-400`}
-					>
-						{char}
-					</span>
-				);
-			}
-
-			return (
-				<span key={index} className={className}>
-					{char}
-				</span>
-			);
-		});
-	};
+	// Update cursor when text changes
+	useLayoutEffect(() => {
+		const index = calculateCursorIndex(targetText || '', typedText);
+		updateCursor(index);
+	}, [typedText, targetText, updateCursor]);
 
 	return (
 		<div className="w-full max-w-4xl space-y-6">
-			<div className="bg-zinc-900/50 p-8 rounded-xl font-mono text-2xl leading-relaxed min-h-37.5 wrap-break-word whitespace-pre-wrap border border-zinc-800 shadow-inner">
-				{renderText()}
-				{typedText.length >= (targetText?.length || 0) && (
-					<span className="border-l-2 border-yellow-400 animate-pulse -ml-px">
-						&nbsp;
-					</span>
-				)}
+			<div className="p-8 bg-zinc-900/50 rounded-xl border border-zinc-800 shadow-inner">
+				<TextDisplay
+					targetText={targetText || ''}
+					userTyped={typedText}
+					caretPos={caretPos}
+					containerRef={containerRef}
+					className="text-2xl"
+				/>
 			</div>
 
 			<div className="flex items-center gap-4 bg-zinc-900 p-4 rounded-lg border border-zinc-800">

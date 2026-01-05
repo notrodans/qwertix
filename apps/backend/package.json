@@ -7,7 +7,7 @@
 		"build": "tsup",
 		"start": "node dist/main.mjs",
 		"lint": "tsc --noEmit -p tsconfig.json && biome check .",
-		"lint:fix": "biome check --write .",
+		"lint:fix": "tsc --noEmit -p tsconfig.json && biome check --write .",
 		"format": "biome format --write .",
 		"typecheck": "tsc --noEmit",
 		"test": "vitest run tests",

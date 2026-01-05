@@ -15,6 +15,7 @@ describe('Room Domain Logic', () => {
 	it('should calculate final stats correctly', async () => {
 		const room = createRoom();
 		room.addParticipant('user-1', 'TestUser');
+		room.startRace();
 		room.startRacing();
 
 		// Simulate 1 minute passage
@@ -48,6 +49,7 @@ describe('Room Domain Logic', () => {
 	it('should handle backspaces in authoritative calculation', () => {
 		const room = createRoom();
 		room.addParticipant('user-1', 'TestUser');
+		room.startRace();
 		room.startRacing();
 
 		// Type "hellx" -> backspace -> "o"
@@ -68,6 +70,7 @@ describe('Room Domain Logic', () => {
 	it('should handle Ctrl+Backspace in authoritative calculation', () => {
 		const room = createRoom();
 		room.addParticipant('user-1', 'TestUser');
+		room.startRace();
 		room.startRacing();
 
 		// Type "hello world" -> Ctrl+Backspace -> "" (if none confirmed)
@@ -99,6 +102,7 @@ describe('Room Domain Logic', () => {
 	it('should update progress and calculate real-time WPM', () => {
 		const room = createRoom();
 		room.addParticipant('user-1', 'TestUser');
+		room.startRace();
 		room.startRacing();
 
 		// "hello world" is 11 chars
@@ -114,6 +118,7 @@ describe('Room Domain Logic', () => {
 		const room = createRoom();
 
 		room.addParticipant('u1', 'user1');
+		room.startRace();
 		room.startRacing();
 		room.updateParticipantProgress('u1', 5);
 		room.finishRacing();

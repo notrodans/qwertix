@@ -1,3 +1,4 @@
+import type { ComponentType } from 'react';
 import type { Participant } from '@/entities/room';
 import { LeaderboardSection } from './parts/leaderboard-section';
 import { ReplaySection } from './parts/replay-section';
@@ -16,6 +17,12 @@ interface ResultsScreenProps {
 	isHost?: boolean;
 	onRestart?: () => void;
 	onClose: () => void;
+	ReplayComponent: ComponentType<{
+		replay: {
+			data: { key: string; timestamp: number }[];
+			targetText: string;
+		};
+	}>;
 }
 
 export function ResultsScreen({
@@ -25,6 +32,7 @@ export function ResultsScreen({
 	isHost,
 	onRestart,
 	onClose,
+	ReplayComponent,
 }: ResultsScreenProps) {
 	return (
 		<div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 overflow-y-auto p-4">
@@ -36,6 +44,7 @@ export function ResultsScreen({
 					<ReplaySection
 						targetText={targetText}
 						replayData={stats.replayData}
+						ReplayComponent={ReplayComponent}
 					/>
 				</div>
 

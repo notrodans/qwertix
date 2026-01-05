@@ -1,3 +1,5 @@
+import { memo } from 'react';
+
 interface CharacterProps {
 	char: string;
 	color: string;
@@ -7,7 +9,7 @@ interface CharacterProps {
 	width?: string;
 }
 
-export function Character({
+export const Character = memo(function Character({
 	char,
 	color,
 	index,
@@ -28,4 +30,4 @@ export function Character({
 			{char === ' ' ? '\u00A0' : char}
 		</span>
 	);
-}
+});

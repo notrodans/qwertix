@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { type ReactNode, memo } from 'react';
 
 interface WordProps {
 	children: ReactNode;
@@ -7,7 +7,12 @@ interface WordProps {
 	hasError: boolean;
 }
 
-export function Word({ children, index, state, hasError }: WordProps) {
+export const Word = memo(function Word({
+	children,
+	index,
+	state,
+	hasError,
+}: WordProps) {
 	return (
 		<span
 			key={index}
@@ -21,4 +26,4 @@ export function Word({ children, index, state, hasError }: WordProps) {
 			{children}
 		</span>
 	);
-}
+});

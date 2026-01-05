@@ -1,8 +1,13 @@
-import { type ComponentProps, type RefObject, useRef } from 'react';
+import {
+	type ComponentProps,
+	type RefObject,
+	useMemo,
+	useRef,
+} from 'react';
 import { useTextScroll } from '../model/use-text-scroll';
 import { Caret } from './caret';
 import { Character } from './character';
-import { Word } from './word';
+import { SmartWord } from './smart-word';
 
 interface TextDisplayProps extends ComponentProps<'div'> {
 	targetText: string;
@@ -20,7 +25,7 @@ export function TextDisplay({
 	...props
 }: TextDisplayProps) {
 	let globalIndex = 0;
-	const targetWords = targetText.split(' ');
+	const targetWords = useMemo(() => targetText.split(' '), [targetText]);
 	const userWords = userTyped.split(' ');
 	const scrollOffset = useTextScroll(containerRef, userTyped);
 	const wrapperRef = useRef<HTMLDivElement>(null);
@@ -55,58 +60,9 @@ export function TextDisplay({
 
 					const hasError = (isPast && !isCorrectWord) || hasExtras;
 
-					// We render max length to accommodate extras
+					const wordStartIndex = globalIndex;
 					const maxLength = Math.max(targetWord.length, userWord.length);
-
-					const chars = [];
-					for (let i = 0; i < maxLength; i++) {
-						const charIndex = globalIndex++; // Assign unique index to every rendered char
-
-						const targetChar = targetWord[i]; // Might be undefined if extra
-						const userChar = userWord[i]; // Might be undefined if untyped
-
-						let charToRender = targetChar;
-						let color = '#646669'; // Default untyped
-
-						let charType = 'target';
-						let charStatus = 'untyped';
-
-						if (i < userWord.length) {
-							// User typed something here
-
-							if (i < targetWord.length) {
-								// Within bounds: Show TARGET char
-								charToRender = targetChar;
-								if (userChar === targetChar) {
-									color = '#d1d0c5';
-									charStatus = 'correct';
-								} else {
-									color = '#ca4754';
-									charStatus = 'incorrect';
-								}
-							} else {
-								// Extra character: Show USER char
-								charToRender = userChar;
-								color = '#7e2a33';
-								charType = 'extra';
-								charStatus = 'extra';
-							}
-						} else {
-							// Untyped part of target
-							charToRender = targetChar;
-						}
-
-						chars.push(
-							<Character
-								key={charIndex}
-								index={charIndex}
-								char={charToRender ?? ''}
-								color={color}
-								type={charType}
-								status={charStatus}
-							/>,
-						);
-					}
+					globalIndex += maxLength;
 
 					// Logic for space
 					const showSpace = wordIndex < targetWords.length - 1;
@@ -131,9 +87,14 @@ export function TextDisplay({
 
 					return (
 						<div key={wordIndex} className="flex whitespace-nowrap">
-							<Word index={wordIndex} state={wordState} hasError={hasError}>
-								{chars}
-							</Word>
+							<SmartWord
+								targetWord={targetWord}
+								userWord={userWord}
+								wordIndex={wordIndex}
+								globalStartIndex={wordStartIndex}
+								state={wordState}
+								hasError={hasError}
+							/>
 							{spaceEl}
 						</div>
 					);

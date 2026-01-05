@@ -8,6 +8,7 @@ import { v4 as uuid } from 'uuid';
 import { DomainException } from '@/exceptions/DomainException';
 import { RaceStrategyFactory } from '@/factories/RaceStrategyFactory';
 import { Participant } from './Participant';
+import { RoomFSM } from './RoomFSM';
 import {
 	calculateAccuracy,
 	calculateWPM,
@@ -21,7 +22,7 @@ import type { IRaceRulesStrategy } from './strategies/BaseRuleStrategy';
 export class Room {
 	private readonly _id: string;
 	private _participants: Map<string, Participant> = new Map();
-	private _status: RoomStatusEnum = RoomStatusEnum.LOBBY;
+	private _fsm: RoomFSM;
 	private _raceStartTime: number | null = null;
 	private _text: string[];
 	private strategy: IRaceRulesStrategy;
@@ -36,6 +37,7 @@ export class Room {
 		this._text = initialText;
 		this.raceStrategyFactory = new RaceStrategyFactory();
 		this.strategy = this.raceStrategyFactory.getStrategy(_config);
+		this._fsm = new RoomFSM();
 	}
 
 	/**
@@ -63,7 +65,7 @@ export class Room {
 	 * Gets the current status of the room.
 	 */
 	status(): RoomStatusEnum {
-		return this._status;
+		return this._fsm.state;
 	}
 
 	/**
@@ -95,7 +97,7 @@ export class Room {
 	 * @throws DomainException if the race is already in progress.
 	 */
 	addParticipant(socketId: string, username: string): Participant {
-		if (this._status === RoomStatusEnum.RACING) {
+		if (this._fsm.state === RoomStatusEnum.RACING) {
 			throw new DomainException('Cannot join racing room');
 		}
 		const isHost = this._participants.size === 0;
@@ -131,14 +133,14 @@ export class Room {
 	 */
 	startRace(): void {
 		if (this._participants.size < 1) throw new Error('Not enough players');
-		this._status = RoomStatusEnum.COUNTDOWN;
+		this._fsm.transitionTo(RoomStatusEnum.COUNTDOWN);
 	}
 
 	/**
 	 * Starts the race (status becomes RACING).
 	 */
 	startRacing(): void {
-		this._status = RoomStatusEnum.RACING;
+		this._fsm.transitionTo(RoomStatusEnum.RACING);
 		this._raceStartTime = Date.now();
 	}
 
@@ -146,7 +148,7 @@ export class Room {
 	 * Finishes the race.
 	 */
 	finishRacing(): void {
-		this._status = RoomStatusEnum.FINISHED;
+		this._fsm.transitionTo(RoomStatusEnum.FINISHED);
 	}
 
 	/**
@@ -154,7 +156,7 @@ export class Room {
 	 * @param newText - The new text for the next race.
 	 */
 	restart(newText: string[]): void {
-		this._status = RoomStatusEnum.LOBBY;
+		this._fsm.transitionTo(RoomStatusEnum.LOBBY);
 		this._raceStartTime = null;
 		this._text = newText;
 		for (const participant of this._participants.values()) {
@@ -232,7 +234,8 @@ export class Room {
 	 * @param typedLength - The length of typed text.
 	 */
 	updateParticipantProgress(socketId: string, typedLength: number): void {
-		if (this._status !== RoomStatusEnum.RACING || !this._raceStartTime) return;
+		if (this._fsm.state !== RoomStatusEnum.RACING || !this._raceStartTime)
+			return;
 
 		const participant = this._participants.get(socketId);
 		if (!participant) return;
@@ -281,7 +284,7 @@ export class Room {
 			(p) => p.finishedAt !== null,
 		);
 		if (allFinished) {
-			this._status = RoomStatusEnum.FINISHED;
+			this._fsm.transitionTo(RoomStatusEnum.FINISHED);
 		}
 	}
 
@@ -292,7 +295,7 @@ export class Room {
 	 * @throws DomainException if the room is not in the LOBBY state.
 	 */
 	updateConfig(config: RoomConfig, newText: string[]): void {
-		if (this._status !== RoomStatusEnum.LOBBY)
+		if (this._fsm.state !== RoomStatusEnum.LOBBY)
 			throw new DomainException('Can only change config in Lobby');
 
 		this._config = config;
@@ -307,7 +310,7 @@ export class Room {
 	toDTO() {
 		return {
 			id: this._id,
-			status: this._status,
+			status: this._fsm.state,
 			participants: Array.from(this._participants.values()).map((p) =>
 				p.toDTO(),
 			),

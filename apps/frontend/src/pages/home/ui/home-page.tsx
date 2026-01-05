@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { roomQueries } from '@/entities/room';
+import { ReplayViewer } from '@/features/replay-viewer';
 import { ResultsScreen } from '@/features/results';
 import { SoloTypingMediator } from '@/features/solo-mode';
 import { Header } from '@/widgets/header';
@@ -41,6 +42,7 @@ export function HomePage() {
 							onClose={onRestart}
 							onRestart={onRestart}
 							isHost={true}
+							ReplayComponent={ReplayViewer}
 						/>
 					)}
 				/>
