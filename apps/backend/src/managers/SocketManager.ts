@@ -185,7 +185,7 @@ export class SocketManager {
 
 		if (token) {
 			try {
-				const decoded = this.app.jwt.verify<{ id: number }>(token);
+				const decoded = this.app.jwt.verify<{ id: string }>(token);
 				ws.dbUserId = decoded.id;
 			} catch {
 				this.logger.warn('Invalid token in JOIN_ROOM');

@@ -30,7 +30,7 @@ export class Room {
 	constructor(
 		private _config: RoomConfig,
 		initialText: string[],
-		private _presetId: number | null = null,
+		private _presetId: string | null = null,
 	) {
 		this._id = uuid().substring(0, 6).toUpperCase();
 		this._text = initialText;
@@ -48,7 +48,7 @@ export class Room {
 	/**
 	 * Gets the preset ID if the room was created from a preset.
 	 */
-	presetId(): number | null {
+	presetId(): string | null {
 		return this._presetId;
 	}
 

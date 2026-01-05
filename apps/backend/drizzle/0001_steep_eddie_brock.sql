@@ -1,1 +1,1 @@
-ALTER TABLE "replays" ADD COLUMN "target_text" text NOT NULL;
+ALTER TABLE "replays" ADD COLUMN IF NOT EXISTS "target_text" text NOT NULL;

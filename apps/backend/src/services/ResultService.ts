@@ -12,7 +12,7 @@ export class ResultService {
 	 * @param id - The ID of the result.
 	 * @returns The result if found, otherwise undefined.
 	 */
-	async getResultById(id: number) {
+	async getResultById(id: string) {
 		return await this.resultRepo.findById(id);
 	}
 
@@ -21,7 +21,7 @@ export class ResultService {
 	 * @param userId - The ID of the user.
 	 * @returns An array of results for the user.
 	 */
-	async getUserResults(userId: number) {
+	async getUserResults(userId: string) {
 		return await this.resultRepo.findByUserId(userId);
 	}
 
@@ -30,7 +30,7 @@ export class ResultService {
 	 * @param resultId - The ID of the result.
 	 * @returns The replay data if found, otherwise undefined.
 	 */
-	async getReplayByResultId(resultId: number) {
+	async getReplayByResultId(resultId: string) {
 		return await this.resultRepo.findReplayByResultId(resultId);
 	}
 
@@ -46,8 +46,8 @@ export class ResultService {
 	 * @returns The saved result, or null if the user is not authenticated.
 	 */
 	async saveResult(
-		userId: number | null,
-		presetId: number | null,
+		userId: string | null,
+		presetId: string | null,
 		wpm: number,
 		raw: number,
 		accuracy: number,

@@ -1,12 +1,12 @@
 import type { Result } from '@/db/schema';
 
 export interface ResultRepository {
-	findById(id: number): Promise<Result | undefined>;
-	findByUserId(userId: number): Promise<Result[]>;
+	findById(id: string): Promise<Result | undefined>;
+	findByUserId(userId: string): Promise<Result[]>;
 	create(
 		data: {
-			userId: number;
-			presetId: number | null;
+			userId: string;
+			presetId: string | null;
 			wpm: number;
 			raw: number;
 			accuracy: number;
@@ -16,7 +16,7 @@ export interface ResultRepository {
 		targetText?: string,
 	): Promise<Result>;
 	findReplayByResultId(
-		resultId: number,
+		resultId: string,
 	): Promise<
 		| { data: { key: string; timestamp: number }[]; targetText: string }
 		| undefined

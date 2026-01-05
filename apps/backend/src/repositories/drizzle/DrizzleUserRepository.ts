@@ -32,7 +32,7 @@ export class DrizzleUserRepository implements UserRepository {
 		email: string;
 		username: string;
 		passwordHash: string;
-		role?: string;
+		role?: 'admin' | 'user';
 	}): Promise<User> {
 		const result = await this.db.source
 			.insert(users)

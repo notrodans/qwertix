@@ -19,27 +19,27 @@ export class ResultController {
 	async register(app: FastifyInstance) {
 		app.get('/results/:id', async (req, reply) => {
 			const { id } = req.params as { id: string };
-			const result = await this.resultService.getResultById(parseInt(id));
+			const result = await this.resultService.getResultById(id);
 			if (!result) return reply.status(404).send({ error: 'Result not found' });
 			return result;
 		});
 
 		app.get('/results/:id/replay', async (req, reply) => {
 			const { id } = req.params as { id: string };
-			const replay = await this.resultService.getReplayByResultId(parseInt(id));
+			const replay = await this.resultService.getReplayByResultId(id);
 			if (!replay) return reply.status(404).send({ error: 'Replay not found' });
 			return replay;
 		});
 
 		app.get('/results/user/:userId', async (req) => {
 			const { userId } = req.params as { userId: string };
-			return await this.resultService.getUserResults(parseInt(userId));
+			return await this.resultService.getUserResults(userId);
 		});
 
 		app.post('/results', async (req, _reply) => {
 			const body = req.body as {
-				userId?: number;
-				presetId?: number;
+				userId?: string;
+				presetId?: string;
 				targetText: string;
 				replayData: {
 					key: string;

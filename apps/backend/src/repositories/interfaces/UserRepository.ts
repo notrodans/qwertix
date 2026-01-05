@@ -6,7 +6,7 @@ export interface UserRepository {
 		email: string;
 		username: string;
 		passwordHash: string;
-		role?: string;
+		role?: 'admin' | 'user';
 	}): Promise<User>;
 	count(): Promise<number>;
 }

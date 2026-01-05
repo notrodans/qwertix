@@ -6,9 +6,9 @@ export interface PresetRepository {
 		name: string;
 		config: RoomConfig;
 		isCustom: boolean;
-		createdBy?: number;
+		createdBy?: string;
 	}): Promise<Preset>;
 	findSystemPresets(): Promise<Preset[]>;
-	findByUserId(userId: number): Promise<Preset[]>;
-	findById(id: number): Promise<Preset | undefined>;
+	findByUserId(userId: string): Promise<Preset[]>;
+	findById(id: string): Promise<Preset | undefined>;
 }

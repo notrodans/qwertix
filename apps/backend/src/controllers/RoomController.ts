@@ -18,7 +18,7 @@ export class RoomController {
 	 */
 	async register(app: FastifyInstance) {
 		app.post('/rooms', async (req, reply) => {
-			const body = req.body as { presetId?: number } | undefined;
+			const body = req.body as { presetId?: string } | undefined;
 			let config: RoomConfig | undefined;
 
 			if (body?.presetId) {

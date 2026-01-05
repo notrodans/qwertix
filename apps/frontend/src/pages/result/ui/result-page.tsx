@@ -6,14 +6,13 @@ import { MainLayout } from '@/widgets/layout';
 
 export function ResultPage() {
 	const { resultId } = useParams<{ resultId: string }>();
-	const id = parseInt(resultId || '0');
 
 	const {
 		data: result,
 		isLoading: isResultLoading,
 		error: resultError,
-	} = useResult(id);
-	const { data: replay, isLoading: isReplayLoading } = useReplay(id);
+	} = useResult(resultId);
+	const { data: replay, isLoading: isReplayLoading } = useReplay(resultId);
 
 	if (isResultLoading || isReplayLoading) {
 		return (

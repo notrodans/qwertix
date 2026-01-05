@@ -6,11 +6,19 @@ test.describe('Typing Board Feature', () => {
 
 	test.beforeEach(async ({ page }) => {
 		// Mock the backend API
-		await page.route('**/api/words', async (route) => {
+		await page.route('**/api/words*', async (route) => {
 			await route.fulfill({
 				status: 200,
 				contentType: 'application/json',
 				body: JSON.stringify(['hello', 'world', 'test']),
+			});
+		});
+
+		await page.route('**/api/auth/setup-status', async (route) => {
+			await route.fulfill({
+				status: 200,
+				contentType: 'application/json',
+				body: JSON.stringify({ isSetupRequired: false }),
 			});
 		});
 

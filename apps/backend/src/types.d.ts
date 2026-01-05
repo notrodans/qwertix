@@ -5,7 +5,7 @@ declare module 'ws' {
 		roomId?: string;
 		userId?: string;
 		username?: string;
-		dbUserId?: number;
+		dbUserId?: string;
 		isAlive: boolean;
 	}
 }

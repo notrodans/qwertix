@@ -18,7 +18,7 @@ export class RoomService {
 	 * @param presetId - The ID of the preset used (optional).
 	 * @returns The created room.
 	 */
-	async createRoom(config?: RoomConfig, presetId?: number): Promise<Room> {
+	async createRoom(config?: RoomConfig, presetId?: string): Promise<Room> {
 		const finalConfig = config || { mode: RaceModeEnum.WORDS, wordCount: 30 };
 		const initialCount =
 			finalConfig.mode === RaceModeEnum.WORDS ? finalConfig.wordCount : 50;

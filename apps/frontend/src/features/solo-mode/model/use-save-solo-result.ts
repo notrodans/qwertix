@@ -2,7 +2,7 @@ import { type ReplayEvent } from '@qwertix/room-contracts';
 import { useMutation } from '@tanstack/react-query';
 
 interface SaveSoloResultVariables {
-	userId?: number;
+	userId?: string;
 	targetText: string;
 	replayData: ReplayEvent[];
 	startTime: number;

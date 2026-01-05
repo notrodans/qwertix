@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useUserResults } from '@/entities/result';
 
 interface HistoryTableProps {
-	userId: number;
+	userId: string;
 }
 
 export function HistoryTable({ userId }: HistoryTableProps) {

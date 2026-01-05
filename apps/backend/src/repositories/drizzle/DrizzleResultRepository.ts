@@ -14,7 +14,7 @@ export class DrizzleResultRepository implements ResultRepository {
 	 * @param id - The ID of the result.
 	 * @returns The result if found, otherwise undefined.
 	 */
-	async findById(id: number): Promise<Result | undefined> {
+	async findById(id: string): Promise<Result | undefined> {
 		const result = await this.db.source
 			.select()
 			.from(results)
@@ -28,7 +28,7 @@ export class DrizzleResultRepository implements ResultRepository {
 	 * @param userId - The ID of the user.
 	 * @returns An array of results, ordered by creation date (descending).
 	 */
-	async findByUserId(userId: number): Promise<Result[]> {
+	async findByUserId(userId: string): Promise<Result[]> {
 		return await this.db.source
 			.select()
 			.from(results)
@@ -46,8 +46,8 @@ export class DrizzleResultRepository implements ResultRepository {
 	 */
 	async create(
 		data: {
-			userId: number;
-			presetId: number | null;
+			userId: string;
+			presetId: string | null;
 			wpm: number;
 			raw: number;
 			accuracy: number;
@@ -92,7 +92,7 @@ export class DrizzleResultRepository implements ResultRepository {
 	 * @returns The replay data if found, otherwise undefined.
 	 */
 	async findReplayByResultId(
-		resultId: number,
+		resultId: string,
 	): Promise<
 		| { data: { key: string; timestamp: number }[]; targetText: string }
 		| undefined

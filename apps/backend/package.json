@@ -13,7 +13,7 @@
 		"test": "vitest run tests",
 		"test:e2e": "vitest run e2e -c vitest.config.e2e.ts",
 		"db:generate": "drizzle-kit generate",
-		"db:migrate": "drizzle-kit generate",
+		"db:migrate": "drizzle-kit migrate",
 		"db:push": "drizzle-kit push",
 		"db:studio": "drizzle-kit studio"
 	},

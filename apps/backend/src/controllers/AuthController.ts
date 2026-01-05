@@ -32,9 +32,9 @@ export class AuthController {
 		);
 
 		fastifyPassport.registerUserSerializer(
-			async (user: { id: number }) => user.id,
+			async (user: { id: string }) => user.id,
 		);
-		fastifyPassport.registerUserDeserializer(async (id: number) => {
+		fastifyPassport.registerUserDeserializer(async (id: string) => {
 			return { id, role: 'admin' };
 		});
 
@@ -46,7 +46,7 @@ export class AuthController {
 				}),
 			},
 			async (req) => {
-				const token = app.jwt.sign({ id: (req.user as { id: number }).id });
+				const token = app.jwt.sign({ id: (req.user as { id: string }).id });
 				return { token, user: req.user };
 			},
 		);
@@ -61,7 +61,7 @@ export class AuthController {
 				email: string;
 				username: string;
 				password: string;
-				role?: string;
+				role?: 'admin' | 'user';
 			};
 
 			const user = await this.authService.createUser(

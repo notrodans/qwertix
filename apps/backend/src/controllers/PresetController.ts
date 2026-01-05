@@ -29,7 +29,7 @@ export class PresetController {
 					name: string;
 					config: RoomConfig;
 				};
-				const user = req.user as { id: number };
+				const user = req.user as { id: string };
 
 				if (!user) {
 					return reply.status(401).send({ error: 'Unauthorized' });

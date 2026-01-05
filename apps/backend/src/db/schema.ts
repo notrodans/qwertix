@@ -3,36 +3,39 @@ import {
 	boolean,
 	integer,
 	jsonb,
+	pgEnum,
 	pgTable,
-	serial,
 	text,
 	timestamp,
+	uuid,
 } from 'drizzle-orm/pg-core';
 
+export const userRoleEnum = pgEnum('role', ['admin', 'user']);
+
 export const users = pgTable('users', {
-	id: serial('id').primaryKey(),
+	id: uuid('id').unique().primaryKey().defaultRandom(),
 	username: text('username').notNull(),
 	email: text('email').notNull().unique(),
-	role: text('role').default('user').notNull(), // 'admin', 'user'
+	role: userRoleEnum('role').default('user').notNull(),
 	passwordHash: text('password_hash').notNull(), // For local auth
 	createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 export type User = InferSelectModel<typeof users>;
 
 export const presets = pgTable('presets', {
-	id: serial('id').primaryKey(),
+	id: uuid('id').unique().primaryKey().defaultRandom(),
 	name: text('name').notNull(),
 	config: jsonb('config').notNull(), // RoomConfig
 	isCustom: boolean('is_custom').default(false).notNull(),
-	createdBy: integer('created_by').references(() => users.id),
+	createdBy: uuid('created_by').references(() => users.id),
 	createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 export type Preset = InferSelectModel<typeof presets>;
 
 export const results = pgTable('results', {
-	id: serial('id').primaryKey(),
-	userId: integer('user_id').references(() => users.id),
-	presetId: integer('preset_id').references(() => presets.id),
+	id: uuid('id').unique().primaryKey().defaultRandom(),
+	userId: uuid('user_id').references(() => users.id),
+	presetId: uuid('preset_id').references(() => presets.id),
 	wpm: integer('wpm').notNull(),
 	raw: integer('raw').notNull(),
 	accuracy: integer('accuracy').notNull(),
@@ -42,8 +45,8 @@ export const results = pgTable('results', {
 export type Result = InferSelectModel<typeof results>;
 
 export const replays = pgTable('replays', {
-	id: serial('id').primaryKey(),
-	resultId: integer('result_id')
+	id: uuid('id').primaryKey().defaultRandom().defaultRandom(),
+	resultId: uuid('result_id')
 		.references(() => results.id, { onDelete: 'cascade' })
 		.notNull(),
 	data: jsonb('data').notNull(), // Array of keystroke events

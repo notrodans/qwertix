@@ -37,7 +37,7 @@ export class AuthService {
 		email: string,
 		username: string,
 		password: string,
-		role = 'user',
+		role: 'admin' | 'user' = 'user',
 	): Promise<User> {
 		const hash = await bcrypt.hash(password, 10);
 		return await this.userRepo.create({

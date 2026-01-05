@@ -2,7 +2,7 @@ export interface Socket {
 	roomId?: string;
 	userId?: string;
 	username?: string;
-	dbUserId?: number;
+	dbUserId?: string;
 	isAlive: boolean;
 	readyState: number;
 

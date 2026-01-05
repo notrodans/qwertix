@@ -18,7 +18,7 @@ export class PresetService {
 	async createPreset(
 		name: string,
 		config: RoomConfig,
-		userId?: number,
+		userId?: string,
 	): Promise<Preset> {
 		return await this.presetRepo.create({
 			name,
@@ -41,7 +41,7 @@ export class PresetService {
 	 * @param userId - The ID of the user.
 	 * @returns An array of presets created by the user.
 	 */
-	async getUserPresets(userId: number) {
+	async getUserPresets(userId: string) {
 		return await this.presetRepo.findByUserId(userId);
 	}
 
@@ -50,7 +50,7 @@ export class PresetService {
 	 * @param id - The ID of the preset.
 	 * @returns The preset if found, otherwise undefined.
 	 */
-	async getPresetById(id: number) {
+	async getPresetById(id: string) {
 		return await this.presetRepo.findById(id);
 	}
 }

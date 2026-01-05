@@ -20,6 +20,7 @@ export interface RoomSocketCallbacks {
 		success: boolean;
 		stats?: { wpm: number; accuracy: number; raw: number };
 	}) => void;
+	onError: (payload: { message: string }) => void;
 }
 
 export function connectToRoom(
@@ -42,6 +43,7 @@ export function connectToRoom(
 		socketService.on(SocketEventEnum.HOST_PROMOTED, callbacks.onHostPromoted),
 		socketService.on(SocketEventEnum.ROOM_UPDATE, callbacks.onRoomState),
 		socketService.on(SocketEventEnum.RESULT_SAVED, callbacks.onResultSaved),
+		socketService.on(SocketEventEnum.ERROR, callbacks.onError),
 	];
 
 	socketService.send(SocketActionEnum.JOIN_ROOM, { roomId, username });

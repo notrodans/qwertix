@@ -19,7 +19,7 @@ export class DrizzlePresetRepository implements PresetRepository {
 		name: string;
 		config: RoomConfig;
 		isCustom: boolean;
-		createdBy?: number;
+		createdBy?: string;
 	}): Promise<Preset> {
 		const result = await this.db.source
 			.insert(presets)
@@ -55,7 +55,7 @@ export class DrizzlePresetRepository implements PresetRepository {
 	 * @param userId - The ID of the user.
 	 * @returns An array of presets.
 	 */
-	async findByUserId(userId: number): Promise<Preset[]> {
+	async findByUserId(userId: string): Promise<Preset[]> {
 		return await this.db.source
 			.select()
 			.from(presets)
@@ -68,7 +68,7 @@ export class DrizzlePresetRepository implements PresetRepository {
 	 * @param id - The ID of the preset.
 	 * @returns The preset if found, otherwise undefined.
 	 */
-	async findById(id: number): Promise<Preset | undefined> {
+	async findById(id: string): Promise<Preset | undefined> {
 		const result = await this.db.source
 			.select()
 			.from(presets)
