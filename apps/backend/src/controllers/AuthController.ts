@@ -73,7 +73,8 @@ export class AuthController {
 				preHandler: async (req, reply) => {
 					try {
 						await req.jwtVerify();
-						const userId = (req.user as { id: string }).id;
+						const userId = (req as unknown as { jwtUser: { id: string } })
+							.jwtUser.id;
 						const user = await this.authService.getUserById(userId);
 						if (!user || user.role !== 'admin') {
 							return reply.code(403).send({ message: 'Forbidden' });
