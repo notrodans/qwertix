@@ -39,7 +39,7 @@ export function useSoloGame() {
 
 	const containerRef = useRef<HTMLDivElement>(null);
 
-	const initialCount = mode === RaceModeEnum.WORDS ? wordCount : 20;
+	const initialCount = mode === RaceModeEnum.WORDS ? wordCount : 50;
 	const { data: initialWords = [], refetch } = useQuery(
 		wordQueries.list(initialCount),
 	);

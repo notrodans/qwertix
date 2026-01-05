@@ -101,3 +101,33 @@ export function reconstructText(
 	}
 	return reconstructedTypedText;
 }
+
+/**
+ * Calculates the number of correct characters based on correctly typed words.
+ * A character is counted as correct only if it's part of a fully correct word.
+ * @param typedText - The text typed by the user.
+ * @param targetText - The target text to match.
+ * @returns The number of correct characters.
+ */
+export function calculateCorrectCharacters(
+	typedText: string,
+	targetText: string,
+): number {
+	const typedWords = typedText.split(' ');
+	const targetWords = targetText.split(' ');
+	let correctChars = 0;
+
+	const wordsToCheck = Math.min(typedWords.length, targetWords.length);
+
+	for (let i = 0; i < wordsToCheck; i++) {
+		if (typedWords[i] === targetWords[i]) {
+			correctChars += targetWords[i].length;
+			// Add space if it's not the last target word and was correctly typed as a separator
+			if (i < targetWords.length - 1 && i < typedWords.length - 1) {
+				correctChars += 1;
+			}
+		}
+	}
+
+	return correctChars;
+}

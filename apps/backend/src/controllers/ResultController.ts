@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import {
 	calculateAccuracy,
+	calculateCorrectCharacters,
 	calculateWPM,
 	reconstructText,
 } from '../domain/room/services/typing-logic';
@@ -53,7 +54,15 @@ export class ResultController {
 			};
 
 			const reconstructed = reconstructText(body.replayData);
+			const correctChars = calculateCorrectCharacters(
+				reconstructed,
+				body.targetText,
+			);
+
 			const wpm = Math.round(
+				calculateWPM(correctChars, body.startTime, body.endTime),
+			);
+			const raw = Math.round(
 				calculateWPM(reconstructed.length, body.startTime, body.endTime),
 			);
 			const accuracy = calculateAccuracy(reconstructed, body.targetText);
@@ -63,7 +72,7 @@ export class ResultController {
 				body.userId || null,
 				body.presetId || null,
 				wpm,
-				wpm, // raw
+				raw,
 				accuracy,
 				consistency,
 				body.replayData,
@@ -74,7 +83,7 @@ export class ResultController {
 			return (
 				savedResult || {
 					wpm,
-					raw: wpm,
+					raw,
 					accuracy,
 					consistency,
 				}
