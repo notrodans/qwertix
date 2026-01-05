@@ -176,6 +176,25 @@ export class SocketManager {
 		payload: { roomId: string; username: string; token?: string },
 	) {
 		const { roomId, username, token } = payload;
+
+		// 1. Check if already in this room
+		if (ws.roomId === roomId && ws.userId) {
+			const room = await this.roomService.get(roomId);
+			if (room) {
+				const participant = room.participants().get(ws.userId);
+				// If username matches, reuse existing session
+				if (participant && participant.username === username) {
+					this.send(ws, SocketEventEnum.ROOM_STATE, room.toDTO());
+					return;
+				}
+			}
+		}
+
+		// 2. Cleanup previous session if in ANY room
+		if (ws.roomId && ws.userId) {
+			await this.handleDisconnect(ws);
+		}
+
 		const room = await this.roomService.get(roomId);
 
 		if (!room) {
@@ -389,35 +408,46 @@ export class SocketManager {
 		if (ws.roomId && ws.userId) {
 			const room = await this.roomService.get(ws.roomId);
 			if (room) {
-				const wasHost = room.participants().get(ws.userId)?.isHost;
-				room.removeParticipant(ws.userId);
-				this.broadcastToRoom(room, SocketEventEnum.PLAYER_LEFT, {
-					userId: ws.userId,
-				});
+				const participant = room.participants().get(ws.userId);
+				if (participant) {
+					const wasHost = participant.isHost;
+					room.removeParticipant(ws.userId);
+					this.broadcastToRoom(room, SocketEventEnum.PLAYER_LEFT, {
+						userId: ws.userId,
+					});
 
-				if (room.participants().size === 0) {
-					await this.roomService.delete(ws.roomId);
-				} else {
-					this.broadcastToRoom(room, SocketEventEnum.ROOM_UPDATE, room.toDTO());
-
-					// Notify new host if role changed
-					if (wasHost) {
-						const newHost = Array.from(room.participants().values()).find(
-							(p) => p.isHost,
+					if (room.participants().size === 0) {
+						await this.roomService.delete(ws.roomId);
+					} else {
+						this.broadcastToRoom(
+							room,
+							SocketEventEnum.ROOM_UPDATE,
+							room.toDTO(),
 						);
-						if (newHost) {
-							const hostWs = Array.from(this.wss.clients).find(
-								(c) => c.userId === newHost.socketId,
+
+						// Notify new host if role changed
+						if (wasHost) {
+							const newHost = Array.from(room.participants().values()).find(
+								(p) => p.isHost,
 							);
-							if (hostWs) {
-								this.send(hostWs, SocketEventEnum.HOST_PROMOTED, {
-									message: 'You are now the host',
-								});
+							if (newHost) {
+								const hostWs = Array.from(this.wss.clients).find(
+									(c) => c.userId === newHost.socketId,
+								);
+								if (hostWs) {
+									this.send(hostWs, SocketEventEnum.HOST_PROMOTED, {
+										message: 'You are now the host',
+									});
+								}
 							}
 						}
 					}
 				}
 			}
+			// Clear session data
+			ws.roomId = undefined;
+			ws.userId = undefined;
+			ws.username = undefined;
 		}
 	}
 

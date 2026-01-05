@@ -49,6 +49,7 @@ export function connectToRoom(
 	socketService.send(SocketActionEnum.JOIN_ROOM, { roomId, username });
 
 	return () => {
+		socketService.send(SocketActionEnum.LEAVE_ROOM, {});
 		for (const unsub of unsubs) unsub();
 	};
 }
