@@ -10,6 +10,7 @@ export class SocketService {
 	// We have to use 'any' internally in the Map because it holds handlers for DIFFERENT types.
 	// biome-ignore lint/suspicious/noExplicitAny: internal storage for generic handlers
 	private listeners: Map<string, Set<MessageHandler<any>>> = new Map();
+	private messageQueue: string[] = [];
 
 	connected() {
 		return this.socket?.readyState === WebSocket.OPEN;
@@ -32,6 +33,7 @@ export class SocketService {
 
 		this.socket.onopen = () => {
 			console.log('WS Connected');
+			this.flushQueue();
 			this.dispatch('CONNECTED', {});
 		};
 
@@ -39,6 +41,13 @@ export class SocketService {
 			console.log('WS Disconnected');
 			this.dispatch('DISCONNECTED', {});
 		};
+	}
+
+	private flushQueue() {
+		while (this.messageQueue.length > 0 && this.connected()) {
+			const msg = this.messageQueue.shift();
+			if (msg) this.socket?.send(msg);
+		}
 	}
 
 	disconnect() {
@@ -52,10 +61,11 @@ export class SocketService {
 		type: T,
 		payload: Extract<SocketAction, { type: T }>['payload'],
 	) {
+		const msg = JSON.stringify({ type, payload });
 		if (this.connected()) {
-			this.socket?.send(JSON.stringify({ type, payload }));
+			this.socket?.send(msg);
 		} else {
-			console.warn('Socket not open, cannot send', type);
+			this.messageQueue.push(msg);
 		}
 	}
 
