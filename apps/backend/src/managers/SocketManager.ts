@@ -20,6 +20,8 @@ import type { ResultPayload } from './ResultPayload';
  * Manages WebSocket connections and handles real-time game events.
  */
 export class SocketManager {
+	private roomDeletionTimers = new Map<string, NodeJS.Timeout>();
+
 	constructor(
 		private wss: SocketServer,
 		private roomService: RoomService,
@@ -176,6 +178,13 @@ export class SocketManager {
 		payload: { roomId: string; username: string; token?: string },
 	) {
 		const { roomId, username, token } = payload;
+
+		// Cancel deletion timer if it exists
+		const existingTimer = this.roomDeletionTimers.get(roomId);
+		if (existingTimer) {
+			clearTimeout(existingTimer);
+			this.roomDeletionTimers.delete(roomId);
+		}
 
 		// 1. Check if already in this room
 		if (ws.roomId === roomId && ws.userId) {
@@ -405,19 +414,27 @@ export class SocketManager {
 	 * Removes the user from the room and updates the room state.
 	 */
 	private async handleDisconnect(ws: Socket) {
-		if (ws.roomId && ws.userId) {
-			const room = await this.roomService.get(ws.roomId);
+		const roomId = ws.roomId;
+		const userId = ws.userId;
+
+		if (roomId && userId) {
+			const room = await this.roomService.get(roomId);
 			if (room) {
-				const participant = room.participants().get(ws.userId);
+				const participant = room.participants().get(userId);
 				if (participant) {
 					const wasHost = participant.isHost;
-					room.removeParticipant(ws.userId);
+					room.removeParticipant(userId);
 					this.broadcastToRoom(room, SocketEventEnum.PLAYER_LEFT, {
-						userId: ws.userId,
+						userId: userId,
 					});
 
 					if (room.participants().size === 0) {
-						await this.roomService.delete(ws.roomId);
+						// Schedule deletion with 10s grace period
+						const timer = setTimeout(async () => {
+							await this.roomService.delete(roomId);
+							this.roomDeletionTimers.delete(roomId);
+						}, 10000);
+						this.roomDeletionTimers.set(roomId, timer);
 					} else {
 						this.broadcastToRoom(
 							room,
