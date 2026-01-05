@@ -1,5 +1,9 @@
 import { RaceModeEnum } from '@qwertix/room-contracts';
-import { useSoloModeStore } from '../model/store';
+import {
+	type Durations,
+	useSoloModeStore,
+	type WordCounts,
+} from '../model/store';
 
 export function SoloToolbar() {
 	const { mode, duration, wordCount, setMode, setDuration, setWordCount } =
@@ -26,7 +30,8 @@ export function SoloToolbar() {
 			{/* Sub-options Selection */}
 			<div className="flex gap-4 animate-in fade-in slide-in-from-left-2">
 				{mode === RaceModeEnum.TIME
-					? [15, 30, 60, 120].map((v) => (
+					? // TODO: Rewrite
+						([15, 30, 60, 120] as unknown as Durations[]).map((v) => (
 							<button
 								key={v}
 								onClick={() => setDuration(v)}
@@ -35,7 +40,8 @@ export function SoloToolbar() {
 								{v}
 							</button>
 						))
-					: [10, 25, 50, 100].map((v) => (
+					: // TODO: Rewrite
+						([10, 25, 50, 100] as unknown as WordCounts[]).map((v) => (
 							<button
 								key={v}
 								onClick={() => setWordCount(v)}

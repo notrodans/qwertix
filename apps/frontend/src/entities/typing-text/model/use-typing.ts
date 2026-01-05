@@ -68,20 +68,13 @@ export function useTyping(
 			const prev = stateRef.current;
 			const currentTargetText = targetTextRef.current;
 			const currentOptions = optionsRef.current;
+			const now = Date.now();
 
 			const nextState = { ...prev };
 			let shouldUpdate = false;
 			let typeEventTriggered = false;
 
-			// Start Timer Logic
-			if (!prev.startTime) {
-				const now = Date.now();
-				nextState.startTime = now;
-				currentOptions.onStart?.();
-				shouldUpdate = true;
-			}
-
-			const timestamp = Date.now() - (nextState.startTime || Date.now());
+			const timestamp = prev.startTime ? now - prev.startTime : 0;
 
 			// Backspace Logic
 			if (event.key === 'Backspace') {
@@ -118,17 +111,17 @@ export function useTyping(
 					event.preventDefault();
 				}
 
-				nextState.replayData = [
-					...prev.replayData,
-					{
-						key: event.key,
-						timestamp,
-					},
-				];
-
 				const nextTyped = appendCharacter(prev.userTyped, event.key);
 
 				if (nextTyped !== prev.userTyped) {
+					nextState.replayData = [
+						...prev.replayData,
+						{
+							key: event.key,
+							timestamp,
+						},
+					];
+
 					nextState.userTyped = nextTyped;
 					typeEventTriggered = true;
 					shouldUpdate = true;
@@ -144,12 +137,18 @@ export function useTyping(
 						}
 					}
 				} else {
-					// Replay data changed
-					shouldUpdate = true;
+					// Replay data NOT changed because input was ignored
+					shouldUpdate = false;
 				}
 			}
 
 			if (shouldUpdate) {
+				// Start Timer Logic
+				if (!prev.startTime) {
+					nextState.startTime = now;
+					currentOptions.onStart?.();
+				}
+
 				stateRef.current = nextState;
 				setState(nextState);
 
