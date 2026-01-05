@@ -16,10 +16,17 @@ export function useMultiplayerRoom(roomId: string, username: string) {
 	const [isResultSaved, setIsResultSaved] = useState(false);
 
 	// Initial fetch via HTTP to check room existence and get initial state
-	const { isError } = useQuery({
+	const { data: initialRoom, isError } = useQuery({
 		...roomQueries.get(roomId),
 		enabled: !!roomId,
 	});
+
+	// Use initial room data when it arrives
+	useEffect(() => {
+		if (initialRoom && !room) {
+			setRoom(initialRoom);
+		}
+	}, [initialRoom, room]);
 
 	useEffect(() => {
 		if (!roomId) return;

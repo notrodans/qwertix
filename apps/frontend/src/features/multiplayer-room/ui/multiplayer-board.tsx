@@ -62,7 +62,10 @@ export function MultiplayerBoard({
 	);
 
 	return (
-		<div className="w-full max-w-4xl mx-auto space-y-8 relative">
+		<div
+			data-testid="typing-board"
+			className="w-full max-w-4xl mx-auto space-y-8 relative"
+		>
 			<BoardIndicators
 				config={config}
 				status={status}

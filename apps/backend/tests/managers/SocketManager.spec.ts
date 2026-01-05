@@ -216,4 +216,126 @@ describe('SocketManager Integration', () => {
 			vi.useRealTimers();
 		});
 	});
+
+	describe('Reconnection & Lifecycle', () => {
+		it('should reuse existing session when re-joining same room', async () => {
+			const room = await roomService.createRoom();
+			const ws = connectClient();
+
+			// Join first time
+			sendMessage(ws, SocketActionEnum.JOIN_ROOM, {
+				roomId: room.id(),
+				username: 'Reconnector',
+			});
+			await new Promise(process.nextTick);
+			const firstUserId = ws.userId;
+			expect(room.participants().size).toBe(1);
+
+			// Re-join (same socket, same room, same name)
+			sendMessage(ws, SocketActionEnum.JOIN_ROOM, {
+				roomId: room.id(),
+				username: 'Reconnector',
+			});
+			await new Promise(process.nextTick);
+
+			expect(ws.userId).toBe(firstUserId);
+			expect(room.participants().size).toBe(1); // No duplicates
+		});
+
+		it('should cleanup previous session when joining a different room', async () => {
+			const room1 = await roomService.createRoom();
+			const room2 = await roomService.createRoom();
+			const ws = connectClient();
+
+			// Join room 1
+			sendMessage(ws, SocketActionEnum.JOIN_ROOM, {
+				roomId: room1.id(),
+				username: 'SwitchUser',
+			});
+			await new Promise(process.nextTick);
+			expect(room1.participants().size).toBe(1);
+
+			// Join room 2
+			sendMessage(ws, SocketActionEnum.JOIN_ROOM, {
+				roomId: room2.id(),
+				username: 'SwitchUser',
+			});
+			await new Promise(process.nextTick);
+
+			expect(room1.participants().size).toBe(0);
+			expect(room2.participants().size).toBe(1);
+		});
+
+		it('should keep room alive during grace period and delete after timeout', async () => {
+			vi.useFakeTimers();
+			const room = await roomService.createRoom();
+			const ws = connectClient();
+
+			// Join
+			sendMessage(ws, SocketActionEnum.JOIN_ROOM, {
+				roomId: room.id(),
+				username: 'Leaver',
+			});
+			await new Promise(process.nextTick);
+			expect(room.participants().size).toBe(1);
+
+			// Leave
+			sendMessage(ws, SocketActionEnum.LEAVE_ROOM, {});
+			await new Promise(process.nextTick);
+
+			expect(room.participants().size).toBe(0);
+
+			// Room should still be in repo (grace period)
+			let found = await roomRepo.findById(room.id());
+			expect(found).toBeDefined();
+
+			// Advance time by 5s (halfway)
+			vi.advanceTimersByTime(5000);
+			found = await roomRepo.findById(room.id());
+			expect(found).toBeDefined();
+
+			// Advance time past 10s
+			vi.advanceTimersByTime(6000);
+			found = await roomRepo.findById(room.id());
+			expect(found).toBeUndefined(); // Deleted
+
+			vi.useRealTimers();
+		});
+
+		it('should cancel deletion if someone rejoins during grace period', async () => {
+			vi.useFakeTimers();
+			const room = await roomService.createRoom();
+			const ws1 = connectClient();
+			const ws2 = connectClient();
+
+			// User 1 joins and leaves
+			sendMessage(ws1, SocketActionEnum.JOIN_ROOM, {
+				roomId: room.id(),
+				username: 'User1',
+			});
+			await new Promise(process.nextTick);
+			sendMessage(ws1, SocketActionEnum.LEAVE_ROOM, {});
+			await new Promise(process.nextTick);
+
+			// Advance 5s
+			vi.advanceTimersByTime(5000);
+
+			// User 2 joins
+			sendMessage(ws2, SocketActionEnum.JOIN_ROOM, {
+				roomId: room.id(),
+				username: 'User2',
+			});
+			await new Promise(process.nextTick);
+
+			// Advance another 10s (past original timeout)
+			vi.advanceTimersByTime(10000);
+
+			// Room should STILL be alive
+			const found = await roomRepo.findById(room.id());
+			expect(found).toBeDefined();
+			expect(found?.participants().size).toBe(1);
+
+			vi.useRealTimers();
+		});
+	});
 });
