@@ -90,18 +90,45 @@ export class Room {
 	}
 
 	/**
-	 * Adds a participant to the room.
+	 * Adds a participant to the room or updates an existing one.
 	 * @param socketId - The socket ID of the participant.
 	 * @param username - The username of the participant.
-	 * @returns The newly created participant.
+	 * @param dbUserId - The database ID of the user (optional).
+	 * @returns The participant.
 	 * @throws DomainException if the race is already in progress.
 	 */
-	addParticipant(socketId: string, username: string): Participant {
+	addParticipant(
+		socketId: string,
+		username: string,
+		dbUserId?: string,
+	): Participant {
 		if (this._fsm.state === RoomStatusEnum.RACING) {
 			throw new DomainException('Cannot join racing room');
 		}
+
+		// 1. Check for existing participant by dbUserId or username
+		let existingParticipant: Participant | undefined;
+		for (const p of this._participants.values()) {
+			if (dbUserId && p.dbUserId === dbUserId) {
+				existingParticipant = p;
+				break;
+			}
+			if (!dbUserId && !p.dbUserId && p.username === username) {
+				existingParticipant = p;
+				break;
+			}
+		}
+
+		if (existingParticipant) {
+			// Update socket mapping
+			this._participants.delete(existingParticipant.socketId);
+			existingParticipant.socketId = socketId;
+			this._participants.set(socketId, existingParticipant);
+			return existingParticipant;
+		}
+
 		const isHost = this._participants.size === 0;
-		const participant = new Participant(socketId, username, isHost);
+		const participant = new Participant(socketId, username, isHost, dbUserId);
 		this._participants.set(socketId, participant);
 		return participant;
 	}

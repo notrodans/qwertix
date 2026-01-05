@@ -235,7 +235,11 @@ export class SocketManager {
 		ws.userId = userId;
 		ws.username = resolvedUsername;
 
-		const participant = room.addParticipant(userId, resolvedUsername);
+		const participant = room.addParticipant(
+			userId,
+			resolvedUsername,
+			ws.dbUserId,
+		);
 
 		// Notify user of success and current state
 		this.send(ws, SocketEventEnum.ROOM_STATE, room.toDTO());

@@ -155,6 +155,50 @@ describe('SocketManager Integration', () => {
 			const participant = room.participants().get(ws.userId!);
 			expect(participant?.username).toBe('RealUsername');
 		});
+
+		it('should prevent duplicate participants when authenticated user joins from a new socket', async () => {
+			const room = await roomService.createRoom();
+			const ws1 = connectClient();
+			const ws2 = connectClient();
+
+			// 1. Mock same user for both sockets
+			const userId = 'user-abc';
+			app.jwt!.verify = vi.fn().mockReturnValue({ id: userId });
+			await userRepo.create({
+				email: 'test@test.com',
+				username: 'Tester',
+				passwordHash: 'h',
+			});
+
+			// 2. First socket joins
+			sendMessage(ws1, SocketActionEnum.JOIN_ROOM, {
+				roomId: room.id(),
+				username: 'Tester',
+				token: 'token1',
+			});
+			await new Promise(process.nextTick);
+			const firstSocketUserId = ws1.userId;
+			expect(room.participants().size).toBe(1);
+
+			// 3. Second socket joins (same user ID)
+			sendMessage(ws2, SocketActionEnum.JOIN_ROOM, {
+				roomId: room.id(),
+				username: 'Tester',
+				token: 'token2',
+			});
+			await new Promise(process.nextTick);
+
+			// 4. Room should still have ONLY 1 participant
+			expect(room.participants().size).toBe(1);
+
+			// 5. The key in participants Map should be updated to the second socket's userId
+			expect(room.participants().has(firstSocketUserId!)).toBe(false);
+			expect(room.participants().has(ws2.userId!)).toBe(true);
+
+			// 6. Existing participant entry should be reused
+			const participant = room.participants().get(ws2.userId!);
+			expect(participant?.username).toBe('Tester');
+		});
 	});
 
 	describe('Game Flow', () => {

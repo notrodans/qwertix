@@ -11,9 +11,10 @@ export class Participant {
 	public isHost: boolean = false;
 
 	constructor(
-		public readonly socketId: string,
+		public socketId: string,
 		public readonly username: string,
 		isHost: boolean,
+		public readonly dbUserId?: string,
 	) {
 		this._stats = new RaceStats();
 		this.isHost = isHost;
@@ -75,6 +76,7 @@ export class Participant {
 			accuracy: this._stats.accuracy,
 			rank: this.rank,
 			finishedAt: this.finishedAt,
+			...(this.dbUserId && { dbUserId: this.dbUserId })
 		};
 	}
 
