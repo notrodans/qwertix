@@ -14,7 +14,12 @@ describe('useSessionStore', () => {
 	});
 
 	it('should set session', () => {
-		const user = { id: '1', username: 'testuser', email: 'test@example.com' };
+		const user = {
+			id: '1',
+			username: 'testuser',
+			email: 'test@example.com',
+			role: 'user' as const,
+		};
 		const token = 'fake-token';
 
 		useSessionStore.getState().setSession(token, user);
@@ -26,9 +31,12 @@ describe('useSessionStore', () => {
 	});
 
 	it('should logout', () => {
-		useSessionStore
-			.getState()
-			.setSession('token', { id: '1', username: 'u', email: 'e' });
+		useSessionStore.getState().setSession('token', {
+			id: '1',
+			username: 'u',
+			email: 'e',
+			role: 'user',
+		});
 		useSessionStore.getState().logout();
 
 		const state = useSessionStore.getState();

@@ -2,6 +2,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { StrictMode } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { useSetupStatus } from '@/features/initial-setup';
+import { AdminPage } from '@/pages/admin';
 import { HomePage } from '@/pages/home/pub';
 import { LoginPage } from '@/pages/login';
 import { ProfilePage } from '@/pages/profile';
@@ -38,6 +39,7 @@ function AppRouter() {
 			<Route path="/room/:roomId" element={<RoomPage />} />
 			<Route path="/login" element={<LoginPage />} />
 			<Route path="/sandbox/:component" element={<SandboxPage />} />
+			<Route path="/admin" element={<AdminPage />} />
 		</Routes>
 	);
 }

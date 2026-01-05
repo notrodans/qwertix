@@ -3,20 +3,23 @@ import type { UserRepository } from '../../src/repositories/interfaces/UserRepos
 
 export class FakeUserRepository implements UserRepository {
 	private users = new Map<string, User>(); // email -> user
-	private nextId = 1;
 
 	async findByEmail(email: string): Promise<User | undefined> {
 		return this.users.get(email);
+	}
+
+	async findById(id: string): Promise<User | undefined> {
+		return Array.from(this.users.values()).find((u) => u.id === id);
 	}
 
 	async create(data: {
 		email: string;
 		username: string;
 		passwordHash: string;
-		role?: string;
+		role?: 'admin' | 'user';
 	}): Promise<User> {
 		const user: User = {
-			id: this.nextId++,
+			id: crypto.randomUUID(),
 			email: data.email,
 			username: data.username,
 			passwordHash: data.passwordHash,

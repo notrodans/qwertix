@@ -120,8 +120,9 @@ export function calculateCorrectCharacters(
 	const wordsToCheck = Math.min(typedWords.length, targetWords.length);
 
 	for (let i = 0; i < wordsToCheck; i++) {
-		if (typedWords[i] === targetWords[i]) {
-			correctChars += targetWords[i].length;
+		const targetWord = targetWords[i];
+		if (targetWord && typedWords[i] === targetWord) {
+			correctChars += targetWord.length;
 			// Add space if it's not the last target word and was correctly typed as a separator
 			if (i < targetWords.length - 1 && i < typedWords.length - 1) {
 				correctChars += 1;

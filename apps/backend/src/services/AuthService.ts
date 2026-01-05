@@ -26,6 +26,15 @@ export class AuthService {
 	}
 
 	/**
+	 * Finds a user by ID.
+	 * @param id - The ID of the user.
+	 * @returns The user object if found.
+	 */
+	async getUserById(id: string): Promise<User | undefined> {
+		return await this.userRepo.findById(id);
+	}
+
+	/**
 	 * Creates a new user with a hashed password.
 	 * @param email - The email address of the new user.
 	 * @param username - The username of the new user.

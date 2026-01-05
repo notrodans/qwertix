@@ -159,7 +159,10 @@ export function calculateCorrectChars(
  * The user finishes if they have typed all words.
  * For the last word, they must type at least as many characters as the target word.
  */
-export function checkCompletion(userTyped: string, targetText: string): boolean {
+export function checkCompletion(
+	userTyped: string,
+	targetText: string,
+): boolean {
 	const userWords = userTyped.split(' ');
 	const targetWords = targetText.split(' ');
 
@@ -174,6 +177,8 @@ export function checkCompletion(userTyped: string, targetText: string): boolean 
 	// lengths are equal, check the last word
 	const lastUserWord = userWords[userWords.length - 1];
 	const lastTargetWord = targetWords[targetWords.length - 1];
+
+	if (!lastUserWord || !lastTargetWord) return false;
 
 	return lastUserWord.length >= lastTargetWord.length;
 }

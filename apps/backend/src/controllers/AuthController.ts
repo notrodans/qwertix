@@ -52,26 +52,59 @@ export class AuthController {
 		);
 
 		app.post('/users', async (req, reply) => {
-			const {
-				email,
-				username,
-				password,
-				role = 'user',
-			} = req.body as {
+			const { email, username, password } = req.body as {
 				email: string;
 				username: string;
 				password: string;
-				role?: 'admin' | 'user';
 			};
 
 			const user = await this.authService.createUser(
 				email,
 				username,
 				password,
-				role,
+				'user',
 			);
 			return reply.send(user);
 		});
+
+		app.post(
+			'/admin/users',
+			{
+				preHandler: async (req, reply) => {
+					try {
+						await req.jwtVerify();
+						const userId = (req.user as { id: string }).id;
+						const user = await this.authService.getUserById(userId);
+						if (!user || user.role !== 'admin') {
+							return reply.code(403).send({ message: 'Forbidden' });
+						}
+					} catch (_err) {
+						return reply.code(401).send({ message: 'Unauthorized' });
+					}
+				},
+			},
+			async (req, reply) => {
+				const {
+					email,
+					username,
+					password,
+					role = 'user',
+				} = req.body as {
+					email: string;
+					username: string;
+					password: string;
+					role?: 'admin' | 'user';
+				};
+
+				const user = await this.authService.createUser(
+					email,
+					username,
+					password,
+					role,
+				);
+				return reply.send(user);
+			},
+		);
 
 		app.get('/auth/setup-status', async () => {
 			const isSetupRequired = await this.authService.isSetupRequired();

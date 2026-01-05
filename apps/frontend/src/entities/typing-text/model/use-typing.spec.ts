@@ -1,60 +1,60 @@
-import { renderHook, act } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { act, renderHook } from '@testing-library/react';
 import { createRef } from 'react';
+import { describe, expect, it, vi } from 'vitest';
 import { useTyping } from './use-typing';
 
 // Mock useCursorPositioning to avoid layout effect issues
 vi.mock('./use-cursor-positioning', () => ({
-    useCursorPositioning: () => vi.fn(),
+	useCursorPositioning: () => vi.fn(),
 }));
 
 describe('useTyping', () => {
-    it('should ignore double spaces in replayData', () => {
-        const targetText = 'hello world';
-        const containerRef = createRef<HTMLElement>();
-        
-        const { result } = renderHook(() => useTyping(targetText, containerRef));
+	it('should ignore double spaces in replayData', () => {
+		const targetText = 'hello world';
+		const containerRef = createRef<HTMLElement>();
 
-        // Start typing
-        act(() => {
-            window.dispatchEvent(new KeyboardEvent('keydown', { key: 'h' }));
-        });
+		const { result } = renderHook(() => useTyping(targetText, containerRef));
 
-        // Type 'hello ' (correct)
-        act(() => {
-            window.dispatchEvent(new KeyboardEvent('keydown', { key: 'e' }));
-            window.dispatchEvent(new KeyboardEvent('keydown', { key: 'l' }));
-            window.dispatchEvent(new KeyboardEvent('keydown', { key: 'l' }));
-            window.dispatchEvent(new KeyboardEvent('keydown', { key: 'o' }));
-            window.dispatchEvent(new KeyboardEvent('keydown', { key: ' ' }));
-        });
+		// Start typing
+		act(() => {
+			window.dispatchEvent(new KeyboardEvent('keydown', { key: 'h' }));
+		});
 
-        expect(result.current.userTyped).toBe('hello ');
-        expect(result.current.replayData).toHaveLength(6); // h, e, l, l, o, space
+		// Type 'hello ' (correct)
+		act(() => {
+			window.dispatchEvent(new KeyboardEvent('keydown', { key: 'e' }));
+			window.dispatchEvent(new KeyboardEvent('keydown', { key: 'l' }));
+			window.dispatchEvent(new KeyboardEvent('keydown', { key: 'l' }));
+			window.dispatchEvent(new KeyboardEvent('keydown', { key: 'o' }));
+			window.dispatchEvent(new KeyboardEvent('keydown', { key: ' ' }));
+		});
 
-        // Type extra space (should be ignored)
-        act(() => {
-            window.dispatchEvent(new KeyboardEvent('keydown', { key: ' ' }));
-        });
+		expect(result.current.userTyped).toBe('hello ');
+		expect(result.current.replayData).toHaveLength(6); // h, e, l, l, o, space
 
-        expect(result.current.userTyped).toBe('hello '); // Should not change
-        
-        // This expectation defines the fix: replayData should NOT increase
-        expect(result.current.replayData).toHaveLength(6); 
-    });
+		// Type extra space (should be ignored)
+		act(() => {
+			window.dispatchEvent(new KeyboardEvent('keydown', { key: ' ' }));
+		});
 
-    it('should ignore leading spaces in replayData', () => {
-        const targetText = 'hello world';
-        const containerRef = createRef<HTMLElement>();
-        
-        const { result } = renderHook(() => useTyping(targetText, containerRef));
+		expect(result.current.userTyped).toBe('hello '); // Should not change
 
-        // Type leading space (should be ignored)
-        act(() => {
-            window.dispatchEvent(new KeyboardEvent('keydown', { key: ' ' }));
-        });
+		// This expectation defines the fix: replayData should NOT increase
+		expect(result.current.replayData).toHaveLength(6);
+	});
 
-        expect(result.current.userTyped).toBe('');
-        expect(result.current.replayData).toHaveLength(0);
-    });
+	it('should ignore leading spaces in replayData', () => {
+		const targetText = 'hello world';
+		const containerRef = createRef<HTMLElement>();
+
+		const { result } = renderHook(() => useTyping(targetText, containerRef));
+
+		// Type leading space (should be ignored)
+		act(() => {
+			window.dispatchEvent(new KeyboardEvent('keydown', { key: ' ' }));
+		});
+
+		expect(result.current.userTyped).toBe('');
+		expect(result.current.replayData).toHaveLength(0);
+	});
 });

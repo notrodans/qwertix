@@ -1,9 +1,4 @@
-import {
-	type ComponentProps,
-	type RefObject,
-	useMemo,
-	useRef,
-} from 'react';
+import { type ComponentProps, type RefObject, useMemo, useRef } from 'react';
 import { useTextScroll } from '../model/use-text-scroll';
 import { Caret } from './caret';
 import { Character } from './character';

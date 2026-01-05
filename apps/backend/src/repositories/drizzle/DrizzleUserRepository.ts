@@ -24,6 +24,20 @@ export class DrizzleUserRepository implements UserRepository {
 	}
 
 	/**
+	 * Finds a user by their ID.
+	 * @param id - The ID of the user.
+	 * @returns The user if found, otherwise undefined.
+	 */
+	async findById(id: string): Promise<User | undefined> {
+		const result = await this.db.source
+			.select()
+			.from(users)
+			.where(eq(users.id, id))
+			.execute();
+		return result[0];
+	}
+
+	/**
 	 * Creates a new user in the database.
 	 * @param data - The user data.
 	 * @returns The created user.
