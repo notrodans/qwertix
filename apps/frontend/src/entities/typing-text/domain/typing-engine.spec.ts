@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { calculateCursorIndex, checkWordCompletion } from './typing-engine';
+import {
+	calculateCursorIndex,
+	checkCompletion,
+	checkWordCompletion,
+} from './typing-engine';
 
 describe('typing-engine', () => {
 	describe('calculateCursorIndex', () => {
@@ -120,6 +124,51 @@ describe('typing-engine', () => {
 			const result = checkWordCompletion(typed, target);
 
 			expect(result).toBe(-1);
+		});
+	});
+
+	describe('checkCompletion', () => {
+		it('should return false when user has fewer words than target', () => {
+			const target = 'one two three';
+			const typed = 'one two';
+			expect(checkCompletion(typed, target)).toBe(false);
+		});
+
+		it('should return false when user is on the last word but it is shorter than target', () => {
+			const target = 'one two three';
+			const typed = 'one two th'; // incomplete last word
+			expect(checkCompletion(typed, target)).toBe(false);
+		});
+
+		it('should return true when user matches target exactly', () => {
+			const target = 'one two three';
+			const typed = 'one two three';
+			expect(checkCompletion(typed, target)).toBe(true);
+		});
+
+		it('should return true when user finishes last word with extras', () => {
+			const target = 'one two three';
+			const typed = 'one two threeee'; // extras
+			expect(checkCompletion(typed, target)).toBe(true);
+		});
+
+		it('should return true when user finishes last word and adds a space', () => {
+			const target = 'one two three';
+			const typed = 'one two three '; // trailing space (moves to next 'ghost' word)
+			expect(checkCompletion(typed, target)).toBe(true);
+		});
+
+		it('should return true if user typed MORE words than target', () => {
+			const target = 'one two';
+			const typed = 'one two three';
+			expect(checkCompletion(typed, target)).toBe(true);
+		});
+
+		it('should return true even if previous words were incorrect (logic only checks counts/last word length)', () => {
+			// Note: This function only checks *length/completion* criteria, not correctness.
+			const target = 'one two';
+			const typed = 'xxx yyy'; // same word count, last word same length
+			expect(checkCompletion(typed, target)).toBe(true);
 		});
 	});
 });

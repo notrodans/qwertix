@@ -2,7 +2,11 @@ import { RaceModeEnum, type ReplayEvent } from '@qwertix/room-contracts';
 import { useQuery } from '@tanstack/react-query';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { useSessionStore } from '@/entities/session';
-import { useTyping, wordQueries } from '@/entities/typing-text';
+import {
+	checkCompletion,
+	useTyping,
+	wordQueries,
+} from '@/entities/typing-text';
 import { useInterval } from '@/shared/lib';
 import { SoloStatusEnum, useSoloModeStore } from './store';
 import { useSaveSoloResult } from './use-save-solo-result';
@@ -119,7 +123,7 @@ export function useSoloGame() {
 			// Completion for WORDS mode
 			if (
 				mode === RaceModeEnum.WORDS &&
-				nextTyped.length === text.length &&
+				checkCompletion(nextTyped, text) &&
 				text.length > 0
 			) {
 				handleFinish(nextTyped, updatedReplayData, typingStartTime || 0);
