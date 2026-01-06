@@ -1,4 +1,5 @@
 import {
+	calculateResultHash,
 	RaceModeEnum,
 	type RoomConfig,
 	RoomStatusEnum,
@@ -14,6 +15,7 @@ import type { Socket } from '@/interfaces/Socket';
 import type { SocketServer } from '@/interfaces/SocketServer';
 import { AuthService } from '@/services/AuthService';
 import { RoomService } from '@/services/RoomService';
+import { env } from '../env';
 import { ResultService } from '../services/ResultService';
 import type { ResultPayload } from './ResultPayload';
 
@@ -356,6 +358,25 @@ export class SocketManager {
 				return;
 			}
 
+			// 1. Verify Hash
+			const calculatedHash = await calculateResultHash(
+				payload.wpm,
+				payload.raw,
+				payload.accuracy,
+				payload.consistency,
+				payload.startTime,
+				payload.endTime,
+				room.text().join(' '),
+				env.RESULT_HASH_SALT,
+			);
+
+			if (calculatedHash !== payload.hash) {
+				this.send(ws, SocketEventEnum.ERROR, {
+					message: 'Invalid result hash',
+				});
+				return;
+			}
+
 			// Authoritative calculation on backend
 			const stats = room.getParticipantFinalStats(
 				ws.userId,
@@ -387,6 +408,7 @@ export class SocketManager {
 				Math.round(payload.consistency),
 				payload.replayData,
 				room.text().join(' '),
+				payload.hash,
 			);
 			this.send(ws, SocketEventEnum.RESULT_SAVED, {
 				success: true,

@@ -6,4 +6,7 @@ export interface ResultPayload {
 	accuracy: number;
 	consistency: number;
 	replayData: ReplayEvent[];
+	startTime: number;
+	endTime: number;
+	hash: string;
 }

@@ -1,9 +1,9 @@
-import { describe, expect, it } from 'vitest';
 import {
 	calculateAccuracy,
 	calculateCorrectCharacters,
 	calculateWPM,
-} from '../../src/domain/room/services/typing-logic';
+} from '@qwertix/room-contracts';
+import { describe, expect, it } from 'vitest';
 
 describe('typing-logic', () => {
 	describe('calculateCorrectCharacters', () => {

@@ -76,7 +76,7 @@ export class Participant {
 			accuracy: this._stats.accuracy,
 			rank: this.rank,
 			finishedAt: this.finishedAt,
-			...(this.dbUserId && { dbUserId: this.dbUserId })
+			...(this.dbUserId && { dbUserId: this.dbUserId }),
 		};
 	}
 

@@ -40,6 +40,7 @@ export const results = pgTable('results', {
 	raw: integer('raw').notNull(),
 	accuracy: integer('accuracy').notNull(),
 	consistency: integer('consistency').notNull(),
+	hash: text('hash'),
 	createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 export type Result = InferSelectModel<typeof results>;

@@ -1,198 +1,221 @@
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 test.describe('Multiplayer Room Lifecycle', () => {
-    test.beforeEach(async ({ page }) => {
-        // Predictable guest name: Guest-123
-        await page.addInitScript(() => {
-            Math.random = () => 0.12345;
-            
-            // Mock WebSocket
-            // biome-ignore lint/suspicious/noExplicitAny: E2E mock
-            (window as any).WebSocket = class extends EventTarget {
-                static OPEN = 1;
-                static CLOSED = 3;
-                readyState = 1; // OPEN
-                onmessage: ((ev: MessageEvent) => any) | null = null;
-                onopen: (() => void) | null = null;
+	test.beforeEach(async ({ page }) => {
+		// Predictable guest name: Guest-123
+		await page.addInitScript(() => {
+			Math.random = () => 0.12345;
 
-                constructor() {
-                    super();
-                    setTimeout(() => {
-                        if (this.onopen) this.onopen();
-                        this.dispatchEvent(new Event('open'));
-                    }, 0);
-                }
+			// Mock WebSocket
+			// biome-ignore lint/suspicious/noExplicitAny: E2E mock
+			(window as any).WebSocket = class extends EventTarget {
+				static OPEN = 1;
+				static CLOSED = 3;
+				readyState = 1; // OPEN
+				onmessage: ((ev: MessageEvent) => any) | null = null;
+				onopen: (() => void) | null = null;
 
-                send(data: string) {
-                    const msg = JSON.parse(data);
-                    console.log('E2E WS SENT:', msg.type);
-                    
-                    const dispatch = (type: string, payload: any) => {
-                        const eventData = JSON.stringify({ type, payload });
-                        if (this.onmessage) {
-                            this.onmessage({ data: eventData } as MessageEvent);
-                        }
-                        this.dispatchEvent(new MessageEvent('message', { data: eventData }));
-                    };
+				constructor() {
+					super();
+					setTimeout(() => {
+						if (this.onopen) this.onopen();
+						this.dispatchEvent(new Event('open'));
+					}, 0);
+				}
 
-                    if (msg.type === 'JOIN_ROOM') {
-                        setTimeout(() => dispatch('ROOM_STATE', {
-                            id: 'TEST12',
-                            status: 0, // LOBBY
-                            participants: [{
-                                socketId: 'host-id',
-                                username: 'Guest-123',
-                                isHost: true,
-                                progress: 0,
-                                wpm: 0,
-                                accuracy: 0,
-                                rank: null,
-                                finishedAt: null
-                            }],
-                            config: { mode: 1, wordCount: 3 }, // WORDS
-                            text: ['multiplayer', 'test', 'room']
-                        }), 50);
-                    }
+				send(data: string) {
+					const msg = JSON.parse(data);
+					console.log('E2E WS SENT:', msg.type);
 
-                    if (msg.type === 'START_RACE') {
-                        console.log('E2E: START_RACE received by mock');
-                        setTimeout(() => dispatch('COUNTDOWN_START', { startTime: Date.now() }), 100);
-                        setTimeout(() => dispatch('RACE_START', {}), 500);
-                    }
+					const dispatch = (type: string, payload: any) => {
+						const eventData = JSON.stringify({ type, payload });
+						if (this.onmessage) {
+							this.onmessage({ data: eventData } as MessageEvent);
+						}
+						this.dispatchEvent(
+							new MessageEvent('message', { data: eventData }),
+						);
+					};
 
-                    if (msg.type === 'UPDATE_PROGRESS' && msg.payload.typedLength >= 21) {
-                        setTimeout(() => {
-                            dispatch('RACE_FINISHED', {
-                                leaderboard: [{
-                                    socketId: 'host-id',
-                                    username: 'Guest-123',
-                                    isHost: true,
-                                    progress: 100,
-                                    wpm: 100,
-                                    accuracy: 100,
-                                    rank: 1,
-                                    finishedAt: Date.now()
-                                }]
-                            });
-                        }, 100);
-                    }
-                }
-                close() {}
-            };
-        });
+					if (msg.type === 'JOIN_ROOM') {
+						setTimeout(
+							() =>
+								dispatch('ROOM_STATE', {
+									id: 'TEST12',
+									status: 0, // LOBBY
+									participants: [
+										{
+											socketId: 'host-id',
+											username: 'Guest-123',
+											isHost: true,
+											progress: 0,
+											wpm: 0,
+											accuracy: 0,
+											rank: null,
+											finishedAt: null,
+										},
+									],
+									config: { mode: 1, wordCount: 3 }, // WORDS
+									text: ['multiplayer', 'test', 'room'],
+								}),
+							50,
+						);
+					}
 
-        // Mock the backend API
-        await page.route('**/api/words*', async (route) => {
-            await route.fulfill({
-                status: 200,
-                contentType: 'application/json',
-                body: JSON.stringify(['multiplayer', 'test', 'room']),
-            });
-        });
+					if (msg.type === 'START_RACE') {
+						console.log('E2E: START_RACE received by mock');
+						setTimeout(
+							() => dispatch('COUNTDOWN_START', { startTime: Date.now() }),
+							100,
+						);
+						setTimeout(() => dispatch('RACE_START', {}), 500);
+					}
 
-        await page.route('**/api/auth/setup-status', async (route) => {
-            await route.fulfill({
-                status: 200,
-                contentType: 'application/json',
-                body: JSON.stringify({ isSetupRequired: false }),
-            });
-        });
-        
-        // Mock room creation
-        await page.route('**/api/rooms', async (route) => {
-             if (route.request().method() === 'POST') {
-                 console.log('E2E: Mocking POST /api/rooms');
-                 await route.fulfill({
-                    status: 200,
-                    contentType: 'application/json',
-                    body: JSON.stringify({ roomId: 'TEST12' }),
-                });
-             } else {
-                 await route.continue();
-             }
-        });
+					if (msg.type === 'UPDATE_PROGRESS' && msg.payload.typedLength >= 21) {
+						setTimeout(() => {
+							dispatch('RACE_FINISHED', {
+								leaderboard: [
+									{
+										socketId: 'host-id',
+										username: 'Guest-123',
+										isHost: true,
+										progress: 100,
+										wpm: 100,
+										accuracy: 100,
+										rank: 1,
+										finishedAt: Date.now(),
+									},
+								],
+							});
+						}, 100);
+					}
+				}
+				close() {}
+			};
+		});
 
-        // Mock room GET
-        await page.route('**/api/rooms/TEST12', async (route) => {
-             console.log('E2E: Mocking GET /api/rooms/TEST12');
-             await route.fulfill({
-                status: 200,
-                contentType: 'application/json',
-                body: JSON.stringify({
-                    id: 'TEST12',
-                    status: 0, // LOBBY
-                    participants: [{
-                        socketId: 'host-id',
-                        username: 'Guest-123',
-                        isHost: true,
-                        progress: 0,
-                        wpm: 0,
-                        accuracy: 0,
-                        rank: null,
-                        finishedAt: null
-                    }],
-                    config: { mode: 1, wordCount: 3 }, // WORDS
-                    text: ['multiplayer', 'test', 'room']
-                }),
-            });
-        });
-    });
+		// Mock the backend API
+		await page.route('**/api/words*', async (route) => {
+			await route.fulfill({
+				status: 200,
+				contentType: 'application/json',
+				body: JSON.stringify(['multiplayer', 'test', 'room']),
+			});
+		});
 
-    test('should create and navigate to room lobby', async ({ page }) => {
-        page.on('console', msg => console.log('BROWSER LOG:', msg.text()));
+		await page.route('**/api/auth/setup-status', async (route) => {
+			await route.fulfill({
+				status: 200,
+				contentType: 'application/json',
+				body: JSON.stringify({ isSetupRequired: false }),
+			});
+		});
 
-        await page.goto('/');
-        
-        // Create room
-        const createButton = page.getByText('Create Multiplayer Room');
-        await createButton.click();
-        
-        // Should navigate to room page
-        await expect(page).toHaveURL(/\/room\/TEST12/, { timeout: 10000 });
-        
-        // Wait for Loading Room... to disappear
-        await expect(page.getByText('Loading Room...')).toBeHidden({ timeout: 10000 });
+		// Mock room creation
+		await page.route('**/api/rooms', async (route) => {
+			if (route.request().method() === 'POST') {
+				console.log('E2E: Mocking POST /api/rooms');
+				await route.fulfill({
+					status: 200,
+					contentType: 'application/json',
+					body: JSON.stringify({ roomId: 'TEST12' }),
+				});
+			} else {
+				await route.continue();
+			}
+		});
 
-        // Should show room details from HTTP initial data
-        await expect(page.getByText(/TEST12/)).toBeVisible({ timeout: 10000 });
-        
-        // Settings should be visible
-        await expect(page.getByText(/words/i)).toBeVisible();
-        
-        // Start button should be available (we are recognized as Guest-123 host)
-        await expect(page.getByRole('button', { name: 'START RACE' })).toBeVisible();
-    });
+		// Mock room GET
+		await page.route('**/api/rooms/TEST12', async (route) => {
+			console.log('E2E: Mocking GET /api/rooms/TEST12');
+			await route.fulfill({
+				status: 200,
+				contentType: 'application/json',
+				body: JSON.stringify({
+					id: 'TEST12',
+					status: 0, // LOBBY
+					participants: [
+						{
+							socketId: 'host-id',
+							username: 'Guest-123',
+							isHost: true,
+							progress: 0,
+							wpm: 0,
+							accuracy: 0,
+							rank: null,
+							finishedAt: null,
+						},
+					],
+					config: { mode: 1, wordCount: 3 }, // WORDS
+					text: ['multiplayer', 'test', 'room'],
+				}),
+			});
+		});
+	});
 
-    test('should run a full multiplayer race', async ({ page }) => {
-        page.on('console', msg => console.log('BROWSER LOG:', msg.text()));
+	test('should create and navigate to room lobby', async ({ page }) => {
+		page.on('console', (msg) => console.log('BROWSER LOG:', msg.text()));
 
-        await page.goto('/');
-        await page.getByText('Create Multiplayer Room').click();
-        
-        // Wait for Lobby
-        await expect(page.getByText(/Room: TEST12/)).toBeVisible();
-        
-        // Wait for our name in participants list (LobbyPlayerList renders names)
-        await expect(page.getByText('Guest-123')).toBeVisible({ timeout: 5000 });
+		await page.goto('/');
 
-        // Start Race
-        const startButton = page.getByRole('button', { name: /START RACE/i });
-        await startButton.waitFor({ state: 'visible' });
-        await startButton.click({ force: true });
-        
-        // Wait for board
-        await expect(page.getByTestId('typing-board')).toBeVisible({ timeout: 10000 });
-        
-        // Type everything correctly
-        await page.keyboard.type('multiplayer test room');
-        
-        // Results should appear
-        await expect(page.getByRole('button', { name: /Return to Lobby/i })).toBeVisible({ timeout: 10000 });
-        await expect(page.getByText('WPM', { exact: true }).first()).toBeVisible();
-        await expect(page.getByText('ACC', { exact: true }).first()).toBeVisible();
-        
-        // Can return to lobby
-        await page.getByRole('button', { name: 'Return to Lobby' }).click();
-        await expect(page.getByText(/Room: TEST12/)).toBeVisible();
-    });
+		// Create room
+		const createButton = page.getByText('Create Multiplayer Room');
+		await createButton.click();
+
+		// Should navigate to room page
+		await expect(page).toHaveURL(/\/room\/TEST12/, { timeout: 10000 });
+
+		// Wait for Loading Room... to disappear
+		await expect(page.getByText('Loading Room...')).toBeHidden({
+			timeout: 10000,
+		});
+
+		// Should show room details from HTTP initial data
+		await expect(page.getByText(/TEST12/)).toBeVisible({ timeout: 10000 });
+
+		// Settings should be visible
+		await expect(page.getByText(/words/i)).toBeVisible();
+
+		// Start button should be available (we are recognized as Guest-123 host)
+		await expect(
+			page.getByRole('button', { name: 'START RACE' }),
+		).toBeVisible();
+	});
+
+	test('should run a full multiplayer race', async ({ page }) => {
+		page.on('console', (msg) => console.log('BROWSER LOG:', msg.text()));
+
+		await page.goto('/');
+		await page.getByText('Create Multiplayer Room').click();
+
+		// Wait for Lobby
+		await expect(page.getByText(/Room: TEST12/)).toBeVisible();
+
+		// Wait for our name in participants list (LobbyPlayerList renders names)
+		await expect(page.getByText('Guest-123')).toBeVisible({ timeout: 5000 });
+
+		// Start Race
+		const startButton = page.getByRole('button', { name: /START RACE/i });
+		await startButton.waitFor({ state: 'visible' });
+		await startButton.click({ force: true });
+
+		// Wait for board
+		await expect(page.getByTestId('typing-board')).toBeVisible({
+			timeout: 10000,
+		});
+
+		// Type everything correctly
+		await page.keyboard.type('multiplayer test room');
+
+		// Results should appear
+		await expect(
+			page.getByRole('button', { name: /Return to Lobby/i }),
+		).toBeVisible({ timeout: 10000 });
+		await expect(page.getByText('WPM', { exact: true }).first()).toBeVisible();
+		await expect(page.getByText('ACC', { exact: true }).first()).toBeVisible();
+
+		// Can return to lobby
+		await page.getByRole('button', { name: 'Return to Lobby' }).click();
+		await expect(page.getByText(/Room: TEST12/)).toBeVisible();
+	});
 });

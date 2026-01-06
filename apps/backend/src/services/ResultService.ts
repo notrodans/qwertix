@@ -54,6 +54,7 @@ export class ResultService {
 		consistency: number,
 		replayData: { key: string; timestamp: number }[],
 		targetText: string,
+		hash?: string,
 	): Promise<Result | undefined> {
 		// If user is not authenticated, do not save result
 		if (!userId) {
@@ -68,6 +69,7 @@ export class ResultService {
 				raw,
 				accuracy,
 				consistency,
+				hash,
 			},
 			replayData,
 			targetText,

@@ -16,6 +16,7 @@ export const env = createEnv({
 		DB_PASSWORD: z.string().default('postgres'),
 		DB_NAME: z.string().default('qwertix'),
 		JWT_SECRET: z.string().default('supersecret'),
+		RESULT_HASH_SALT: z.string().default('default_salt'),
 	},
 	runtimeEnv: process.env,
 	emptyStringAsUndefined: true,

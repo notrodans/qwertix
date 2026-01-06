@@ -36,8 +36,14 @@ export function calculateBackspace(
 
 /**
  * Validates and appends a new character to the typed string.
+ * Optionally limits the number of incorrect characters in the current word.
  */
-export function appendCharacter(current: string, char: string): string {
+export function appendCharacter(
+	current: string,
+	char: string,
+	targetText?: string,
+	maxIncorrect = 6,
+): string {
 	if (char === ' ') {
 		// Prevent space if at start
 		if (current.length === 0) return current;
@@ -45,7 +51,50 @@ export function appendCharacter(current: string, char: string): string {
 		if (current.endsWith(' ')) return current;
 	}
 
-	return current + char;
+	const next = current + char;
+
+	if (targetText && char !== ' ') {
+		const incorrectCount = getIncorrectCharsCount(next, targetText);
+		if (incorrectCount > maxIncorrect) {
+			return current;
+		}
+	}
+
+	return next;
+}
+
+/**
+ * Calculates the number of incorrect characters in the active (last) word.
+ * Incorrect characters are mismatches with target text or extra characters beyond target word length.
+ */
+export function getIncorrectCharsCount(
+	userTyped: string,
+	targetText: string,
+): number {
+	const userWords = userTyped.split(' ');
+	const targetWords = targetText.split(' ');
+	const activeWordIndex = userWords.length - 1;
+
+	if (activeWordIndex >= targetWords.length) return 0;
+
+	const userWord = userWords[activeWordIndex] || '';
+	const targetWord = targetWords[activeWordIndex] || '';
+
+	let incorrect = 0;
+
+	// Count mismatches within target word length
+	for (let i = 0; i < userWord.length; i++) {
+		if (i < targetWord.length) {
+			if (userWord[i] !== targetWord[i]) {
+				incorrect++;
+			}
+		} else {
+			// Extra characters are also considered incorrect
+			incorrect++;
+		}
+	}
+
+	return incorrect;
 }
 
 /**

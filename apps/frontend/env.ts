@@ -6,6 +6,7 @@ export const env = createEnv({
 	client: {
 		VITE_API_URL: z.url().default('http://localhost:3000'),
 		VITE_WS_URL: z.url().default('ws://localhost:3000'),
+		VITE_RESULT_HASH_SALT: z.string().default('default_salt'),
 	},
 	runtimeEnv: import.meta.env,
 	emptyStringAsUndefined: true,

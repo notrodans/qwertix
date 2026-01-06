@@ -1,7 +1,6 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { StrictMode, useEffect } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import { env } from '../../env';
 import { useSetupStatus } from '@/features/initial-setup';
 import { AdminPage } from '@/pages/admin';
 import { HomePage } from '@/pages/home/pub';
@@ -13,6 +12,7 @@ import { SandboxPage } from '@/pages/sandbox';
 import { SetupPage } from '@/pages/setup';
 import { queryClient } from '@/shared/api/query/client';
 import { socketService } from '@/shared/api/socket';
+import { env } from '../../env';
 
 function AppRouter() {
 	const { data: setupStatus, isLoading } = useSetupStatus();

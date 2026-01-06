@@ -1,4 +1,9 @@
-import { type ParticipantDTO, SocketActionEnum } from '@qwertix/room-contracts';
+import { env } from '@env';
+import {
+	calculateResultHash,
+	type ParticipantDTO,
+	SocketActionEnum,
+} from '@qwertix/room-contracts';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import {
@@ -146,14 +151,35 @@ export function useMultiplayerRoom(
 		socketService.send(SocketActionEnum.LOAD_MORE_WORDS, {});
 	};
 
-	const submitResult = (stats: {
+	const submitResult = async (stats: {
 		wpm: number;
 		raw: number;
 		accuracy: number;
 		consistency: number;
 		replayData: { key: string; timestamp: number }[];
 	}) => {
-		socketService.send(SocketActionEnum.SUBMIT_RESULT, stats);
+		if (!room) return;
+		const startTime = room.startTime || Date.now();
+		const endTime = Date.now();
+		const targetText = room.text.join(' ');
+
+		const hash = await calculateResultHash(
+			stats.wpm,
+			stats.raw,
+			stats.accuracy,
+			stats.consistency,
+			startTime,
+			endTime,
+			targetText,
+			env.VITE_RESULT_HASH_SALT,
+		);
+
+		socketService.send(SocketActionEnum.SUBMIT_RESULT, {
+			...stats,
+			startTime,
+			endTime,
+			hash,
+		});
 	};
 
 	const restartGame = () => {

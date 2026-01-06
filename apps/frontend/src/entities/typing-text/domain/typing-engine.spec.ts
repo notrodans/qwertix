@@ -1,11 +1,86 @@
 import { describe, expect, it } from 'vitest';
 import {
+	appendCharacter,
 	calculateCursorIndex,
 	checkCompletion,
 	checkWordCompletion,
+	getIncorrectCharsCount,
 } from './typing-engine';
 
 describe('typing-engine', () => {
+	describe('getIncorrectCharsCount', () => {
+		it('should return 0 for correct prefix', () => {
+			expect(getIncorrectCharsCount('hel', 'hello')).toBe(0);
+		});
+
+		it('should return 0 for exact match', () => {
+			expect(getIncorrectCharsCount('hello', 'hello')).toBe(0);
+		});
+
+		it('should count mismatches', () => {
+			// target: "hello"
+			// user:   "hexxo"
+			// index 2: x vs l
+			// index 3: x vs l
+			expect(getIncorrectCharsCount('hexxo', 'hello')).toBe(2);
+		});
+
+		it('should count extra characters', () => {
+			expect(getIncorrectCharsCount('hello!!!', 'hello')).toBe(3);
+		});
+
+		it('should count both mismatches and extras', () => {
+			// target: "abc"
+			// user:   "axcyy"
+			// index 1: x vs b (mismatch)
+			// index 3: y (extra)
+			// index 4: y (extra)
+			// Total: 3
+			expect(getIncorrectCharsCount('axcyy', 'abc')).toBe(3);
+		});
+
+		it('should only check the active word', () => {
+			expect(getIncorrectCharsCount('correct word ', 'correct word next')).toBe(
+				0,
+			);
+			expect(
+				getIncorrectCharsCount('correct word nxxtt', 'correct word next'),
+			).toBe(2);
+		});
+	});
+
+	describe('appendCharacter', () => {
+		it('should allow characters when limit is not reached', () => {
+			const target = 'hello';
+			let typed = '';
+			typed = appendCharacter(typed, 'h', target, 2);
+			typed = appendCharacter(typed, 'e', target, 2);
+			typed = appendCharacter(typed, 'x', target, 2); // 1 incorrect
+			expect(typed).toBe('hex');
+		});
+
+		it('should block characters when limit is exceeded', () => {
+			const target = 'hello';
+			const typed = 'hexx'; // 2 incorrect
+			// trying to add another 'x' (3rd incorrect) with limit 2
+			const next = appendCharacter(typed, 'x', target, 2);
+			expect(next).toBe('hexx');
+		});
+
+		it('should allow space even if limit is reached', () => {
+			const target = 'hello world';
+			const typed = 'hexxxxxx'; // 6 incorrect, limit is 6 by default
+			const next = appendCharacter(typed, ' ', target, 6);
+			expect(next).toBe('hexxxxxx ');
+		});
+
+		it('should use default limit of 6 if not specified', () => {
+			const target = 'hello';
+			const typed = 'hexxxxxx'; // 6 incorrect
+			const next = appendCharacter(typed, 'x', target); // try 7th
+			expect(next).toBe('hexxxxxx');
+		});
+	});
 	describe('calculateCursorIndex', () => {
 		it('should return 0 for empty input', () => {
 			expect(calculateCursorIndex('hello', '')).toBe(0);

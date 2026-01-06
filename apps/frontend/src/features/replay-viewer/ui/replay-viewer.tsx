@@ -15,6 +15,7 @@ interface ReplayViewerProps {
 function reconstructTextAtTime(
 	replayData: ReplayEvent[],
 	targetTimestamp: number,
+	targetText: string,
 ): string {
 	let reconstructedTypedText = '';
 	for (const event of replayData) {
@@ -33,6 +34,7 @@ function reconstructTextAtTime(
 			reconstructedTypedText = appendCharacter(
 				reconstructedTypedText,
 				event.key,
+				targetText,
 			);
 		}
 	}
@@ -69,10 +71,14 @@ export function ReplayViewer({ replay }: ReplayViewerProps) {
 		(prog: number) => {
 			if (!events || events.length === 0) return;
 			const currentTimestamp = firstTimestamp + prog * duration;
-			const text = reconstructTextAtTime(events, currentTimestamp);
+			const text = reconstructTextAtTime(
+				events,
+				currentTimestamp,
+				targetText || '',
+			);
 			setTypedText(text);
 		},
-		[events, duration, firstTimestamp],
+		[events, duration, firstTimestamp, targetText],
 	);
 
 	const animate = (time: number) => {

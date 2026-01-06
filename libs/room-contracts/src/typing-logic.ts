@@ -132,3 +132,46 @@ export function calculateCorrectCharacters(
 
 	return correctChars;
 }
+
+/**
+ * Calculates a SHA-256 hash of the result payload.
+ * @param wpm - Words Per Minute.
+ * @param raw - Raw WPM.
+ * @param accuracy - Accuracy percentage.
+ * @param consistency - Consistency score.
+ * @param startTime - Start timestamp.
+ * @param endTime - End timestamp.
+ * @param targetText - The target text (or its length if text is too long).
+ * @param salt - The secret salt (should be same on client and server).
+ * @returns The hex string of the hash.
+ */
+export async function calculateResultHash(
+	wpm: number,
+	raw: number,
+	accuracy: number,
+	consistency: number,
+	startTime: number,
+	endTime: number,
+	targetText: string,
+	salt: string,
+): Promise<string> {
+	const data = `${wpm}-${raw}-${accuracy}-${consistency}-${startTime}-${endTime}-${targetText.length}-${salt}`;
+	const encoder = new TextEncoder();
+	const dataBuffer = encoder.encode(data);
+
+	// Check if crypto.subtle is available (Browser/Node 19+/Bun)
+	if (typeof crypto !== 'undefined' && crypto.subtle) {
+		const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer);
+		const hashArray = Array.from(new Uint8Array(hashBuffer));
+		const hashHex = hashArray
+			.map((b) => b.toString(16).padStart(2, '0'))
+			.join('');
+		return hashHex;
+	}
+
+	// Fallback for older Node environments if needed (though we use Bun)
+	// In Bun/Modern Node, crypto.subtle is available.
+	// If not, we might need 'crypto' module import, but that breaks browser compatibility without polyfill.
+	// Assuming Bun environment for this project.
+	throw new Error('Crypto API not available');
+}

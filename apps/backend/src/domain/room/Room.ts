@@ -1,19 +1,17 @@
 import {
+	calculateAccuracy,
+	calculateWPM,
 	RaceModeEnum,
 	type ReplayEvent,
 	type RoomConfig,
 	RoomStatusEnum,
+	reconstructText,
 } from '@qwertix/room-contracts';
 import { v4 as uuid } from 'uuid';
 import { DomainException } from '@/exceptions/DomainException';
 import { RaceStrategyFactory } from '@/factories/RaceStrategyFactory';
 import { Participant } from './Participant';
 import { RoomFSM } from './RoomFSM';
-import {
-	calculateAccuracy,
-	calculateWPM,
-	reconstructText,
-} from './services/typing-logic';
 import type { IRaceRulesStrategy } from './strategies/BaseRuleStrategy';
 
 /**

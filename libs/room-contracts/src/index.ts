@@ -84,6 +84,9 @@ export type SocketAction =
 				accuracy: number;
 				consistency: number;
 				replayData: ReplayEvent[];
+				startTime: number;
+				endTime: number;
+				hash: string;
 			};
 	  };
 
@@ -111,7 +114,10 @@ export type SocketEvent =
 	| { type: SocketEventEnum.PLAYER_LEFT; payload: { userId: string } }
 	| { type: SocketEventEnum.COUNTDOWN_START; payload: { startTime: number } }
 	| { type: SocketEventEnum.RACE_START; payload: Record<string, never> }
-	| { type: SocketEventEnum.RACE_FINISHED; payload: { leaderboard: ParticipantDTO[] } }
+	| {
+			type: SocketEventEnum.RACE_FINISHED;
+			payload: { leaderboard: ParticipantDTO[] };
+	  }
 	| { type: SocketEventEnum.PROGRESS_UPDATE; payload: ParticipantDTO[] }
 	| { type: SocketEventEnum.WORDS_APPENDED; payload: { words: string[] } }
 	| { type: SocketEventEnum.HOST_PROMOTED; payload: { message: string } }
@@ -124,10 +130,4 @@ export type SocketEvent =
 			};
 	  };
 
-/**
- * Generic envelope for all socket communication
- */
-export interface SocketMessage {
-	type: string;
-	payload: unknown;
-}
+export * from './typing-logic';

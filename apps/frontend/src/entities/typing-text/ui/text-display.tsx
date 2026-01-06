@@ -28,7 +28,7 @@ export function TextDisplay({
 	return (
 		<div
 			ref={wrapperRef}
-			className="relative overflow-hidden"
+			className="relative overflow-hidden select-none"
 			style={{ height: '7.3125rem' }} // Exactly 3 lines (3 * 2.4375rem)
 		>
 			<div

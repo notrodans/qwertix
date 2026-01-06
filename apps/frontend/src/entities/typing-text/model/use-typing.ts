@@ -111,7 +111,11 @@ export function useTyping(
 					event.preventDefault();
 				}
 
-				const nextTyped = appendCharacter(prev.userTyped, event.key);
+				const nextTyped = appendCharacter(
+					prev.userTyped,
+					event.key,
+					currentTargetText,
+				);
 
 				if (nextTyped !== prev.userTyped) {
 					nextState.replayData = [

@@ -52,6 +52,7 @@ export class DrizzleResultRepository implements ResultRepository {
 			raw: number;
 			accuracy: number;
 			consistency: number;
+			hash?: string;
 		},
 		replayData?: { key: string; timestamp: number }[],
 		targetText?: string,
@@ -66,6 +67,7 @@ export class DrizzleResultRepository implements ResultRepository {
 					raw: data.raw,
 					accuracy: data.accuracy,
 					consistency: data.consistency,
+					hash: data.hash,
 				})
 				.returning();
 

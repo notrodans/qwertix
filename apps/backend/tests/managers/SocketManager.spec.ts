@@ -1,4 +1,5 @@
 import {
+	calculateResultHash,
 	RaceModeEnum,
 	RoomStatusEnum,
 	type SocketAction,
@@ -35,6 +36,7 @@ describe('SocketManager Integration', () => {
 		resultRepo = new FakeResultRepository();
 		userRepo = new FakeUserRepository();
 		logger = new FakeLogger();
+        logger.error = vi.fn((e, msg) => console.error('FAKE LOGGER ERROR:', msg, e));
 
 		const wordService = new WordService();
 		roomService = new RoomService(roomRepo, wordService);
@@ -279,24 +281,72 @@ describe('SocketManager Integration', () => {
 			];
 			// 1 word in 1 second = 60 WPM.
 
-			sendMessage(ws, SocketActionEnum.SUBMIT_RESULT, {
-				wpm: 60, // Ignored by server
-				raw: 60,
-				accuracy: 100,
-				consistency: 90,
-				replayData: replayData,
-			});
-			await new Promise(process.nextTick);
+			const startTime = Date.now() - 1000;
+			const endTime = Date.now();
+			const targetText = room.text().join(' ');
+			const salt = 'default_salt';
 
-			const results = await resultRepo.findByUserId('user-123');
-			expect(results).toHaveLength(1);
-			expect(results[0].wpm).toBeGreaterThan(0);
+			const hash = await calculateResultHash(
+				60,
+				60,
+				100,
+				90,
+				startTime,
+				endTime,
+				targetText,
+				salt,
+			);
 
-			vi.useRealTimers();
-		});
-	});
+						sendMessage(ws, SocketActionEnum.SUBMIT_RESULT, {
 
-	describe('Reconnection & Lifecycle', () => {
+							wpm: 60,
+
+							raw: 60,
+
+							accuracy: 100,
+
+							consistency: 90,
+
+							replayData: replayData,
+
+							startTime,
+
+							endTime,
+
+							hash,
+
+						});
+
+						
+
+						// Wait for async processing (hash calc + DB save)
+
+						for (let i = 0; i < 100; i++) {
+
+			                await new Promise(resolve => {
+
+			                    setTimeout(resolve, 10);
+
+			                    vi.advanceTimersByTime(10);
+
+			                });
+
+						}
+
+			
+
+						const results = await resultRepo.findByUserId('user-123');
+
+						expect(results).toHaveLength(1);
+
+						expect(results[0].wpm).toBeGreaterThan(0);
+
+					});
+
+				});
+
+			
+					describe('Reconnection & Lifecycle', () => {
 		it('should reuse existing session when re-joining same room', async () => {
 			const room = await roomService.createRoom();
 			const ws = connectClient();
