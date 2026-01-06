@@ -4,7 +4,10 @@ import type { ResultRepository } from '../../src/repositories/interfaces/ResultR
 
 export class FakeResultRepository implements ResultRepository {
 	private results = new Map<string, Result>();
-	private replays = new Map<string, { data: { key: string; timestamp: number }[]; targetText: string }>();
+	private replays = new Map<
+		string,
+		{ data: { key: string; timestamp: number }[]; targetText: string }
+	>();
 
 	async findById(id: string): Promise<Result | undefined> {
 		return this.results.get(id);

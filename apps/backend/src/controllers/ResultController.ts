@@ -96,13 +96,13 @@ export class ResultController {
 			const accDiff = Math.abs(accuracy - body.accuracy);
 
 			if (wpmDiff > 5 || accDiff > 2) {
-				return reply.status(400).send({ 
-                    error: 'Stats verification failed',
-                    details: {
-                        server: { wpm, accuracy },
-                        client: { wpm: body.wpm, accuracy: body.accuracy }
-                    }
-                });
+				return reply.status(400).send({
+					error: 'Stats verification failed',
+					details: {
+						server: { wpm, accuracy },
+						client: { wpm: body.wpm, accuracy: body.accuracy },
+					},
+				});
 			}
 
 			const savedResult = await this.resultService.saveResult(

@@ -1,11 +1,3 @@
-import {
-	calculateResultHash,
-	RaceModeEnum,
-	RoomStatusEnum,
-	type SocketAction,
-	SocketActionEnum,
-	SocketEventEnum,
-} from '@qwertix/room-contracts';
 import type { FastifyInstance } from 'fastify';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SocketManager } from '../../src/managers/SocketManager';
@@ -18,6 +10,25 @@ import { FakeLogger } from '../fakes/FakeLogger';
 import { FakeResultRepository } from '../fakes/FakeResultRepository';
 import { FakeUserRepository } from '../fakes/FakeUserRepository';
 import { FakeWebSocket, FakeWebSocketServer } from '../fakes/FakeWebSocket';
+
+// Mock calculateResultHash to avoid timing issues with crypto.subtle and fake timers
+vi.mock('@qwertix/room-contracts', async (importOriginal) => {
+	const actual =
+		await importOriginal<typeof import('@qwertix/room-contracts')>();
+	return {
+		...actual,
+		calculateResultHash: vi.fn().mockResolvedValue('mock_hash'),
+	};
+});
+
+// Re-import after mock
+import {
+	RaceModeEnum,
+	RoomStatusEnum,
+	type SocketAction,
+	SocketActionEnum,
+	SocketEventEnum,
+} from '@qwertix/room-contracts';
 
 describe('SocketManager Integration', () => {
 	let wss: FakeWebSocketServer;
@@ -36,7 +47,9 @@ describe('SocketManager Integration', () => {
 		resultRepo = new FakeResultRepository();
 		userRepo = new FakeUserRepository();
 		logger = new FakeLogger();
-        logger.error = vi.fn((e, msg) => console.error('FAKE LOGGER ERROR:', msg, e));
+		logger.error = vi.fn((e, msg) =>
+			console.error('FAKE LOGGER ERROR:', msg, e),
+		);
 
 		const wordService = new WordService();
 		roomService = new RoomService(roomRepo, wordService);
@@ -283,70 +296,36 @@ describe('SocketManager Integration', () => {
 
 			const startTime = Date.now() - 1000;
 			const endTime = Date.now();
-			const targetText = room.text().join(' ');
-			const salt = 'default_salt';
+			// const targetText = room.text().join(' ');
+			// const salt = 'default_salt';
 
-			const hash = await calculateResultHash(
-				60,
-				60,
-				100,
-				90,
+			// Use mocked hash
+			const hash = 'mock_hash';
+
+			sendMessage(ws, SocketActionEnum.SUBMIT_RESULT, {
+				wpm: 60,
+				raw: 60,
+				accuracy: 100,
+				consistency: 90,
+				replayData: replayData,
 				startTime,
 				endTime,
-				targetText,
-				salt,
-			);
+				hash,
+			});
 
-						sendMessage(ws, SocketActionEnum.SUBMIT_RESULT, {
+			// Wait for async processing (DB save)
+			// With mocked hash, it should be fast, but we still need to let the promise chain resolve
+			for (let i = 0; i < 10; i++) {
+				await new Promise((resolve) => process.nextTick(resolve));
+			}
 
-							wpm: 60,
+			const results = await resultRepo.findByUserId('user-123');
+			expect(results).toHaveLength(1);
+			expect(results[0].wpm).toBeGreaterThan(0);
+		});
+	});
 
-							raw: 60,
-
-							accuracy: 100,
-
-							consistency: 90,
-
-							replayData: replayData,
-
-							startTime,
-
-							endTime,
-
-							hash,
-
-						});
-
-						
-
-						// Wait for async processing (hash calc + DB save)
-
-						for (let i = 0; i < 100; i++) {
-
-			                await new Promise(resolve => {
-
-			                    setTimeout(resolve, 10);
-
-			                    vi.advanceTimersByTime(10);
-
-			                });
-
-						}
-
-			
-
-						const results = await resultRepo.findByUserId('user-123');
-
-						expect(results).toHaveLength(1);
-
-						expect(results[0].wpm).toBeGreaterThan(0);
-
-					});
-
-				});
-
-			
-					describe('Reconnection & Lifecycle', () => {
+	describe('Reconnection & Lifecycle', () => {
 		it('should reuse existing session when re-joining same room', async () => {
 			const room = await roomService.createRoom();
 			const ws = connectClient();

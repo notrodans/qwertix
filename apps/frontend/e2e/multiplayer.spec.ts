@@ -12,7 +12,7 @@ test.describe('Multiplayer Room Lifecycle', () => {
 				static OPEN = 1;
 				static CLOSED = 3;
 				readyState = 1; // OPEN
-				onmessage: ((ev: MessageEvent) => any) | null = null;
+				onmessage: ((ev: MessageEvent) => void) | null = null;
 				onopen: (() => void) | null = null;
 
 				constructor() {
@@ -27,7 +27,7 @@ test.describe('Multiplayer Room Lifecycle', () => {
 					const msg = JSON.parse(data);
 					console.log('E2E WS SENT:', msg.type);
 
-					const dispatch = (type: string, payload: any) => {
+					const dispatch = (type: string, payload: unknown) => {
 						const eventData = JSON.stringify({ type, payload });
 						if (this.onmessage) {
 							this.onmessage({ data: eventData } as MessageEvent);
