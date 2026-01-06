@@ -7,6 +7,13 @@ export async function setup() {
 	process.env.DB_NAME = 'qwertix_test';
 
 	try {
+		// Dynamic import to ensure process.env is set
+		const { DataBase } = await import('../src/db');
+		const db = new DataBase();
+
+		await db.source.execute(sql.raw('DROP SCHEMA IF EXISTS public CASCADE'));
+		await db.source.execute(sql.raw('CREATE SCHEMA public'));
+
 		console.log('Synchronizing test database schema via db:push...');
 		// Use db:push because it ensures the schema matches exactly (removes stale columns)
 		// We use execSync to run the drizzle-kit command
@@ -16,21 +23,13 @@ export async function setup() {
 				DB_PORT: '5433',
 				DB_NAME: 'qwertix_test',
 			},
+			stdio: 'inherit',
 		});
 		console.log('Global E2E setup: Schema synchronized');
 
-		// Dynamic import to ensure process.env is set for the cleanup
-		const { DataBase } = await import('../src/db');
-		const db = new DataBase();
-
-		// Initial data cleanup
-		const tables = ['replays', 'results', 'presets', 'users'];
-		for (const table of tables) {
-			await db.source.execute(
-				sql.raw(`TRUNCATE TABLE "${table}" RESTART IDENTITY CASCADE`),
-			);
-		}
-		console.log('Global E2E setup: Database cleaned');
+		// Initial data cleanup (not needed if we dropped schema, but keeps seed data clean logic if any)
+		// const tables = ['replays', 'results', 'presets', 'users'];
+        // ...
 	} catch (error) {
 		console.error('Global E2E setup failed:', error);
 		throw error;
