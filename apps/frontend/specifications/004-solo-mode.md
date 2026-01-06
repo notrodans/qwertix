@@ -34,5 +34,9 @@ Implement a solo typing mode similar to Monkeytype, allowing users to practice t
 6. Upon completion:
     - `WORDS` mode: When the user reaches the end of the target text.
     - `TIME` mode: When time expires.
-7. Status changes to `RESULT`, showing the results screen.
-8. User can restart or change settings.
+7. **Submission**:
+    - Frontend calculates final stats.
+    - Generates a SHA-256 hash using `VITE_RESULT_HASH_SALT` to sign the result.
+    - Sends payload (stats, replayData, hash) to `/api/results`.
+8. Status changes to `RESULT`, showing the results screen.
+9. User can restart or change settings.

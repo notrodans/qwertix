@@ -20,9 +20,10 @@ Allows users to create game sessions, invite others via a unique link, and compe
 
 ## 4. Performance & Validation
 
-### 4.1 Authoritative Metrics
-- **Strict Server-Side Calculation**: The frontend MUST NOT calculate WPM or Accuracy. It sends raw keystroke data (replay) to the server.
-- The server calculates final metrics and broadcasts them back.
+### 4.1 Security & Verification
+- **Hash Check**: Client signs the result with a secret salt. Server verifies integrity before processing.
+- **Strict Server-Side Calculation**: The server validates the client's WPM claims by re-calculating them from the raw `replayData`.
+- **Tolerance**: Small discrepancies (+/- 5 WPM) are allowed; larger ones result in rejection.
 
 ### 4.2 Replay Data
 - Frontend provides controls for replay playback: Play, Pause, Scrubbing/Rewind, and Time display.

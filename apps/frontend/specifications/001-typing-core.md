@@ -24,7 +24,7 @@ Provide a minimalist, high-performance typing experience with instant feedback a
   - `key`: The character or command (e.g., 'Backspace').
   - `ctrlKey`: Recorded for 'Backspace' to handle complex deletions (Ctrl+Backspace).
   - `confirmedIndex`: The state of the confirmed typing index at the time of the event to ensure deterministic reconstruction.
-- **Playback**: Deterministic reconstruction of the session using `calculateBackspace` and `appendCharacter` logic.
+- **Playback**: Deterministic reconstruction of the session using shared `reconstructText` logic (handling standard and Ctrl+Backspace behavior).
 
 ## 5. Performance Optimization
 - **Stable Listeners**: Event listeners use `useRef` for state tracking to avoid expensive re-attachments on every keystroke.
