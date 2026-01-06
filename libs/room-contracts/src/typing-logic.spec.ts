@@ -1,10 +1,10 @@
+import { describe, expect, it } from 'vitest';
 import {
 	calculateAccuracy,
 	calculateCorrectCharacters,
 	calculateWPM,
 	reconstructText,
-} from '@qwertix/room-contracts';
-import { describe, expect, it } from 'vitest';
+} from './typing-logic';
 
 describe('typing-logic', () => {
 	describe('reconstructText', () => {

@@ -6,11 +6,15 @@
 	"types": "./src/index.ts",
 	"private": true,
 	"scripts": {
+		"test": "vitest run",
+		"test:watch": "vitest",
 		"lint": "tsc --noEmit -p tsconfig.json && eslint . && biome check .",
 		"lint:fix": "tsc --noEmit -p tsconfig.json && eslint . --fix && biome check --write ."
 	},
 	"devDependencies": {
 		"@qwertix/tsconfig": "workspace:*",
-		"typescript": "catalog:"
+		"typescript": "catalog:",
+		"vite-tsconfig-paths": "catalog:",
+		"vitest": "catalog:"
 	}
 }
