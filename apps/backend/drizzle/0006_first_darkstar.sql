@@ -1,1 +1,4 @@
-ALTER TABLE "results" ADD COLUMN "hash" text;
+ALTER TABLE "results"
+    ADD COLUMN IF NOT EXISTS "hash" text;
+
+

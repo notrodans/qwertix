@@ -29,7 +29,7 @@ export async function setup() {
 
 		// Initial data cleanup (not needed if we dropped schema, but keeps seed data clean logic if any)
 		// const tables = ['replays', 'results', 'presets', 'users'];
-        // ...
+		// ...
 	} catch (error) {
 		console.error('Global E2E setup failed:', error);
 		throw error;

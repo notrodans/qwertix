@@ -2,10 +2,86 @@ import {
 	calculateAccuracy,
 	calculateCorrectCharacters,
 	calculateWPM,
+	reconstructText,
 } from '@qwertix/room-contracts';
 import { describe, expect, it } from 'vitest';
 
 describe('typing-logic', () => {
+	describe('reconstructText', () => {
+		it('should reconstruct simple text', () => {
+			const events = [
+				{ key: 'h', timestamp: 1 },
+				{ key: 'i', timestamp: 2 },
+			];
+			expect(reconstructText(events)).toBe('hi');
+		});
+
+		it('should handle backspace', () => {
+			const events = [
+				{ key: 'h', timestamp: 1 },
+				{ key: 'i', timestamp: 2 },
+				{ key: 'Backspace', timestamp: 3 },
+			];
+			expect(reconstructText(events)).toBe('h');
+		});
+
+		it('should handle Ctrl+Backspace (delete word)', () => {
+			const events = [
+				{ key: 'h', timestamp: 1 },
+				{ key: 'i', timestamp: 2 },
+				{ key: ' ', timestamp: 3 },
+				{ key: 't', timestamp: 4 },
+				{ key: 'h', timestamp: 5 },
+				{ key: 'e', timestamp: 6 },
+				{ key: 'r', timestamp: 7 },
+				{ key: 'e', timestamp: 8 },
+				{ key: 'Backspace', timestamp: 9, ctrlKey: true },
+			];
+			// "hi there" -> "hi "
+			expect(reconstructText(events)).toBe('hi ');
+		});
+
+		it('should handle Ctrl+Backspace with trailing spaces', () => {
+			const events = [
+				{ key: 'h', timestamp: 1 },
+				{ key: 'i', timestamp: 2 },
+				{ key: ' ', timestamp: 3 },
+				{ key: ' ', timestamp: 4 },
+				{ key: 'Backspace', timestamp: 5, ctrlKey: true },
+			];
+			// "hi  " -> "hi " (removes last word, which is empty? or removes spaces?)
+			// Logic: "hi  " -> trimEnd -> "hi". lastSpace index 2 (after i? no, "hi" lastSpace -1)
+			// Wait, "hi  " trimmed is "hi". lastSpace of "hi" is -1.
+			// if lastSpace -1 -> slice(0, confirmedIndex).
+			// So "hi  " -> "".
+			// Let's verify this behavior.
+			expect(reconstructText(events)).toBe('');
+		});
+
+		it('should handle Ctrl+Backspace with trailing spaces and previous word', () => {
+			// "hello world  " -> "hello "
+			// "hello world  " trimmed -> "hello world". lastSpace is 5.
+			// slice(0, 5+1) -> "hello ".
+			const events = [
+				{ key: 'h', timestamp: 1 },
+				{ key: 'e', timestamp: 2 },
+				{ key: 'l', timestamp: 3 },
+				{ key: 'l', timestamp: 4 },
+				{ key: 'o', timestamp: 5 },
+				{ key: ' ', timestamp: 6 },
+				{ key: 'w', timestamp: 7 },
+				{ key: 'o', timestamp: 8 },
+				{ key: 'r', timestamp: 9 },
+				{ key: 'l', timestamp: 10 },
+				{ key: 'd', timestamp: 11 },
+				{ key: ' ', timestamp: 12 },
+				{ key: ' ', timestamp: 13 },
+				{ key: 'Backspace', timestamp: 14, ctrlKey: true },
+			];
+			expect(reconstructText(events)).toBe('hello ');
+		});
+	});
+
 	describe('calculateCorrectCharacters', () => {
 		it('should count characters in correct words', () => {
 			const target = 'hello world';

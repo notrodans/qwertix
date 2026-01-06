@@ -1,9 +1,12 @@
 import { drizzle, NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import { env } from '../env';
+import * as relations from './relations';
 import * as schema from './schema';
 
-type DataSource = NodePgDatabase<typeof schema> & {
+const combinedSchema = { ...schema, ...relations };
+
+type DataSource = NodePgDatabase<typeof combinedSchema> & {
 	$client: Pool;
 };
 
@@ -19,6 +22,6 @@ export class DataBase {
 			database: env.DB_NAME,
 		});
 
-		this.source = drizzle(pool, { schema });
+		this.source = drizzle(pool, { schema: combinedSchema });
 	}
 }

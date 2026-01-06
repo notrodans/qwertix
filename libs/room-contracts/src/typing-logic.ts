@@ -62,34 +62,18 @@ export function reconstructText(
 					const textAfterConfirmed =
 						reconstructedTypedText.slice(confirmedIndex);
 					const trimmed = textAfterConfirmed.trimEnd();
-					const diff = textAfterConfirmed.length - trimmed.length;
+					const lastSpace = trimmed.lastIndexOf(' ');
 
-					if (diff === 0) {
-						const lastSpace = trimmed.lastIndexOf(' ');
-						if (lastSpace === -1) {
-							reconstructedTypedText = reconstructedTypedText.slice(
-								0,
-								confirmedIndex,
-							);
-						} else {
-							reconstructedTypedText = reconstructedTypedText.slice(
-								0,
-								confirmedIndex + lastSpace + 1,
-							);
-						}
+					if (lastSpace === -1) {
+						reconstructedTypedText = reconstructedTypedText.slice(
+							0,
+							confirmedIndex,
+						);
 					} else {
-						const lastSpace = trimmed.lastIndexOf(' ');
-						if (lastSpace === -1) {
-							reconstructedTypedText = reconstructedTypedText.slice(
-								0,
-								confirmedIndex,
-							);
-						} else {
-							reconstructedTypedText = reconstructedTypedText.slice(
-								0,
-								confirmedIndex + lastSpace + 1,
-							);
-						}
+						reconstructedTypedText = reconstructedTypedText.slice(
+							0,
+							confirmedIndex + lastSpace + 1,
+						);
 					}
 				} else {
 					reconstructedTypedText = reconstructedTypedText.slice(0, -1);
