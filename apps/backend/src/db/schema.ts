@@ -1,3 +1,4 @@
+import { UserRoleEnum } from '@qwertix/room-contracts';
 import type { InferSelectModel } from 'drizzle-orm';
 import {
 	boolean,
@@ -10,13 +11,16 @@ import {
 	uuid,
 } from 'drizzle-orm/pg-core';
 
-export const userRoleEnum = pgEnum('role', ['admin', 'user']);
+export const userRoleEnum = pgEnum('role', [
+	UserRoleEnum.ADMIN,
+	UserRoleEnum.USER,
+]);
 
 export const users = pgTable('users', {
 	id: uuid('id').unique().primaryKey().defaultRandom(),
 	username: text('username').notNull(),
 	email: text('email').notNull().unique(),
-	role: userRoleEnum('role').default('user').notNull(),
+	role: userRoleEnum('role').default(UserRoleEnum.USER).notNull(),
 	passwordHash: text('password_hash').notNull(), // For local auth
 	createdAt: timestamp('created_at').defaultNow().notNull(),
 });

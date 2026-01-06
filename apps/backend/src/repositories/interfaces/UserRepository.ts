@@ -1,13 +1,14 @@
+import { UserRoleEnum } from '@qwertix/room-contracts';
 import type { User } from '@/db/schema';
 
 export interface UserRepository {
-	findById(id: string): Promise<User | undefined>;
 	findByEmail(email: string): Promise<User | undefined>;
-	create(user: {
+	findById(id: string): Promise<User | undefined>;
+	create(data: {
 		email: string;
 		username: string;
 		passwordHash: string;
-		role?: 'admin' | 'user';
+		role?: UserRoleEnum;
 	}): Promise<User>;
 	count(): Promise<number>;
 }

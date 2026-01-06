@@ -1,3 +1,5 @@
+import { UserRoleEnum } from '@qwertix/room-contracts';
+
 export interface SetupStatusResponse {
 	isSetupRequired: boolean;
 }
@@ -10,10 +12,10 @@ export interface SetupPayload {
 
 export interface SetupResponse {
 	user: {
-		id: number;
+		id: string;
 		username: string;
 		email: string;
-		role: string;
+		role: UserRoleEnum;
 	};
 	message: string;
 }

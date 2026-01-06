@@ -1,3 +1,4 @@
+import { UserRoleEnum } from '@qwertix/room-contracts';
 import { useState } from 'react';
 import { useCreateUser } from '../model/use-create-user';
 
@@ -13,7 +14,7 @@ export function CreateUserForm() {
 		email: '',
 		username: '',
 		password: '',
-		role: 'user' as 'admin' | 'user',
+		role: UserRoleEnum.USER,
 	});
 
 	const handleSubmit = (e: React.FormEvent) => {
@@ -32,7 +33,7 @@ export function CreateUserForm() {
 							email: '',
 							username: '',
 							password: '',
-							role: 'user',
+							role: UserRoleEnum.USER,
 						});
 					}}
 					className="mt-3 px-4 py-2 bg-emerald-500 text-zinc-950 font-bold rounded hover:bg-emerald-400"
@@ -100,13 +101,13 @@ export function CreateUserForm() {
 					onChange={(e) =>
 						setFormData({
 							...formData,
-							role: e.target.value as 'user' | 'admin',
+							role: e.target.value as UserRoleEnum,
 						})
 					}
 					className="w-full px-3 py-2 mt-1 bg-zinc-800 border border-zinc-700 rounded focus:ring-2 focus:ring-emerald-500 outline-none text-zinc-200"
 				>
-					<option value="user">User</option>
-					<option value="admin">Admin</option>
+					<option value={UserRoleEnum.USER}>User</option>
+					<option value={UserRoleEnum.ADMIN}>Admin</option>
 				</select>
 			</div>
 

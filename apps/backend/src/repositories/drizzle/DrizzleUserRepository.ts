@@ -1,3 +1,4 @@
+import { UserRoleEnum } from '@qwertix/room-contracts';
 import { count, eq } from 'drizzle-orm';
 import { DataBase } from '@/db';
 import { type User, users } from '@/db/schema';
@@ -46,7 +47,7 @@ export class DrizzleUserRepository implements UserRepository {
 		email: string;
 		username: string;
 		passwordHash: string;
-		role?: 'admin' | 'user';
+		role?: UserRoleEnum;
 	}): Promise<User> {
 		const result = await this.db.source
 			.insert(users)
@@ -54,7 +55,7 @@ export class DrizzleUserRepository implements UserRepository {
 				email: data.email,
 				username: data.username,
 				passwordHash: data.passwordHash,
-				role: data.role ?? 'user',
+				role: data.role ?? UserRoleEnum.USER,
 			})
 			.returning()
 			.execute();

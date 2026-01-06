@@ -1,10 +1,11 @@
+import { UserRoleEnum } from '@qwertix/room-contracts';
 import { useSessionStore } from '@/entities/session';
 
 interface CreateUserParams {
 	email: string;
 	username: string;
 	password: string;
-	role: 'admin' | 'user';
+	role: UserRoleEnum;
 }
 
 export const createUserApi = async (params: CreateUserParams) => {

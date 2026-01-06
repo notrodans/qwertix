@@ -1,3 +1,4 @@
+import { UserRoleEnum } from '@qwertix/room-contracts';
 import fastifyPassport from '@fastify/passport';
 import type { FastifyInstance } from 'fastify';
 import { Strategy as LocalStrategy } from 'passport-local';
@@ -35,7 +36,7 @@ export class AuthController {
 			async (user: { id: string }) => user.id,
 		);
 		fastifyPassport.registerUserDeserializer(async (id: string) => {
-			return { id, role: 'admin' };
+			return { id, role: UserRoleEnum.ADMIN };
 		});
 
 		app.post(
@@ -62,7 +63,7 @@ export class AuthController {
 				email,
 				username,
 				password,
-				'user',
+				UserRoleEnum.USER,
 			);
 			return reply.send(user);
 		});
@@ -76,7 +77,7 @@ export class AuthController {
 						const userId = (req as unknown as { jwtUser: { id: string } })
 							.jwtUser.id;
 						const user = await this.authService.getUserById(userId);
-						if (!user || user.role !== 'admin') {
+						if (!user || user.role !== UserRoleEnum.ADMIN) {
 							return reply.code(403).send({ message: 'Forbidden' });
 						}
 					} catch (_err) {
@@ -89,12 +90,12 @@ export class AuthController {
 					email,
 					username,
 					password,
-					role = 'user',
+					role = UserRoleEnum.USER,
 				} = req.body as {
 					email: string;
 					username: string;
 					password: string;
-					role?: 'admin' | 'user';
+					role?: UserRoleEnum;
 				};
 
 				const user = await this.authService.createUser(
@@ -128,7 +129,7 @@ export class AuthController {
 				email,
 				username,
 				password,
-				'admin',
+				UserRoleEnum.ADMIN,
 			);
 
 			return reply.send({ user, message: 'Superuser created successfully' });

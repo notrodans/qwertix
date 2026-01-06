@@ -1,3 +1,4 @@
+import { UserRoleEnum } from '@qwertix/room-contracts';
 import bcrypt from 'bcryptjs';
 import { type User } from '@/db/schema';
 import type { UserRepository } from '@/repositories/interfaces/UserRepository';
@@ -39,14 +40,14 @@ export class AuthService {
 	 * @param email - The email address of the new user.
 	 * @param username - The username of the new user.
 	 * @param password - The plain text password.
-	 * @param role - The role of the user (default: 'user').
+	 * @param role - The role of the user (default: UserRoleEnum.USER).
 	 * @returns The created user object.
 	 */
 	async createUser(
 		email: string,
 		username: string,
 		password: string,
-		role: 'admin' | 'user' = 'user',
+		role: UserRoleEnum = UserRoleEnum.USER,
 	): Promise<User> {
 		const hash = await bcrypt.hash(password, 10);
 		return await this.userRepo.create({

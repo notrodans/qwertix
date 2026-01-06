@@ -1,3 +1,4 @@
+import { UserRoleEnum } from '@qwertix/room-contracts';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSessionStore } from '@/entities/session';
@@ -10,13 +11,13 @@ export function AdminPage() {
 	useEffect(() => {
 		if (!isAuthenticated()) {
 			navigate('/login');
-		} else if (user?.role !== 'admin') {
+		} else if (user?.role !== UserRoleEnum.ADMIN) {
 			navigate('/');
 		}
 	}, [isAuthenticated, user, navigate]);
 
-	if (!user || user.role !== 'admin') {
-		return null; // Or loading
+	if (!user || user.role !== UserRoleEnum.ADMIN) {
+		return null;
 	}
 
 	return (

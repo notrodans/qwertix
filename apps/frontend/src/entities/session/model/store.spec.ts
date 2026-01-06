@@ -1,3 +1,4 @@
+import { UserRoleEnum } from '@qwertix/room-contracts';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { useSessionStore } from './store';
 
@@ -18,7 +19,7 @@ describe('useSessionStore', () => {
 			id: '1',
 			username: 'testuser',
 			email: 'test@example.com',
-			role: 'user' as const,
+			role: UserRoleEnum.USER,
 		};
 		const token = 'fake-token';
 
@@ -35,7 +36,7 @@ describe('useSessionStore', () => {
 			id: '1',
 			username: 'u',
 			email: 'e',
-			role: 'user',
+			role: UserRoleEnum.USER,
 		});
 		useSessionStore.getState().logout();
 

@@ -5,6 +5,11 @@ export enum RoomStatusEnum {
 	FINISHED,
 }
 
+export enum UserRoleEnum {
+	ADMIN = 'admin',
+	USER = 'user',
+}
+
 export interface ParticipantDTO {
 	socketId: string;
 	username: string;

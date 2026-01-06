@@ -1,8 +1,10 @@
+import { UserRoleEnum } from '@qwertix/room-contracts';
+
 export interface User {
 	id: string;
 	username: string;
 	email: string;
-	role: 'admin' | 'user';
+	role: UserRoleEnum;
 	avatarUrl?: string;
 }
 

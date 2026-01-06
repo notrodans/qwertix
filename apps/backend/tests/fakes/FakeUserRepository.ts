@@ -1,3 +1,4 @@
+import { UserRoleEnum } from '@qwertix/room-contracts';
 import type { User } from '../../src/db/schema';
 import type { UserRepository } from '../../src/repositories/interfaces/UserRepository';
 
@@ -16,14 +17,14 @@ export class FakeUserRepository implements UserRepository {
 		email: string;
 		username: string;
 		passwordHash: string;
-		role?: 'admin' | 'user';
+		role?: UserRoleEnum;
 	}): Promise<User> {
 		const user: User = {
 			id: crypto.randomUUID(),
 			email: data.email,
 			username: data.username,
 			passwordHash: data.passwordHash,
-			role: data.role ?? 'user',
+			role: data.role ?? UserRoleEnum.USER,
 			createdAt: new Date(),
 		};
 		this.users.set(data.email, user);
