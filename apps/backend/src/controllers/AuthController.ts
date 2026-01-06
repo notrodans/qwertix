@@ -1,5 +1,5 @@
-import { UserRoleEnum } from '@qwertix/room-contracts';
 import fastifyPassport from '@fastify/passport';
+import { UserRoleEnum } from '@qwertix/room-contracts';
 import type { FastifyInstance } from 'fastify';
 import { Strategy as LocalStrategy } from 'passport-local';
 import { AuthService } from '../services/AuthService';
