@@ -12,9 +12,16 @@ describe('ResultService', () => {
 	});
 
 	it('should save result if userId is provided', async () => {
-		const result = await resultService.saveResult(1, 1, 100, 110, 98, 95, [
-			{ key: 'a', timestamp: 10 },
-		]);
+		const result = await resultService.saveResult(
+			'user-1',
+			'preset-1',
+			100,
+			110,
+			98,
+			95,
+			[{ key: 'a', timestamp: 10 }],
+			'target',
+		);
 
 		expect(result).toBeTruthy();
 	});
@@ -22,37 +29,46 @@ describe('ResultService', () => {
 	it('should NOT save result if userId is null', async () => {
 		const result = await resultService.saveResult(
 			null,
-			1,
+			'preset-1',
 			100,
 			110,
 			98,
 			95,
 			[],
+			'target',
 		);
 
 		expect(result).toBeFalsy();
 	});
 
 	it('should get user results', async () => {
-		await fakeRepo.create({
-			userId: 1,
-			presetId: null,
-			wpm: 60,
-			raw: 60,
-			accuracy: 100,
-			consistency: 100,
-		});
-		await fakeRepo.create({
-			userId: 2,
-			presetId: null,
-			wpm: 50,
-			raw: 50,
-			accuracy: 100,
-			consistency: 100,
-		});
+		await fakeRepo.create(
+			{
+				userId: 'user-1',
+				presetId: null,
+				wpm: 60,
+				raw: 60,
+				accuracy: 100,
+				consistency: 100,
+			},
+			[],
+			'target',
+		);
+		await fakeRepo.create(
+			{
+				userId: 'user-2',
+				presetId: null,
+				wpm: 50,
+				raw: 50,
+				accuracy: 100,
+				consistency: 100,
+			},
+			[],
+			'target',
+		);
 
-		const results = await resultService.getUserResults(1);
+		const results = await resultService.getUserResults('user-1');
 		expect(results).toHaveLength(1);
-		expect(results[0].wpm).toBe(60);
+		expect(results[0]?.wpm).toBe(60);
 	});
 });

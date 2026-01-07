@@ -47,9 +47,6 @@ describe('SocketManager Integration', () => {
 		resultRepo = new FakeResultRepository();
 		userRepo = new FakeUserRepository();
 		logger = new FakeLogger();
-		logger.error = vi.fn((e, msg) =>
-			console.error('FAKE LOGGER ERROR:', msg, e),
-		);
 
 		const wordService = new WordService();
 		roomService = new RoomService(roomRepo, wordService);
@@ -321,7 +318,7 @@ describe('SocketManager Integration', () => {
 
 			const results = await resultRepo.findByUserId('user-123');
 			expect(results).toHaveLength(1);
-			expect(results[0].wpm).toBeGreaterThan(0);
+			expect(results[0]!.wpm).toBeGreaterThan(0);
 		});
 	});
 

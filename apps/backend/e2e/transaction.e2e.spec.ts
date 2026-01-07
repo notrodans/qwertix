@@ -73,6 +73,6 @@ describe('Result Repository Transaction', () => {
 
 		const results = await resultRepo.findByUserId(user.id);
 		expect(results).toHaveLength(1);
-		expect(results[0].id).toBe(result.id);
+		expect(results[0]!.id).toBe(result.id);
 	});
 });

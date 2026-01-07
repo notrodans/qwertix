@@ -1,3 +1,4 @@
+import { UserRoleEnum } from '@qwertix/room-contracts';
 import bcrypt from 'bcryptjs';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { AuthService } from '../../src/services/AuthService';
@@ -47,11 +48,11 @@ describe('AuthService', () => {
 	});
 
 	it('should create a new user with hashed password', async () => {
-		const _result = await authService.createUser(
+		await authService.createUser(
 			'new@example.com',
 			'newuser',
 			'password',
-			'user',
+			UserRoleEnum.USER,
 		);
 
 		const inRepo = await fakeRepo.findByEmail('new@example.com');

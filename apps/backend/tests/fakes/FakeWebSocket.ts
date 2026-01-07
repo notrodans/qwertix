@@ -9,7 +9,7 @@ export class FakeWebSocket extends EventEmitter implements Socket {
 	roomId?: string;
 	userId?: string;
 	username?: string;
-	dbUserId?: number;
+	dbUserId?: string;
 	isAlive = true;
 
 	send(data: string) {

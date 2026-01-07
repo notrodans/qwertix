@@ -59,6 +59,6 @@ describe('Room E2E', () => {
 		};
 
 		expect(payload.id).toBe(roomId);
-		expect(payload.participants[0].username).toBe('test-user');
+		expect(payload.participants[0]!.username).toBe('test-user');
 	});
 });
