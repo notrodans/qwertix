@@ -19,6 +19,7 @@ describe('ResultService', () => {
 			110,
 			98,
 			95,
+			0,
 			[{ key: 'a', timestamp: 10 }],
 			'target',
 		);
@@ -34,6 +35,7 @@ describe('ResultService', () => {
 			110,
 			98,
 			95,
+			0,
 			[],
 			'target',
 		);
@@ -50,6 +52,7 @@ describe('ResultService', () => {
 				raw: 60,
 				accuracy: 100,
 				consistency: 100,
+				afkDuration: 0,
 			},
 			[],
 			'target',
@@ -62,6 +65,7 @@ describe('ResultService', () => {
 				raw: 50,
 				accuracy: 100,
 				consistency: 100,
+				afkDuration: 0,
 			},
 			[],
 			'target',

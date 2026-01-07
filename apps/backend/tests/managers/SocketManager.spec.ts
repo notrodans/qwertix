@@ -307,6 +307,7 @@ describe('SocketManager Integration', () => {
 				replayData: replayData,
 				startTime,
 				endTime,
+				afkDuration: 0,
 				hash,
 			});
 

@@ -161,6 +161,7 @@ export function calculateCorrectCharacters(
  * @param consistency - Consistency score.
  * @param startTime - Start timestamp.
  * @param endTime - End timestamp.
+ * @param afkDuration - Time spent AFK in milliseconds.
  * @param targetText - The target text (or its length if text is too long).
  * @param salt - The secret salt (should be same on client and server).
  * @returns The hex string of the hash.
@@ -172,10 +173,11 @@ export async function calculateResultHash(
 	consistency: number,
 	startTime: number,
 	endTime: number,
+	afkDuration: number,
 	targetText: string,
 	salt: string,
 ): Promise<string> {
-	const data = `${wpm}-${raw}-${accuracy}-${consistency}-${startTime}-${endTime}-${targetText.length}-${salt}`;
+	const data = `${wpm}-${raw}-${accuracy}-${consistency}-${startTime}-${endTime}-${afkDuration}-${targetText.length}-${salt}`;
 	const encoder = new TextEncoder();
 	const dataBuffer = encoder.encode(data);
 

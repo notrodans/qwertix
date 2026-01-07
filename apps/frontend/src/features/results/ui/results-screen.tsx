@@ -11,6 +11,7 @@ interface ResultsScreenProps {
 		accuracy: number;
 		consistency: number;
 		replayData: { key: string; timestamp: number }[];
+		afkDuration?: number;
 	};
 	targetText: string;
 	participants: Participant[];

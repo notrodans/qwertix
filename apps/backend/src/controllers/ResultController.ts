@@ -53,6 +53,7 @@ export class ResultController {
 				startTime: number;
 				endTime: number;
 				consistency: number;
+				afkDuration: number;
 				wpm: number;
 				raw: number;
 				accuracy: number;
@@ -67,6 +68,7 @@ export class ResultController {
 				body.consistency,
 				body.startTime,
 				body.endTime,
+				body.afkDuration,
 				body.targetText,
 				env.RESULT_HASH_SALT,
 			);
@@ -112,6 +114,7 @@ export class ResultController {
 				raw,
 				accuracy,
 				consistency,
+				Math.round(body.afkDuration),
 				body.replayData,
 				body.targetText,
 				body.hash,

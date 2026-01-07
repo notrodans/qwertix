@@ -91,6 +91,7 @@ export type SocketAction =
 				replayData: ReplayEvent[];
 				startTime: number;
 				endTime: number;
+				afkDuration: number;
 				hash: string;
 			};
 	  };

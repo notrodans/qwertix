@@ -18,6 +18,7 @@ export interface SoloGameResult {
 	consistency: number;
 	replayData: ReplayEvent[];
 	fullText: string;
+	afkDuration: number;
 }
 
 export function useSoloGame() {
@@ -39,6 +40,7 @@ export function useSoloGame() {
 
 	const containerRef = useRef<HTMLDivElement>(null);
 	const lastInputTime = useRef<number>(0);
+	const afkDurationRef = useRef<number>(0);
 
 	const initialCount = mode === RaceModeEnum.WORDS ? wordCount : 50;
 	const { data: initialWords = [], refetch } = useQuery(
@@ -65,6 +67,14 @@ export function useSoloGame() {
 	const handleFinish = useCallback(
 		(_currentTyped: string, replay: ReplayEvent[], startTime: number) => {
 			if (status !== SoloStatusEnum.TYPING) return;
+
+			const endTime = Date.now();
+			// Check final gap
+			const finalGap = endTime - lastInputTime.current;
+			if (finalGap > 5000) {
+				afkDurationRef.current += finalGap;
+			}
+
 			setStatus(SoloStatusEnum.RESULT);
 
 			saveResult(
@@ -73,8 +83,9 @@ export function useSoloGame() {
 					targetText: text,
 					replayData: replay,
 					startTime: startTime,
-					endTime: Date.now(),
+					endTime: endTime,
 					consistency: 100,
+					afkDuration: afkDurationRef.current,
 				},
 				{
 					onSuccess: (savedResult) => {
@@ -86,6 +97,7 @@ export function useSoloGame() {
 								consistency: savedResult.consistency,
 								replayData: replay,
 								fullText: text,
+								afkDuration: afkDurationRef.current,
 							});
 						}
 					},
@@ -97,6 +109,7 @@ export function useSoloGame() {
 							consistency: 100,
 							replayData: replay,
 							fullText: text,
+							afkDuration: afkDurationRef.current,
 						});
 					},
 				},
@@ -112,6 +125,7 @@ export function useSoloGame() {
 		setTimeLeft(null);
 		setResults(null);
 		resetStore();
+		afkDurationRef.current = 0;
 	};
 
 	const {
@@ -124,10 +138,17 @@ export function useSoloGame() {
 		onStart: () => {
 			setStatus(SoloStatusEnum.TYPING);
 			lastInputTime.current = Date.now();
+			afkDurationRef.current = 0;
 			if (mode === RaceModeEnum.TIME) setTimeLeft(duration);
 		},
 		onType: (nextTyped, updatedReplayData) => {
-			lastInputTime.current = Date.now();
+			const now = Date.now();
+			const gap = now - lastInputTime.current;
+			if (gap > 5000) {
+				afkDurationRef.current += gap;
+			}
+			lastInputTime.current = now;
+
 			// Infinite scroll
 			if (mode === RaceModeEnum.TIME && text.length - nextTyped.length < 150) {
 				loadMoreWords();
@@ -147,13 +168,9 @@ export function useSoloGame() {
 		() => {
 			if (!typingStartTime) return;
 			const now = Date.now();
-			const lastActive = lastInputTime.current || typingStartTime;
 
-			// AFK Detection (10 seconds)
-			if (now - lastActive > 10000) {
-				restart();
-				return;
-			}
+			// We DO NOT reset on AFK anymore.
+			// Just update timer if needed.
 
 			if (mode === RaceModeEnum.TIME && duration) {
 				const elapsed = (now - typingStartTime) / 1000;

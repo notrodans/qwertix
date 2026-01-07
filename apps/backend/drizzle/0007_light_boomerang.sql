@@ -1,0 +1,1 @@
+ALTER TABLE "results" ADD COLUMN "afk_duration" integer DEFAULT 0 NOT NULL;

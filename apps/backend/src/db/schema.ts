@@ -44,6 +44,7 @@ export const results = pgTable('results', {
 	raw: integer('raw').notNull(),
 	accuracy: integer('accuracy').notNull(),
 	consistency: integer('consistency').notNull(),
+	afkDuration: integer('afk_duration').default(0).notNull(),
 	hash: text('hash'),
 	createdAt: timestamp('created_at').defaultNow().notNull(),
 });

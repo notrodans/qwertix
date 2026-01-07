@@ -19,6 +19,7 @@ interface TypingStats {
 	consistency: number;
 	replayData: ReplayEvent[];
 	fullText: string;
+	afkDuration: number;
 }
 
 interface UseMultiplayerGameProps {
@@ -45,6 +46,9 @@ export function useMultiplayerGame({
 	const [timeLeft, setTimeLeft] = useState<number | null>(null);
 	const [startTimeLocal, setStartTimeLocal] = useState<number | null>(null);
 
+	const lastInputTime = useRef<number>(0);
+	const afkDurationRef = useRef<number>(0);
+
 	const onSubmitCb = useEventCallback(onSubmit);
 
 	// Throttled progress updater
@@ -54,6 +58,13 @@ export function useMultiplayerGame({
 		(_typed: string, replay: ReplayEvent[]) => {
 			if (submitted) return;
 
+			// Check final gap
+			const endTime = Date.now();
+			const finalGap = endTime - lastInputTime.current;
+			if (finalGap > 5000) {
+				afkDurationRef.current += finalGap;
+			}
+
 			// Calculated on backend
 			onSubmitCb({
 				wpm: 0,
@@ -62,6 +73,7 @@ export function useMultiplayerGame({
 				consistency: 100,
 				replayData: replay,
 				fullText: text,
+				afkDuration: afkDurationRef.current,
 			});
 			setSubmitted(true);
 		},
@@ -75,6 +87,13 @@ export function useMultiplayerGame({
 			onType: (nextTyped) => {
 				if (submitted) return;
 
+				const now = Date.now();
+				const gap = now - lastInputTime.current;
+				if (gap > 5000) {
+					afkDurationRef.current += gap;
+				}
+				lastInputTime.current = now;
+
 				if (text.length - nextTyped.length < 150) {
 					onLoadMore();
 				}
@@ -85,7 +104,10 @@ export function useMultiplayerGame({
 	// React to Room Status changes
 	useEffect(() => {
 		if (status === RoomStatusEnum.RACING && !startTimeLocal) {
-			setStartTimeLocal(Date.now());
+			const now = Date.now();
+			setStartTimeLocal(now);
+			lastInputTime.current = now;
+			afkDurationRef.current = 0;
 		} else if (status === RoomStatusEnum.FINISHED && !submitted) {
 			handleFinish(userTyped, replayData);
 		} else if (status === RoomStatusEnum.LOBBY) {
@@ -93,6 +115,7 @@ export function useMultiplayerGame({
 			setTimeLeft(null);
 			setStartTimeLocal(null);
 			reset();
+			afkDurationRef.current = 0;
 		}
 	}, [
 		status,

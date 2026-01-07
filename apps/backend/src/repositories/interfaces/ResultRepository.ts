@@ -11,6 +11,7 @@ export interface ResultRepository {
 			raw: number;
 			accuracy: number;
 			consistency: number;
+			afkDuration: number;
 			hash?: string;
 		},
 		replayData?: { key: string; timestamp: number }[],

@@ -17,6 +17,7 @@ export interface SoloResult {
 	consistency: number;
 	replayData: { key: string; timestamp: number }[];
 	fullText: string;
+	afkDuration: number;
 }
 
 interface SoloTypingMediatorProps {

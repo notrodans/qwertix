@@ -371,6 +371,7 @@ export class SocketManager {
 				payload.consistency,
 				payload.startTime,
 				payload.endTime,
+				payload.afkDuration,
 				room.text().join(' '),
 				env.RESULT_HASH_SALT,
 			);
@@ -411,6 +412,7 @@ export class SocketManager {
 				stats.raw,
 				stats.accuracy,
 				Math.round(payload.consistency),
+				Math.round(payload.afkDuration),
 				payload.replayData,
 				room.text().join(' '),
 				payload.hash,

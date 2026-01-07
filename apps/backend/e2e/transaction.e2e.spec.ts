@@ -39,6 +39,7 @@ describe('Result Repository Transaction', () => {
 			raw: 100,
 			accuracy: 100,
 			consistency: 100,
+			afkDuration: 0,
 		};
 
 		// 1. Attempt to create result with invalid replay data
@@ -62,6 +63,7 @@ describe('Result Repository Transaction', () => {
 			raw: 100,
 			accuracy: 100,
 			consistency: 100,
+			afkDuration: 0,
 		};
 
 		const result = await resultRepo.create(

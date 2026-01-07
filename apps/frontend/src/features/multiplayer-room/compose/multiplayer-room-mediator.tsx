@@ -13,6 +13,7 @@ export interface LocalResult {
 	raw: number;
 	accuracy: number;
 	consistency: number;
+	afkDuration: number;
 	replayData: { key: string; timestamp: number }[];
 }
 

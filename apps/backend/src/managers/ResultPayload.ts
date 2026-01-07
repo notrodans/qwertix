@@ -8,5 +8,6 @@ export interface ResultPayload {
 	replayData: ReplayEvent[];
 	startTime: number;
 	endTime: number;
+	afkDuration: number;
 	hash: string;
 }

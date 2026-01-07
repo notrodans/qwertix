@@ -156,6 +156,7 @@ export function useMultiplayerRoom(
 		raw: number;
 		accuracy: number;
 		consistency: number;
+		afkDuration: number;
 		replayData: { key: string; timestamp: number }[];
 	}) => {
 		if (!room) return;
@@ -170,6 +171,7 @@ export function useMultiplayerRoom(
 			stats.consistency,
 			startTime,
 			endTime,
+			stats.afkDuration,
 			targetText,
 			env.VITE_RESULT_HASH_SALT,
 		);
@@ -178,6 +180,7 @@ export function useMultiplayerRoom(
 			...stats,
 			startTime,
 			endTime,
+			afkDuration: stats.afkDuration,
 			hash,
 		});
 	};

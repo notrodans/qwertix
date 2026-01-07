@@ -16,6 +16,7 @@ interface SaveSoloResultVariables {
 	startTime: number;
 	endTime: number;
 	consistency: number;
+	afkDuration: number;
 }
 
 interface SaveSoloResultResponse {
@@ -50,6 +51,7 @@ async function saveSoloResult(
 		data.consistency,
 		data.startTime,
 		data.endTime,
+		data.afkDuration,
 		data.targetText,
 		env.VITE_RESULT_HASH_SALT,
 	);

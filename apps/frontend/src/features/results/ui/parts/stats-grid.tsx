@@ -10,12 +10,13 @@ interface StatsGridProps {
 		raw: number;
 		accuracy: number;
 		consistency: number;
+		afkDuration?: number;
 	};
 }
 
 export function StatsGrid({ stats }: StatsGridProps) {
 	return (
-		<div className="grid grid-cols-4 gap-4">
+		<div className="grid grid-cols-5 gap-4">
 			<StatBox
 				label="WPM"
 				value={formatWPM(stats.wpm)}
@@ -31,6 +32,15 @@ export function StatsGrid({ stats }: StatsGridProps) {
 				label="CONS"
 				value={formatConsistency(stats.consistency)}
 				color="text-zinc-400"
+			/>
+			<StatBox
+				label="AFK"
+				value={
+					stats.afkDuration
+						? (stats.afkDuration / 1000).toFixed(1) + 's'
+						: '0.0s'
+				}
+				color="text-red-400"
 			/>
 		</div>
 	);

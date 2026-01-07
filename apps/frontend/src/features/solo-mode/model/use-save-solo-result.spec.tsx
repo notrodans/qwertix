@@ -71,6 +71,7 @@ describe('useSaveSoloResult', () => {
 			startTime,
 			endTime,
 			consistency: 100,
+			afkDuration: 0,
 		});
 
 		await waitFor(() => {

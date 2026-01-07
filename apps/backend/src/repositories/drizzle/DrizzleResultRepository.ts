@@ -52,6 +52,7 @@ export class DrizzleResultRepository implements ResultRepository {
 			raw: number;
 			accuracy: number;
 			consistency: number;
+			afkDuration: number;
 			hash?: string;
 		},
 		replayData?: { key: string; timestamp: number }[],
@@ -67,6 +68,7 @@ export class DrizzleResultRepository implements ResultRepository {
 					raw: data.raw,
 					accuracy: data.accuracy,
 					consistency: data.consistency,
+					afkDuration: data.afkDuration,
 					hash: data.hash,
 				})
 				.returning();
