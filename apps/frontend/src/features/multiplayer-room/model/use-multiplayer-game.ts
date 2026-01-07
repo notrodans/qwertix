@@ -45,14 +45,45 @@ export function useMultiplayerGame({
 	const [submitted, setSubmitted] = useState(false);
 	const [timeLeft, setTimeLeft] = useState<number | null>(null);
 	const [startTimeLocal, setStartTimeLocal] = useState<number | null>(null);
+	const [isFocused, setIsFocused] = useState(true);
 
 	const lastInputTime = useRef<number>(0);
 	const afkDurationRef = useRef<number>(0);
+	const blurStartTimeRef = useRef<number | null>(null);
 
 	const onSubmitCb = useEventCallback(onSubmit);
 
 	// Throttled progress updater
 	const throttledProgress = useThrottledCallback(onProgress, 200);
+
+	// Focus/Blur Handling
+	useEffect(() => {
+		const handleBlur = () => {
+			if (status === RoomStatusEnum.RACING) {
+				setIsFocused(false);
+				blurStartTimeRef.current = Date.now();
+			}
+		};
+
+		const handleFocus = () => {
+			if (status === RoomStatusEnum.RACING) {
+				setIsFocused(true);
+				if (blurStartTimeRef.current) {
+					const duration = Date.now() - blurStartTimeRef.current;
+					afkDurationRef.current += duration;
+					blurStartTimeRef.current = null;
+					lastInputTime.current = Date.now();
+				}
+			}
+		};
+
+		window.addEventListener('blur', handleBlur);
+		window.addEventListener('focus', handleFocus);
+		return () => {
+			window.removeEventListener('blur', handleBlur);
+			window.removeEventListener('focus', handleFocus);
+		};
+	}, [status]);
 
 	const handleFinish = useCallback(
 		(_typed: string, replay: ReplayEvent[]) => {
@@ -108,6 +139,7 @@ export function useMultiplayerGame({
 			setStartTimeLocal(now);
 			lastInputTime.current = now;
 			afkDurationRef.current = 0;
+			setIsFocused(true);
 		} else if (status === RoomStatusEnum.FINISHED && !submitted) {
 			handleFinish(userTyped, replayData);
 		} else if (status === RoomStatusEnum.LOBBY) {
@@ -116,6 +148,7 @@ export function useMultiplayerGame({
 			setStartTimeLocal(null);
 			reset();
 			afkDurationRef.current = 0;
+			setIsFocused(true);
 		}
 	}, [
 		status,
@@ -157,5 +190,6 @@ export function useMultiplayerGame({
 		caretPos,
 		timeLeft,
 		containerRef,
+		isFocused,
 	};
 }

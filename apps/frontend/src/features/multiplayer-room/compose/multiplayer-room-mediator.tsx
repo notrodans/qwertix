@@ -123,20 +123,32 @@ export function MultiplayerRoomMediator({
 				(room.status === RoomStatusEnum.COUNTDOWN ||
 					room.status === RoomStatusEnum.RACING) &&
 				!finalStats ? (
-					<MultiplayerBoard
-						text={room.text.join(' ')}
-						config={room.config}
-						status={room.status}
-						startTime={room.startTime}
-						participants={room.participants}
-						currentUser={currentUser}
-						// Game State
-						userTyped={game.userTyped}
-						validLength={game.validLength}
-						caretPos={game.caretPos}
-						timeLeft={game.timeLeft}
-						containerRef={game.containerRef}
-					/>
+					<div className="relative w-full">
+						{!game.isFocused && room.status === RoomStatusEnum.RACING && (
+							<div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm rounded-lg cursor-pointer">
+								<div className="text-xl font-bold text-white flex flex-col items-center gap-2">
+									<span>Out of focus</span>
+									<span className="text-sm font-normal text-zinc-300">
+										Click to resume
+									</span>
+								</div>
+							</div>
+						)}
+						<MultiplayerBoard
+							text={room.text.join(' ')}
+							config={room.config}
+							status={room.status}
+							startTime={room.startTime}
+							participants={room.participants}
+							currentUser={currentUser}
+							// Game State
+							userTyped={game.userTyped}
+							validLength={game.validLength}
+							caretPos={game.caretPos}
+							timeLeft={game.timeLeft}
+							containerRef={game.containerRef}
+						/>
+					</div>
 				) : null
 			}
 			results={

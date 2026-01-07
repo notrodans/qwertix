@@ -31,7 +31,8 @@ Implement a solo typing mode similar to Monkeytype, allowing users to practice t
 5. During the run (TIME mode):
     - System detects when user is close to the end of available text and fetches more words.
     - New words are appended to the existing text array.
-    - **AFK Detection**: If no input is detected for 10 seconds, the run is automatically reset.
+    - **AFK Detection**: The system tracks inactivity (gaps > 5s) and focus loss. The time spent inactive is recorded and displayed in results.
+    - **Focus Loss**: If the user switches tabs/windows, an "Out of focus" overlay is shown.
 6. Upon completion:
     - `WORDS` mode: When the user reaches the end of the target text.
     - `TIME` mode: When time expires.

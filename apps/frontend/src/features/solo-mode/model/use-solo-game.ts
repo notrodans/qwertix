@@ -1,6 +1,6 @@
 import { RaceModeEnum, type ReplayEvent } from '@qwertix/room-contracts';
 import { useQuery } from '@tanstack/react-query';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSessionStore } from '@/entities/session';
 import {
 	checkCompletion,
@@ -41,11 +41,43 @@ export function useSoloGame() {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const lastInputTime = useRef<number>(0);
 	const afkDurationRef = useRef<number>(0);
+	const blurStartTimeRef = useRef<number | null>(null);
+	const [isFocused, setIsFocused] = useState(true);
 
 	const initialCount = mode === RaceModeEnum.WORDS ? wordCount : 50;
 	const { data: initialWords = [], refetch } = useQuery(
 		wordQueries.list(initialCount),
 	);
+
+	// Focus/Blur Handling
+	useEffect(() => {
+		const handleBlur = () => {
+			if (status === SoloStatusEnum.TYPING) {
+				setIsFocused(false);
+				blurStartTimeRef.current = Date.now();
+			}
+		};
+
+		const handleFocus = () => {
+			if (status === SoloStatusEnum.TYPING) {
+				setIsFocused(true);
+				if (blurStartTimeRef.current) {
+					const duration = Date.now() - blurStartTimeRef.current;
+					afkDurationRef.current += duration;
+					blurStartTimeRef.current = null;
+					// Reset input timer to avoid double counting the blur period as a "gap"
+					lastInputTime.current = Date.now();
+				}
+			}
+		};
+
+		window.addEventListener('blur', handleBlur);
+		window.addEventListener('focus', handleFocus);
+		return () => {
+			window.removeEventListener('blur', handleBlur);
+			window.removeEventListener('focus', handleFocus);
+		};
+	}, [status]);
 
 	const text = useMemo(
 		() => [...initialWords, ...extraWords].join(' '),
@@ -201,6 +233,7 @@ export function useSoloGame() {
 		caretPos,
 		containerRef,
 		isSaving,
+		isFocused,
 
 		// Actions
 		restart,
