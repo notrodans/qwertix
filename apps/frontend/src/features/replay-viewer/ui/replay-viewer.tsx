@@ -55,14 +55,10 @@ export function ReplayViewer({ replay }: ReplayViewerProps) {
 
 	const { data: events, targetText } = replay;
 	// Calculate duration based on first and last event, or at least 1000ms
-	const duration =
-		events && events.length > 0
-			? Math.max(
-					(events[events.length - 1]?.timestamp ?? 0) -
-						(events[0]?.timestamp ?? 0),
-					1000,
-				)
-			: 1000;
+	const duration = Math.max(
+		(events[events.length - 1]?.timestamp ?? 0) - (events[0]?.timestamp ?? 0),
+		1000,
+	);
 	const firstTimestamp =
 		events && events.length > 0 ? (events[0]?.timestamp ?? 0) : 0;
 

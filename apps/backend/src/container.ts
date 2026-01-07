@@ -46,8 +46,8 @@ export function setupContainer(
 		resultController: asClass(ResultController).singleton(),
 		roomController: asClass(RoomController).singleton(),
 
-		wss: asValue(wss as unknown as SocketServer),
-		app: asValue(fastifyApp),
+		socketServer: asValue(wss as unknown as SocketServer),
+		fastifyApp: asValue(fastifyApp),
 		logger: asValue(fastifyApp.log),
 	});
 

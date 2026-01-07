@@ -26,15 +26,15 @@ export class SocketManager {
 	private roomDeletionTimers = new Map<string, NodeJS.Timeout>();
 
 	constructor(
-		private wss: SocketServer,
+		private socketServer: SocketServer,
 		private roomService: RoomService,
 		private logger: FastifyBaseLogger,
 		private resultService: ResultService,
-		private app: FastifyInstance,
+		private fastifyApp: FastifyInstance,
 		private authService: AuthService,
 	) {
 		this.setupHeartbeat();
-		this.wss.on('connection', (ws: Socket) => {
+		this.socketServer.on('connection', (ws: Socket) => {
 			this.logger.info('New WebSocket connection');
 			ws.isAlive = true;
 			ws.on('pong', () => {
@@ -162,7 +162,7 @@ export class SocketManager {
 		if (room.transferHost(payload.targetId)) {
 			this.broadcastToRoom(room, SocketEventEnum.ROOM_UPDATE, room.toDTO());
 			// Optionally send individual notification
-			const targetWs = Array.from(this.wss.clients).find(
+			const targetWs = Array.from(this.socketServer.clients).find(
 				(c) => c.userId === payload.targetId,
 			);
 			if (targetWs) {
@@ -219,7 +219,7 @@ export class SocketManager {
 
 		if (token) {
 			try {
-				const decoded = this.app.jwt.verify<{ id: string }>(token);
+				const decoded = this.fastifyApp.jwt.verify<{ id: string }>(token);
 				ws.dbUserId = decoded.id;
 
 				const dbUser = await this.authService.getUserById(decoded.id);
@@ -483,7 +483,7 @@ export class SocketManager {
 								(p) => p.isHost,
 							);
 							if (newHost) {
-								const hostWs = Array.from(this.wss.clients).find(
+								const hostWs = Array.from(this.socketServer.clients).find(
 									(c) => c.userId === newHost.socketId,
 								);
 								if (hostWs) {
@@ -510,7 +510,7 @@ export class SocketManager {
 	}
 
 	private broadcastToRoom(room: Room, type: SocketEventEnum, payload: unknown) {
-		for (const client of this.wss.clients) {
+		for (const client of this.socketServer.clients) {
 			if (client.roomId === room.id() && client.readyState === WebSocket.OPEN) {
 				client.send(JSON.stringify({ type, payload }));
 			}
@@ -519,14 +519,14 @@ export class SocketManager {
 
 	private setupHeartbeat() {
 		const interval = setInterval(() => {
-			for (const client of this.wss.clients) {
+			for (const client of this.socketServer.clients) {
 				if (client.isAlive === false) return client.terminate();
 				client.isAlive = false;
 				client.ping();
 			}
 		}, 30000);
 
-		this.wss.on('close', () => {
+		this.socketServer.on('close', () => {
 			clearInterval(interval);
 		});
 	}

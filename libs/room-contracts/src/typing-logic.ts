@@ -19,6 +19,7 @@ export function calculateWPM(
 
 /**
  * Calculates accuracy percentage.
+ * Handles offsets caused by extra characters by comparing word-by-word.
  * @param typedText - The text typed by the user.
  * @param targetText - The target text to match.
  * @returns The accuracy as a percentage (0-100).
@@ -28,13 +29,44 @@ export function calculateAccuracy(
 	targetText: string,
 ): number {
 	if (typedText.length === 0) return 100;
+
+	const typedWords = typedText.split(' ');
+	const targetWords = targetText.split(' ');
 	let correct = 0;
-	const minLength = Math.min(typedText.length, targetText.length);
-	for (let i = 0; i < minLength; i++) {
-		if (typedText[i] === targetText[i]) {
+
+	let targetIdx = 0;
+	for (let typedIdx = 0; typedIdx < typedWords.length; typedIdx++) {
+		const typedWord = typedWords[typedIdx]!;
+
+		// If user typed an extra space, it will result in an empty word.
+		// We skip it to keep alignment with targetWords, but it's still an error
+		// because 'correct' won't be incremented, while typedText.length is the denominator.
+		if (typedWord === '' && targetIdx < targetWords.length) {
+			continue;
+		}
+
+		if (targetIdx >= targetWords.length) break;
+
+		const targetWord = targetWords[targetIdx]!;
+
+		const charLimit = Math.min(typedWord.length, targetWord.length);
+		for (let j = 0; j < charLimit; j++) {
+			if (typedWord[j] === targetWord[j]) {
+				correct++;
+			}
+		}
+
+		// Count correct space between words
+		// We count a space if there's another word in target AND another word was typed
+		if (targetIdx < targetWords.length - 1 && typedIdx < typedWords.length - 1) {
+			// Check if the NEXT typed thing wasn't just another space
+			// This is simplified: we assume if we are moving to next target word, a space was consumed.
 			correct++;
 		}
+
+		targetIdx++;
 	}
+
 	return Math.round((correct / typedText.length) * 100);
 }
 
