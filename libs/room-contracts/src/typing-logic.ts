@@ -58,7 +58,10 @@ export function calculateAccuracy(
 
 		// Count correct space between words
 		// We count a space if there's another word in target AND another word was typed
-		if (targetIdx < targetWords.length - 1 && typedIdx < typedWords.length - 1) {
+		if (
+			targetIdx < targetWords.length - 1 &&
+			typedIdx < typedWords.length - 1
+		) {
 			// Check if the NEXT typed thing wasn't just another space
 			// This is simplified: we assume if we are moving to next target word, a space was consumed.
 			correct++;
@@ -83,39 +86,40 @@ export function reconstructText(
 		confirmedIndex?: number;
 	}[],
 ): string {
-	let reconstructedTypedText = '';
+	let text = '';
+
 	for (const event of replayData) {
-		if (event.key === 'Backspace') {
-			const isCtrl = !!event.ctrlKey;
-			const confirmedIndex = event.confirmedIndex ?? 0;
+		const { key, ctrlKey, confirmedIndex = 0 } = event;
 
-			if (reconstructedTypedText.length > confirmedIndex) {
-				if (isCtrl) {
-					const textAfterConfirmed =
-						reconstructedTypedText.slice(confirmedIndex);
-					const trimmed = textAfterConfirmed.trimEnd();
-					const lastSpace = trimmed.lastIndexOf(' ');
+		// 1. Handle regular character input
+		if (key.length === 1) {
+			text += key;
+			continue;
+		}
 
-					if (lastSpace === -1) {
-						reconstructedTypedText = reconstructedTypedText.slice(
-							0,
-							confirmedIndex,
-						);
-					} else {
-						reconstructedTypedText = reconstructedTypedText.slice(
-							0,
-							confirmedIndex + lastSpace + 1,
-						);
-					}
+		// 2. Handle Backspace deletion
+		if (key === 'Backspace' && text.length > confirmedIndex) {
+			if (ctrlKey) {
+				// Handle Ctrl+Backspace (delete word)
+				// Slice text after the confirmed boundary and trim trailing whitespace
+				const deletablePart = text.slice(confirmedIndex).trimEnd();
+				const lastSpaceIndex = deletablePart.lastIndexOf(' ');
+
+				if (lastSpaceIndex === -1) {
+					// No space found: delete everything back to the boundary
+					text = text.slice(0, confirmedIndex);
 				} else {
-					reconstructedTypedText = reconstructedTypedText.slice(0, -1);
+					// Space found: delete until the last space (keeping the space itself)
+					text = text.slice(0, confirmedIndex + lastSpaceIndex + 1);
 				}
+			} else {
+				// Handle regular Backspace (delete single character)
+				text = text.slice(0, -1);
 			}
-		} else if (event.key.length === 1) {
-			reconstructedTypedText += event.key;
 		}
 	}
-	return reconstructedTypedText;
+
+	return text;
 }
 
 /**
