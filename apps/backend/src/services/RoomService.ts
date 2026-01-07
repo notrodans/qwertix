@@ -1,4 +1,8 @@
-import { RaceModeEnum, type RoomConfig } from '@qwertix/room-contracts';
+import {
+	RaceModeEnum,
+	type RoomConfig,
+	RoomStatusEnum,
+} from '@qwertix/room-contracts';
 import { Room } from '@/domain/room/Room';
 import { type RoomRepository } from '@/repositories/interfaces/RoomRepository';
 import { WordService } from './WordService';
@@ -11,6 +15,37 @@ export class RoomService {
 		private roomRepo: RoomRepository,
 		private wordService: WordService,
 	) {}
+
+	/**
+	 * Checks for inactive rooms/participants and prunes them.
+	 * @returns List of removed participants with roomIds.
+	 */
+	async checkInactivity(): Promise<
+		{ roomId: string; removedParticipants: string[] }[]
+	> {
+		const rooms = await this.roomRepo.getAll();
+		const result: { roomId: string; removedParticipants: string[] }[] = [];
+		const now = Date.now();
+		const LOBBY_TIMEOUT = 10 * 60 * 1000; // 10 minutes
+
+		for (const room of rooms) {
+			if (room.status() !== RoomStatusEnum.LOBBY) continue;
+
+			const removed: string[] = [];
+			for (const participant of room.participants().values()) {
+				if (now - participant.lastActiveAt > LOBBY_TIMEOUT) {
+					room.removeParticipant(participant.socketId);
+					removed.push(participant.socketId);
+				}
+			}
+
+			if (removed.length > 0) {
+				await this.roomRepo.save(room);
+				result.push({ roomId: room.id(), removedParticipants: removed });
+			}
+		}
+		return result;
+	}
 
 	/**
 	 * Creates a new room with the specified configuration.

@@ -32,4 +32,12 @@ export class MemoryRoomRepository implements RoomRepository {
 	async delete(id: string): Promise<void> {
 		this.rooms.delete(id);
 	}
+
+	/**
+	 * Retrieves all rooms.
+	 * @returns An array of all rooms.
+	 */
+	async getAll(): Promise<Room[]> {
+		return Array.from(this.rooms.values());
+	}
 }

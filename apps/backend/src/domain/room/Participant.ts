@@ -9,6 +9,7 @@ export class Participant {
 	public finishedAt: number | null = null;
 	public rank: number | null = null;
 	public isHost: boolean = false;
+	public lastActiveAt: number;
 
 	constructor(
 		public socketId: string,
@@ -18,6 +19,14 @@ export class Participant {
 	) {
 		this._stats = new RaceStats();
 		this.isHost = isHost;
+		this.lastActiveAt = Date.now();
+	}
+
+	/**
+	 * Updates the last active timestamp to now.
+	 */
+	touch(): void {
+		this.lastActiveAt = Date.now();
 	}
 
 	/**

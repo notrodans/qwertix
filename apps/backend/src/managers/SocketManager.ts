@@ -58,6 +58,11 @@ export class SocketManager {
 	}
 
 	private async handleMessage(ws: Socket, msg: SocketAction) {
+		if (ws.roomId && ws.userId) {
+			const room = await this.roomService.get(ws.roomId);
+			room?.participants().get(ws.userId)?.touch();
+		}
+
 		switch (msg.type) {
 			case SocketActionEnum.JOIN_ROOM:
 				await this.handleJoinRoom(ws, msg.payload);
@@ -526,8 +531,37 @@ export class SocketManager {
 			}
 		}, 30000);
 
+		// AFK Check Interval
+		const afkInterval = setInterval(async () => {
+			const changes = await this.roomService.checkInactivity();
+			for (const change of changes) {
+				const room = await this.roomService.get(change.roomId);
+				if (room) {
+					// Broadcast new state to remaining users
+					this.broadcastToRoom(room, SocketEventEnum.ROOM_UPDATE, room.toDTO());
+				}
+
+				// Notify kicked users
+				for (const userId of change.removedParticipants) {
+					const ws = Array.from(this.socketServer.clients).find(
+						(c) => c.userId === userId,
+					);
+					if (ws) {
+						this.send(ws, SocketEventEnum.ERROR, {
+							message: 'Disconnected due to inactivity',
+							code: 'AFK_TIMEOUT',
+						});
+						// Clean up socket state
+						ws.roomId = undefined;
+						ws.userId = undefined;
+					}
+				}
+			}
+		}, 60000); // Check every minute
+
 		this.socketServer.on('close', () => {
 			clearInterval(interval);
+			clearInterval(afkInterval);
 		});
 	}
 }

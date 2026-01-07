@@ -38,6 +38,7 @@ export function useSoloGame() {
 	const { mutate: saveResult, isPending: isSaving } = useSaveSoloResult();
 
 	const containerRef = useRef<HTMLDivElement>(null);
+	const lastInputTime = useRef<number>(0);
 
 	const initialCount = mode === RaceModeEnum.WORDS ? wordCount : 50;
 	const { data: initialWords = [], refetch } = useQuery(
@@ -104,6 +105,15 @@ export function useSoloGame() {
 		[status, setStatus, saveResult, text, user],
 	);
 
+	const restart = () => {
+		refetch();
+		setExtraWords([]);
+		resetTyping();
+		setTimeLeft(null);
+		setResults(null);
+		resetStore();
+	};
+
 	const {
 		userTyped,
 		caretPos,
@@ -113,9 +123,11 @@ export function useSoloGame() {
 	} = useTyping(text, containerRef, {
 		onStart: () => {
 			setStatus(SoloStatusEnum.TYPING);
+			lastInputTime.current = Date.now();
 			if (mode === RaceModeEnum.TIME) setTimeLeft(duration);
 		},
 		onType: (nextTyped, updatedReplayData) => {
+			lastInputTime.current = Date.now();
 			// Infinite scroll
 			if (mode === RaceModeEnum.TIME && text.length - nextTyped.length < 150) {
 				loadMoreWords();
@@ -131,41 +143,33 @@ export function useSoloGame() {
 		},
 	});
 
-	const isTimeModeRunning = useMemo(
-		() =>
-			status === SoloStatusEnum.TYPING &&
-			mode === RaceModeEnum.TIME &&
-			!!typingStartTime &&
-			!!duration,
-		[status, mode, typingStartTime, duration],
-	);
-
 	useInterval(
 		() => {
 			if (!typingStartTime) return;
 			const now = Date.now();
-			const elapsed = (now - typingStartTime) / 1000;
-			const remaining = Math.max(0, duration - elapsed);
+			const lastActive = lastInputTime.current || typingStartTime;
 
-			// Only update if value changed to avoid extra renders
-			const nextTimeLeft = Math.ceil(remaining);
-			setTimeLeft((prev) => (prev !== nextTimeLeft ? nextTimeLeft : prev));
+			// AFK Detection (10 seconds)
+			if (now - lastActive > 10000) {
+				restart();
+				return;
+			}
 
-			if (remaining <= 0) {
-				handleFinish(userTyped, replayData, typingStartTime);
+			if (mode === RaceModeEnum.TIME && duration) {
+				const elapsed = (now - typingStartTime) / 1000;
+				const remaining = Math.max(0, duration - elapsed);
+
+				// Only update if value changed to avoid extra renders
+				const nextTimeLeft = Math.ceil(remaining);
+				setTimeLeft((prev) => (prev !== nextTimeLeft ? nextTimeLeft : prev));
+
+				if (remaining <= 0) {
+					handleFinish(userTyped, replayData, typingStartTime);
+				}
 			}
 		},
-		isTimeModeRunning ? 100 : 0,
+		status === SoloStatusEnum.TYPING ? 100 : 0,
 	);
-
-	const restart = () => {
-		refetch();
-		setExtraWords([]);
-		resetTyping();
-		setTimeLeft(null);
-		setResults(null);
-		resetStore();
-	};
 
 	return {
 		// State

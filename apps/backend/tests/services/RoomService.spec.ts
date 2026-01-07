@@ -130,4 +130,21 @@ describe('RoomService Logic', () => {
 		await roomService.delete(roomId);
 		expect(await roomService.get(roomId)).toBeUndefined();
 	});
+
+	it('should prune inactive participants from lobby', async () => {
+		const room = await roomService.createRoom();
+		room.addParticipant('s1', 'u1');
+		const p2 = room.addParticipant('s2', 'u2');
+
+		// p2 was active 11 minutes ago
+		p2.lastActiveAt = Date.now() - 11 * 60 * 1000;
+
+		const changes = await roomService.checkInactivity();
+
+		expect(changes.length).toBe(1);
+		expect(changes[0]?.roomId).toBe(room.id());
+		expect(changes[0]?.removedParticipants).toContain('s2');
+		expect(room.participants().has('s2')).toBe(false);
+		expect(room.participants().has('s1')).toBe(true);
+	});
 });
