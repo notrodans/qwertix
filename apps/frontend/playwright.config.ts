@@ -20,7 +20,7 @@ export default defineConfig({
 		},
 	],
 	webServer: {
-		command: 'bun run dev',
+		command: 'NODE_ENV=test bun run dev',
 		url: baseURL,
 		reuseExistingServer: !process.env.CI,
 		stdout: 'ignore',

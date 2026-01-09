@@ -1,10 +1,12 @@
-import { Link } from 'react-router-dom';
-import { useSessionStore } from '@/entities/session';
+import { reatomComponent } from '@reatom/react';
+import { isAuthenticatedAtom, logout, userAtom } from '@/entities/session';
+import { Link } from '@/shared/ui/link';
 
-export function UserMenu() {
-	const { user, logout, isAuthenticated } = useSessionStore();
+export const UserMenu = reatomComponent(() => {
+	const user = userAtom();
+	const isAuthenticated = isAuthenticatedAtom();
 
-	if (!isAuthenticated()) {
+	if (!isAuthenticated) {
 		return (
 			<div className="flex gap-4">
 				<Link to="/login" className="text-zinc-400 hover:text-white">
@@ -27,4 +29,4 @@ export function UserMenu() {
 			</button>
 		</div>
 	);
-}
+});

@@ -1,7 +1,6 @@
-import { useCallback, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReplayEvent, ReplayResponse } from '@/entities/result';
 import {
-	appendCharacter,
 	calculateBackspace,
 	calculateCursorIndex,
 	TextDisplay,
@@ -15,11 +14,15 @@ interface ReplayViewerProps {
 function reconstructTextAtTime(
 	replayData: ReplayEvent[],
 	targetTimestamp: number,
-	targetText: string,
 ): string {
 	let reconstructedTypedText = '';
 	for (const event of replayData) {
 		if (event.timestamp > targetTimestamp) break;
+
+		if (event.key.length === 1) {
+			reconstructedTypedText += event.key;
+			continue;
+		}
 
 		if (event.key === 'Backspace') {
 			const isCtrl = !!event.ctrlKey;
@@ -29,12 +32,6 @@ function reconstructTextAtTime(
 				reconstructedTypedText,
 				confirmedIndex,
 				isCtrl,
-			);
-		} else if (event.key.length === 1) {
-			reconstructedTypedText = appendCharacter(
-				reconstructedTypedText,
-				event.key,
-				targetText,
 			);
 		}
 	}
@@ -67,14 +64,10 @@ export function ReplayViewer({ replay }: ReplayViewerProps) {
 		(prog: number) => {
 			if (!events || events.length === 0) return;
 			const currentTimestamp = firstTimestamp + prog * duration;
-			const text = reconstructTextAtTime(
-				events,
-				currentTimestamp,
-				targetText || '',
-			);
+			const text = reconstructTextAtTime(events, currentTimestamp);
 			setTypedText(text);
 		},
-		[events, duration, firstTimestamp, targetText],
+		[events, duration, firstTimestamp],
 	);
 
 	const animate = (time: number) => {
@@ -124,7 +117,7 @@ export function ReplayViewer({ replay }: ReplayViewerProps) {
 	};
 
 	// Update cursor when text changes
-	useLayoutEffect(() => {
+	useEffect(() => {
 		const index = calculateCursorIndex(targetText || '', typedText);
 		updateCursor(index);
 	}, [typedText, targetText, updateCursor]);

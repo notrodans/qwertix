@@ -1,17 +1,23 @@
 import { UserRoleEnum } from '@qwertix/room-contracts';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { useSessionStore } from './store';
+import {
+	isAuthenticatedAtom,
+	logout,
+	setSession,
+	tokenAtom,
+	userAtom,
+} from './store';
 
-describe('useSessionStore', () => {
+describe('session store', () => {
 	beforeEach(() => {
-		useSessionStore.getState().logout();
+		localStorage.clear();
+		logout(); // Reset global state
 	});
 
 	it('should start with empty state', () => {
-		const state = useSessionStore.getState();
-		expect(state.token).toBeNull();
-		expect(state.user).toBeNull();
-		expect(state.isAuthenticated()).toBe(false);
+		expect(tokenAtom()).toBeNull();
+		expect(userAtom()).toBeNull();
+		expect(isAuthenticatedAtom()).toBe(false);
 	});
 
 	it('should set session', () => {
@@ -23,25 +29,23 @@ describe('useSessionStore', () => {
 		};
 		const token = 'fake-token';
 
-		useSessionStore.getState().setSession(token, user);
+		setSession(token, user);
 
-		const state = useSessionStore.getState();
-		expect(state.token).toBe(token);
-		expect(state.user).toEqual(user);
-		expect(state.isAuthenticated()).toBe(true);
+		expect(tokenAtom()).toBe(token);
+		expect(userAtom()).toEqual(user);
+		expect(isAuthenticatedAtom()).toBe(true);
 	});
 
 	it('should logout', () => {
-		useSessionStore.getState().setSession('token', {
+		setSession('token', {
 			id: '1',
 			username: 'u',
 			email: 'e',
 			role: UserRoleEnum.USER,
 		});
-		useSessionStore.getState().logout();
+		logout();
 
-		const state = useSessionStore.getState();
-		expect(state.token).toBeNull();
-		expect(state.user).toBeNull();
+		expect(tokenAtom()).toBeNull();
+		expect(userAtom()).toBeNull();
 	});
 });

@@ -1,40 +1,25 @@
 import { RaceModeEnum } from '@qwertix/room-contracts';
-import { create } from 'zustand';
+import { action, atom } from '@reatom/core';
 
 export enum SoloStatusEnum {
+	OFF,
 	START,
 	TYPING,
+	IDLE,
 	RESULT,
 }
 
 export type Durations = 15 | 30 | 60 | 120;
 export type WordCounts = 10 | 25 | 50 | 100;
 
-interface SoloModeState {
-	mode: RaceModeEnum;
-	duration: Durations;
-	wordCount: WordCounts;
-	status: SoloStatusEnum;
+export const modeAtom = atom<RaceModeEnum>(RaceModeEnum.WORDS, 'solo.mode');
+export const durationAtom = atom<Durations>(30, 'solo.duration');
+export const wordCountAtom = atom<WordCounts>(25, 'solo.wordCount');
+export const statusAtom = atom<SoloStatusEnum>(
+	SoloStatusEnum.OFF,
+	'solo.status',
+);
 
-	// Actions
-	setMode: (mode: RaceModeEnum) => void;
-	setDuration: (seconds: Durations) => void;
-	setWordCount: (count: WordCounts) => void;
-	setStatus: (status: SoloStatusEnum) => void;
-	reset: () => void;
-}
-
-export const useSoloModeStore = create<SoloModeState>((set) => ({
-	mode: RaceModeEnum.WORDS,
-	duration: 30,
-	wordCount: 25,
-	status: SoloStatusEnum.START,
-
-	setMode: (mode) => set({ mode, status: SoloStatusEnum.START }),
-	setDuration: (duration: Durations) =>
-		set({ duration, status: SoloStatusEnum.START }),
-	setWordCount: (wordCount: WordCounts) =>
-		set({ wordCount, status: SoloStatusEnum.START }),
-	setStatus: (status) => set({ status }),
-	reset: () => set({ status: SoloStatusEnum.START }),
-}));
+export const setStatus = action((status: SoloStatusEnum) => {
+	statusAtom.set(status);
+}, 'solo.setStatus');

@@ -26,8 +26,8 @@ export interface RoomSocketCallbacks {
 export function connectToRoom(
 	roomId: string,
 	username: string,
+	token: string | null,
 	callbacks: RoomSocketCallbacks,
-	token?: string | null,
 ) {
 	const unsubs = [
 		socketService.on(SocketEventEnum.ROOM_STATE, callbacks.onRoomState),

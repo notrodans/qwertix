@@ -1,5 +1,6 @@
 import { UserRoleEnum } from '@qwertix/room-contracts';
-import { useSessionStore } from '@/entities/session';
+import { wrap } from '@reatom/core';
+import { tokenAtom } from '@/entities/session';
 
 interface CreateUserParams {
 	email: string;
@@ -9,21 +10,23 @@ interface CreateUserParams {
 }
 
 export const createUserApi = async (params: CreateUserParams) => {
-	const token = useSessionStore.getState().token;
+	const token = tokenAtom();
 
-	const res = await fetch('/api/admin/users', {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json',
-			Authorization: `Bearer ${token}`,
-		},
-		body: JSON.stringify(params),
-	});
+	const res = await wrap(
+		fetch('/api/admin/users', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${token}`,
+			},
+			body: JSON.stringify(params),
+		}),
+	);
 
 	if (!res.ok) {
-		const error = await res.json();
+		const error = await wrap(res.json());
 		throw new Error(error.message || 'Failed to create user');
 	}
 
-	return res.json();
+	return wrap(res.json());
 };

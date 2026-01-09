@@ -27,7 +27,8 @@ Provide a minimalist, high-performance typing experience with instant feedback a
 - **Playback**: Deterministic reconstruction of the session using shared `reconstructText` logic (handling standard and Ctrl+Backspace behavior).
 
 ## 5. Performance Optimization
-- **Stable Listeners**: Event listeners use `useRef` for state tracking to avoid expensive re-attachments on every keystroke.
+- **Reatom State**: Logic is decoupled from UI using Reatom atoms and actions.
+- **Stable Handlers**: Keydown listeners dispatch stable actions, avoiding re-attachments.
 - **Throttling**: Server-side progress updates are throttled (e.g., every 200ms) to reduce network overhead while maintaining visual smoothness.
 
 ## 6. Visual Standards

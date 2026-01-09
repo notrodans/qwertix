@@ -53,7 +53,12 @@ export class ResultService {
 		accuracy: number,
 		consistency: number,
 		afkDuration: number,
-		replayData: { key: string; timestamp: number }[],
+		replayData: {
+			key: string;
+			timestamp: number;
+			ctrlKey?: boolean;
+			confirmedIndex?: number;
+		}[],
 		targetText: string,
 		hash?: string,
 	): Promise<Result | undefined> {

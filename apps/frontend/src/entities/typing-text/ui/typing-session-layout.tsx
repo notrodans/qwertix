@@ -17,29 +17,33 @@ export function TypingSessionLayout({
 	loadingFallback,
 	errorFallback,
 }: TypingSessionLayoutProps) {
-	if (state === 'loading' && loadingFallback) {
-		return <>{loadingFallback}</>;
-	}
-
-	if (state === 'error' && errorFallback) {
-		return <>{errorFallback}</>;
-	}
-
 	return (
 		<div
-			className="flex flex-col gap-8 w-full max-w-3xl"
+			className="flex flex-col gap-8 w-full max-w-3xl items-center"
 			data-testid="typing-board"
 		>
-			{/* Top: Config Summary */}
-			<div data-testid="config-summary" className="flex justify-center">
-				{config}
-			</div>
+			{state === 'loading' && loadingFallback ? (
+				<div className="h-64 flex items-center justify-center">
+					{loadingFallback}
+				</div>
+			) : state === 'error' && errorFallback ? (
+				<div className="h-64 flex items-center justify-center">
+					{errorFallback}
+				</div>
+			) : (
+				<>
+					{/* Top: Config Summary */}
+					<div data-testid="config-summary" className="flex justify-center">
+						{config}
+					</div>
 
-			{/* Middle: Typing Text Area */}
-			<div className="relative min-h-37.5">{board}</div>
+					{/* Middle: Typing Text Area */}
+					<div className="relative min-h-37.5">{board}</div>
 
-			{/* Bottom: Restart Button */}
-			<div className="flex justify-center mt-8">{controls}</div>
+					{/* Bottom: Restart Button */}
+					<div className="flex justify-center mt-8">{controls}</div>
+				</>
+			)}
 		</div>
 	);
 }

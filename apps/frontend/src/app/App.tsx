@@ -1,23 +1,17 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { StrictMode, useEffect } from 'react';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import { useSetupStatus } from '@/features/initial-setup';
-import { AdminPage } from '@/pages/admin';
-import { HomePage } from '@/pages/home/pub';
-import { LoginPage } from '@/pages/login';
-import { ProfilePage } from '@/pages/profile';
-import { ResultPage } from '@/pages/result';
-import { RoomPage } from '@/pages/room/pub';
-import { SandboxPage } from '@/pages/sandbox';
-import { SetupPage } from '@/pages/setup';
-import { queryClient } from '@/shared/api/query/client';
-import { socketService } from '@/shared/api/socket';
-import { env } from '../../env';
+import { reatomComponent } from '@reatom/react';
+import { StrictMode } from 'react';
+import { fetchSetupStatus } from '@/features/initial-setup';
+import { socketConnectionAtom } from '@/shared/api/socket-model';
+import { homeRoute, mainRouter, setupRoute } from './routes';
+import './interceptors';
 
-function AppRouter() {
-	const { data: setupStatus, isLoading } = useSetupStatus();
+const AppRouter = reatomComponent(() => {
+	socketConnectionAtom(); // Subscribe to connection
+	const statusData = fetchSetupStatus.data();
+	const statusLoading = fetchSetupStatus.pending() > 0 && !statusData;
+	const statusError = fetchSetupStatus.error();
 
-	if (isLoading) {
+	if (statusLoading) {
 		return (
 			<div className="flex items-center justify-center min-h-screen">
 				Loading...
@@ -25,44 +19,44 @@ function AppRouter() {
 		);
 	}
 
-	if (setupStatus?.isSetupRequired) {
+	if (statusError) {
 		return (
-			<Routes>
-				<Route path="*" element={<SetupPage />} />
-			</Routes>
+			<div className="flex flex-col items-center justify-center min-h-screen text-red-400">
+				<h1 className="text-xl font-bold">Failed to load setup status</h1>
+				<p>{String(statusError)}</p>
+			</div>
 		);
 	}
 
-	return (
-		<Routes>
-			<Route path="/" element={<HomePage />} />
-			<Route path="/profile" element={<ProfilePage />} />
-			<Route path="/result/:resultId" element={<ResultPage />} />
-			<Route path="/room/:roomId" element={<RoomPage />} />
-			<Route path="/login" element={<LoginPage />} />
-			<Route path="/sandbox/:component" element={<SandboxPage />} />
-			<Route path="/admin" element={<AdminPage />} />
-		</Routes>
-	);
-}
+	if (statusData?.isSetupRequired) {
+		setupRoute.go();
+	}
 
-function App() {
-	useEffect(() => {
-		socketService.connect(env.VITE_WS_URL);
-		return () => {
-			socketService.disconnect();
-		};
-	}, []);
+	const content = mainRouter.render();
 
+	if (!content || (Array.isArray(content) && content.length === 0)) {
+		return (
+			<div className="flex flex-col items-center justify-center min-h-screen gap-4 bg-zinc-950 text-zinc-200">
+				<h1 className="text-4xl font-bold text-emerald-400">404 Not Found</h1>
+				<button
+					onClick={() => homeRoute.go()}
+					className="mt-4 px-6 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors"
+				>
+					Back to Home
+				</button>
+			</div>
+		);
+	}
+
+	return content;
+}, 'App');
+
+const App = reatomComponent(() => {
 	return (
 		<StrictMode>
-			<QueryClientProvider client={queryClient}>
-				<BrowserRouter>
-					<AppRouter />
-				</BrowserRouter>
-			</QueryClientProvider>
+			<AppRouter />
 		</StrictMode>
 	);
-}
+});
 
 export default App;

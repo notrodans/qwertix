@@ -1,4 +1,5 @@
-import { useSessionStore } from '@/entities/session';
+import { wrap } from '@reatom/core';
+import { tokenAtom } from '@/entities/session';
 
 export interface RoomConfig {
 	mode: 'TIME' | 'WORDS';
@@ -15,22 +16,24 @@ export interface Preset {
 
 export const presetApi = {
 	getPresets: async (): Promise<Preset[]> => {
-		const res = await fetch(`/api/presets`);
+		const res = await wrap(fetch(`/api/presets`));
 		if (!res.ok) throw new Error('Failed to fetch presets');
-		return res.json();
+		return wrap(res.json());
 	},
 
 	createPreset: async (name: string, config: RoomConfig): Promise<Preset> => {
-		const token = useSessionStore.getState().token;
-		const res = await fetch(`/api/presets`, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				Authorization: `Bearer ${token}`,
-			},
-			body: JSON.stringify({ name, config }),
-		});
+		const token = tokenAtom();
+		const res = await wrap(
+			fetch(`/api/presets`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${token}`,
+				},
+				body: JSON.stringify({ name, config }),
+			}),
+		);
 		if (!res.ok) throw new Error('Failed to create preset');
-		return res.json();
+		return wrap(res.json());
 	},
 };

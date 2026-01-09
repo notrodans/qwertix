@@ -1,50 +1,60 @@
-import { Link } from 'react-router-dom';
-import { useUserResults } from '@/entities/result';
+import { reatomComponent } from '@reatom/react';
+import { useEffect } from 'react';
+import { fetchUserResults } from '@/entities/result';
+import { Link } from '@/shared/ui/link';
+import { historyUserIdAtom } from '../model/history-model';
 
 interface HistoryTableProps {
 	userId: string;
 }
 
-export function HistoryTable({ userId }: HistoryTableProps) {
-	const { data: results, isLoading, error } = useUserResults(userId);
+export const HistoryTable = reatomComponent(({ userId }: HistoryTableProps) => {
+	useEffect(() => {
+		historyUserIdAtom.set(userId);
+	}, [userId]);
 
-	if (isLoading) return <div>Loading history...</div>;
-	if (error) return <div>Error loading history</div>;
-	if (!results || results.length === 0) return <div>No games played yet.</div>;
+	const results = fetchUserResults.data();
+	const isLoading = fetchUserResults.pending() > 0 && results.length === 0;
+
+	if (isLoading) {
+		return <div className="text-zinc-400">Loading history...</div>;
+	}
+
+	if (!results || results.length === 0) {
+		return <div className="text-zinc-500">No races yet.</div>;
+	}
 
 	return (
-		<div className="overflow-x-auto w-full">
-			<table className="min-w-full bg-zinc-900 border border-zinc-800 rounded-lg text-left">
-				<thead className="bg-zinc-800">
+		<div className="overflow-x-auto">
+			<table className="w-full text-left text-sm text-zinc-400">
+				<thead className="text-xs uppercase bg-zinc-800 text-zinc-400">
 					<tr>
-						<th className="px-6 py-3 text-xs font-medium text-zinc-400 uppercase tracking-wider">
-							Date
-						</th>
-						<th className="px-6 py-3 text-xs font-medium text-zinc-400 uppercase tracking-wider">
-							WPM
-						</th>
-						<th className="px-6 py-3 text-xs font-medium text-zinc-400 uppercase tracking-wider">
-							Accuracy
-						</th>
-						<th className="px-6 py-3 text-xs font-medium text-zinc-400 uppercase tracking-wider">
-							Actions
-						</th>
+						<th className="px-6 py-3">Date</th>
+						<th className="px-6 py-3">WPM</th>
+						<th className="px-6 py-3">Accuracy</th>
+						<th className="px-6 py-3">Actions</th>
 					</tr>
 				</thead>
-				<tbody className="divide-y divide-zinc-800">
+				<tbody>
 					{results.map((result) => (
-						<tr key={result.id}>
-							<td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-100">
-								{new Date(result.createdAt).toLocaleString()}
+						<tr
+							key={result.id}
+							className="bg-zinc-900 border-b border-zinc-800 hover:bg-zinc-800/50 transition-colors"
+						>
+							<td className="px-6 py-4">
+								{new Date(result.createdAt).toLocaleDateString()}
 							</td>
-							<td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-100">
+							<td className="px-6 py-4 font-bold text-emerald-400">
 								{result.wpm}
 							</td>
-							<td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-100">
-								{result.accuracy}%
-							</td>
-							<td className="px-6 py-4 whitespace-nowrap text-sm text-blue-400 hover:text-blue-300">
-								<Link to={`/result/${result.id}`}>View Replay</Link>
+							<td className="px-6 py-4 text-yellow-400">{result.accuracy}%</td>
+							<td className="px-6 py-4">
+								<Link
+									to={`/result/${result.id}`}
+									className="text-blue-400 hover:text-blue-300"
+								>
+									View
+								</Link>
 							</td>
 						</tr>
 					))}
@@ -52,4 +62,4 @@ export function HistoryTable({ userId }: HistoryTableProps) {
 			</table>
 		</div>
 	);
-}
+});

@@ -37,6 +37,10 @@ test.describe('Multiplayer Room Lifecycle', () => {
 						);
 					};
 
+					// Using string literals here inside initScript because imports are not available in browser context scope without complex setup.
+					// However, the test logic below matches against real contract usage in the app.
+					// The app sends SocketActionEnum values.
+
 					if (msg.type === 'JOIN_ROOM') {
 						setTimeout(
 							() =>

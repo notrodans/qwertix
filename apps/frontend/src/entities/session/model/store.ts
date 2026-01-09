@@ -1,26 +1,25 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { action, atom, computed, withLocalStorage } from '@reatom/core';
 import type { User } from '../api/auth.api';
 
-interface SessionState {
-	token: string | null;
-	user: User | null;
-	setSession: (token: string, user: User) => void;
-	logout: () => void;
-	isAuthenticated: () => boolean;
-}
-
-export const useSessionStore = create<SessionState>()(
-	persist(
-		(set, get) => ({
-			token: null,
-			user: null,
-			setSession: (token, user) => set({ token, user }),
-			logout: () => set({ token: null, user: null }),
-			isAuthenticated: () => !!get().token,
-		}),
-		{
-			name: 'session-storage',
-		},
-	),
+export const tokenAtom = atom<string | null>(null, 'session.token').extend(
+	withLocalStorage('session.token'),
 );
+
+export const userAtom = atom<User | null>(null, 'session.user').extend(
+	withLocalStorage('session.user'),
+);
+
+export const isAuthenticatedAtom = computed(
+	() => !!tokenAtom(),
+	'session.isAuthenticated',
+);
+
+export const setSession = action((token: string, user: User) => {
+	tokenAtom.set(token);
+	userAtom.set(user);
+}, 'session.setSession');
+
+export const logout = action(() => {
+	tokenAtom.set(null);
+	userAtom.set(null);
+}, 'session.logout');

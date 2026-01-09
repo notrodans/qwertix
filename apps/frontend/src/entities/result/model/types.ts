@@ -6,6 +6,7 @@ export interface Result {
 	raw: number;
 	accuracy: number;
 	consistency: number;
+	afkDuration: number;
 	createdAt: string;
 }
 

@@ -18,10 +18,11 @@ Implement a solo typing mode similar to Monkeytype, allowing users to practice t
 ## 3. Architecture
 ### Frontend
 - **Feature**: `solo-mode`
-    - `model/store.ts`: Zustand store for current configuration and status.
+    - `model/store.ts`: Reatom atoms for settings (mode, duration, wordCount).
+    - `model/solo-model.ts`: Game logic, timer, and state management (Reatom).
     - `ui/solo-toolbar.tsx`: Navigation bar for settings.
-    - `compose/solo-typing-mediator.tsx`: Composes typing board, toolbar, and results. Handles infinite word loading logic.
-- **Entities**: Reuse `typing-text`.
+    - `compose/solo-typing-mediator.tsx`: Composes typing board, toolbar, and results.
+- **Entities**: Reuse `typing-text` (Reatom typing model).
 
 ## 4. Workflow
 1. User opens the Home page.

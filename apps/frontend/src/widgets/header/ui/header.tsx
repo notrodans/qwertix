@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link } from '@/shared/ui/link';
 import { UserMenu } from './user-menu';
 
 export function Header() {

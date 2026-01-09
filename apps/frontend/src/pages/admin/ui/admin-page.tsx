@@ -1,23 +1,13 @@
 import { UserRoleEnum } from '@qwertix/room-contracts';
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useSessionStore } from '@/entities/session';
+import { reatomComponent } from '@reatom/react';
+import { userAtom } from '@/entities/session';
 import { CreateUserForm } from '@/features/create-user';
 
-export function AdminPage() {
-	const { user, isAuthenticated } = useSessionStore();
-	const navigate = useNavigate();
-
-	useEffect(() => {
-		if (!isAuthenticated()) {
-			navigate('/login');
-		} else if (user?.role !== UserRoleEnum.ADMIN) {
-			navigate('/');
-		}
-	}, [isAuthenticated, user, navigate]);
+const AdminPage = reatomComponent(() => {
+	const user = userAtom();
 
 	if (!user || user.role !== UserRoleEnum.ADMIN) {
-		return null;
+		return <></>;
 	}
 
 	return (
@@ -36,4 +26,7 @@ export function AdminPage() {
 			</div>
 		</div>
 	);
-}
+});
+
+const Component = AdminPage;
+export default Component;

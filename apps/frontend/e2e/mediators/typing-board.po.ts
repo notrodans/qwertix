@@ -22,6 +22,7 @@ export class TypingBoardPage {
 	async waitForLoad() {
 		await expect(this.loadingState).toBeHidden();
 		await expect(this.board).toBeVisible();
+		await expect(this.getWord(0)).toBeVisible();
 	}
 
 	getWord(index: number) {

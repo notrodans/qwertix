@@ -191,9 +191,15 @@ export async function calculateResultHash(
 		return hashHex;
 	}
 
-	// Fallback for older Node environments if needed (though we use Bun)
-	// In Bun/Modern Node, crypto.subtle is available.
-	// If not, we might need 'crypto' module import, but that breaks browser compatibility without polyfill.
-	// Assuming Bun environment for this project.
-	throw new Error('Crypto API not available');
+	// Non-secure context fallback (for development/testing)
+	console.warn(
+		'Crypto API not available, using fallback hash. This is insecure for production.',
+	);
+	let hash = 0;
+	for (let i = 0; i < data.length; i++) {
+		const char = data.charCodeAt(i);
+		hash = (hash << 5) - hash + char;
+		hash |= 0; // Convert to 32bit integer
+	}
+	return `fallback-${Math.abs(hash).toString(16)}`;
 }

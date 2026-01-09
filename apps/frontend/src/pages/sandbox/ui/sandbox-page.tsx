@@ -1,20 +1,16 @@
-import { useParams } from 'react-router-dom';
-import { TypingBoard } from '@/widgets/typing-board/pub';
+import { reatomComponent } from '@reatom/react';
+import { TypingBoard } from '@/widgets/typing-board';
 
-export function SandboxPage() {
-	const { component } = useParams<{ component: string }>();
-
+const SandboxPage = reatomComponent(({ component }: { component: string }) => {
 	return (
-		<div className="min-h-screen bg-zinc-950 p-8 flex flex-col items-center justify-center font-mono">
-			<div className="w-full max-w-4xl border border-dashed border-zinc-800 p-8 rounded-xl">
-				<div className="text-zinc-500 text-xs uppercase tracking-widest mb-8 border-b border-zinc-900 pb-2">
-					Sandbox: {component}
-				</div>
-				{component === 'typing-board' && <TypingBoard />}
-				{!component && (
-					<div className="text-zinc-400">Select a component to test</div>
-				)}
-			</div>
+		<div className="container mx-auto p-8 flex flex-col items-center">
+			<h1 className="text-3xl font-bold mb-8 text-zinc-500">
+				Sandbox: {component}
+			</h1>
+			{component === 'typing-board' && <TypingBoard />}
 		</div>
 	);
-}
+});
+
+const Component = SandboxPage;
+export default Component;

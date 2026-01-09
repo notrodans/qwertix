@@ -14,7 +14,7 @@ A multiplayer typing competition platform built with real-time features.
 ## 🛠 Tech Stack
 
 - **Monorepo:** Bun Workspaces
-- **Frontend:** React, Vite (8.0 Beta), TanStack Query, Zod, ESLint (FSD boundaries)
+- **Frontend:** React, Vite (8.0 Beta), Reatom (v1000 - State, Routing, Forms), Zod, ESLint (FSD boundaries)
 - **Backend:** Node.js, Fastify, WebSockets (`ws`), PostgreSQL + Drizzle ORM, `tsc`
 - **Tooling:** Biome (Linting & Formatting), Vitest (Unit/E2E), Playwright (Integration)
 
