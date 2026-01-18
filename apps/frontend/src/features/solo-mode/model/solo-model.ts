@@ -8,7 +8,14 @@ import {
 	type ReplayEvent,
 	reconstructText,
 } from '@qwertix/room-contracts';
-import { action, atom, effect, withConnectHook, wrap } from '@reatom/core';
+import {
+	action,
+	atom,
+	effect,
+	withAsync,
+	withConnectHook,
+	wrap,
+} from '@reatom/core';
 import { tokenAtom, userAtom } from '@/entities/session';
 import {
 	checkCompletion,
@@ -111,24 +118,24 @@ export const stopSoloGame = action(() => {
 	resetTyping();
 }, 'solo.stopSoloGame');
 
-export const restartGame = action(() => {
-	initializeGame();
-}, 'solo.restartGame');
+export const restartGame = action(async () => {
+	await wrap(initializeGame());
+}, 'solo.restartGame').extend(withAsync());
 
-export const setMode = action((mode: RaceModeEnum) => {
+export const setMode = action(async (mode: RaceModeEnum) => {
 	modeAtom.set(mode);
-	initializeGame();
-}, 'solo.setMode');
+	await wrap(initializeGame());
+}, 'solo.setMode').extend(withAsync());
 
-export const setDuration = action((duration: Durations) => {
+export const setDuration = action(async (duration: Durations) => {
 	durationAtom.set(duration);
-	initializeGame();
-}, 'solo.setDuration');
+	await wrap(initializeGame());
+}, 'solo.setDuration').extend(withAsync());
 
-export const setWordCount = action((wordCount: WordCounts) => {
+export const setWordCount = action(async (wordCount: WordCounts) => {
 	wordCountAtom.set(wordCount);
-	initializeGame();
-}, 'solo.setWordCount');
+	await wrap(initializeGame());
+}, 'solo.setWordCount').extend(withAsync());
 
 export const exitToIdle = action(() => {
 	if (statusAtom() === SoloStatusEnum.TYPING) {
@@ -210,6 +217,7 @@ const saveResult = action(
 			const headers: Record<string, string> = {
 				'Content-Type': 'application/json',
 			};
+			// TODO: we need client sdk
 			if (token) headers.Authorization = `Bearer ${token}`;
 
 			const response = await wrap(

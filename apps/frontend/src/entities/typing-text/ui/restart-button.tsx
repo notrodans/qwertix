@@ -11,7 +11,7 @@ export function RestartButton({ onReset, className }: RestartButtonProps) {
 			type="button"
 			onClick={onReset}
 			data-testid="restart-button"
-			className={`text-[#646669] hover:text-[#d1d0c5] transition-colors p-4 rounded cursor-pointer ${className}`}
+			className={`text-muted-foreground hover:text-foreground transition-colors p-4 rounded cursor-pointer ${className}`}
 			aria-label="Restart Test"
 		>
 			<RefreshIcon className="w-6 h-6" />

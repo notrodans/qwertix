@@ -1,4 +1,5 @@
 import { type RoomStatus, RoomStatusEnum } from '@/entities/room';
+import { Button } from '@/shared/ui';
 
 interface LobbyActionsProps {
 	isHost: boolean;
@@ -15,7 +16,7 @@ export function LobbyActions({
 }: LobbyActionsProps) {
 	if (!isHost) {
 		return (
-			<div className="text-gray-500 font-bold italic animate-pulse">
+			<div className="text-muted-foreground font-bold italic animate-pulse">
 				{status === RoomStatusEnum.FINISHED
 					? 'Waiting for host to restart...'
 					: 'Waiting for host to start...'}
@@ -24,12 +25,11 @@ export function LobbyActions({
 	}
 
 	return (
-		<button
-			type="button"
+		<Button
 			onClick={status === RoomStatusEnum.FINISHED ? onRestart : onStart}
-			className="bg-green-600 hover:bg-green-500 px-12 py-4 rounded-xl text-2xl font-black text-white shadow-lg shadow-green-900/20 transition-all hover:scale-105 active:scale-95"
+			className="px-12 py-8 rounded-xl text-2xl font-black bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95"
 		>
 			{status === RoomStatusEnum.FINISHED ? 'RESTART GAME' : 'START RACE'}
-		</button>
+		</Button>
 	);
 }

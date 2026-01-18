@@ -11,7 +11,7 @@ export function TypingStatusIndicator({
 		return (
 			<div
 				data-testid="loading-state"
-				className="flex justify-center items-center h-50 text-[#646669]"
+				className="flex justify-center items-center h-50 text-muted-foreground"
 			>
 				{message || 'Loading...'}
 			</div>
@@ -21,7 +21,7 @@ export function TypingStatusIndicator({
 	return (
 		<div
 			data-testid="error-state"
-			className="flex justify-center items-center h-50 text-[#ca4754]"
+			className="flex justify-center items-center h-50 text-destructive"
 		>
 			{message || 'Failed to load words.'}
 		</div>

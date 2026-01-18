@@ -1,65 +1,95 @@
 import { reatomComponent } from '@reatom/react';
-import { useEffect } from 'react';
+import { ExternalLink } from 'lucide-react';
 import { fetchUserResults } from '@/entities/result';
+import { cn } from '@/shared/lib/utils';
+import {
+	buttonVariants,
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from '@/shared/ui';
 import { Link } from '@/shared/ui/link';
-import { historyUserIdAtom } from '../model/history-model';
+import '../model/history-model';
 
-interface HistoryTableProps {
-	userId: string;
-}
-
-export const HistoryTable = reatomComponent(({ userId }: HistoryTableProps) => {
-	useEffect(() => {
-		historyUserIdAtom.set(userId);
-	}, [userId]);
-
-	const results = fetchUserResults.data();
-	const isLoading = fetchUserResults.pending() > 0 && results.length === 0;
+export const HistoryTable = reatomComponent(() => {
+	const data = fetchUserResults.data();
+	const isLoading = fetchUserResults.pending() > 0 && data.length === 0;
 
 	if (isLoading) {
-		return <div className="text-zinc-400">Loading history...</div>;
+		return (
+			<div className="text-muted-foreground py-8 text-center italic">
+				Loading history...
+			</div>
+		);
 	}
 
-	if (!results || results.length === 0) {
-		return <div className="text-zinc-500">No races yet.</div>;
+	if (!data || data.length === 0) {
+		return (
+			<div className="text-muted-foreground py-8 text-center">
+				No races recorded yet.
+			</div>
+		);
 	}
+
+	const results = [...data].sort(
+		(a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+	);
 
 	return (
-		<div className="overflow-x-auto">
-			<table className="w-full text-left text-sm text-zinc-400">
-				<thead className="text-xs uppercase bg-zinc-800 text-zinc-400">
-					<tr>
-						<th className="px-6 py-3">Date</th>
-						<th className="px-6 py-3">WPM</th>
-						<th className="px-6 py-3">Accuracy</th>
-						<th className="px-6 py-3">Actions</th>
-					</tr>
-				</thead>
-				<tbody>
+		<div className="rounded-lg border border-border overflow-hidden">
+			<Table>
+				<TableHeader className="bg-muted/50">
+					<TableRow>
+						<TableHead className="w-[200px]">Date</TableHead>
+						<TableHead className="text-right">WPM</TableHead>
+						<TableHead className="text-right">Raw</TableHead>
+						<TableHead className="text-right">Accuracy</TableHead>
+						<TableHead className="text-right w-[80px]" />
+					</TableRow>
+				</TableHeader>
+				<TableBody>
 					{results.map((result) => (
-						<tr
-							key={result.id}
-							className="bg-zinc-900 border-b border-zinc-800 hover:bg-zinc-800/50 transition-colors"
-						>
-							<td className="px-6 py-4">
-								{new Date(result.createdAt).toLocaleDateString()}
-							</td>
-							<td className="px-6 py-4 font-bold text-emerald-400">
+						<TableRow key={result.id} className="hover:bg-muted/30">
+							<TableCell className="font-medium text-muted-foreground text-xs sm:text-sm">
+								{new Date(result.createdAt).toLocaleString(undefined, {
+									dateStyle: 'medium',
+									timeStyle: 'short',
+								})}
+							</TableCell>
+							<TableCell className="text-right font-mono text-lg font-bold text-primary">
 								{result.wpm}
-							</td>
-							<td className="px-6 py-4 text-yellow-400">{result.accuracy}%</td>
-							<td className="px-6 py-4">
+							</TableCell>
+							<TableCell className="text-right font-mono text-muted-foreground">
+								{result.raw}
+							</TableCell>
+							<TableCell className="text-right font-mono">
+								<span
+									className={
+										result.accuracy === 100 ? 'text-primary font-bold' : ''
+									}
+								>
+									{result.accuracy}%
+								</span>
+							</TableCell>
+							<TableCell className="text-right">
 								<Link
 									to={`/result/${result.id}`}
-									className="text-blue-400 hover:text-blue-300"
+									className={cn(
+										buttonVariants({ variant: 'ghost', size: 'icon' }),
+										'h-8 w-8 text-muted-foreground hover:text-foreground',
+									)}
+									title="View Details"
 								>
-									View
+									<ExternalLink className="w-4 h-4" />
 								</Link>
-							</td>
-						</tr>
+							</TableCell>
+						</TableRow>
 					))}
-				</tbody>
-			</table>
+				</TableBody>
+			</Table>
 		</div>
 	);
 });

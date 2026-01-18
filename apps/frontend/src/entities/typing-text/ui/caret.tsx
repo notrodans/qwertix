@@ -6,7 +6,7 @@ interface CaretProps {
 export function Caret({ left, top }: CaretProps) {
 	return (
 		<div
-			className="absolute w-[2.5px] h-[1.5em] bg-[#e2b714] rounded-4xl"
+			className="absolute w-[2.5px] h-[1.5em] bg-primary rounded-4xl"
 			data-testid="cursor"
 			style={{
 				left,

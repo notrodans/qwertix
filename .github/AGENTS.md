@@ -29,6 +29,9 @@ The frontend follows strict FSD principles with a **specific custom adaptation**
     *   **Public API:** Exports must be done via `pub/index.ts`
     *   **Internal Imports:** Do NOT use aliases (e.g., `@/features/...`) for imports within the same slice. Use relative paths.
 
+**Exception:**
+The file `apps/frontend/src/shared/model/router/routes.tsx` is an exception. It serves as the central router configuration and is allowed to import from upper layers (`pages`, `features`) to map routes to components. This is handled via a special ESLint rule.
+
 **Specific Guidelines:**
 
 1.  **Feature-First Approach:** Always start implementation from the `features` layer.
@@ -404,3 +407,37 @@ These practices have emerged from recent refactoring and performance optimizatio
 #### **10.4. Reliability & Security**
 *   **Authoritative Server:** Never trust the client for game-critical calculations (WPM, Accuracy, Win Condition). Send raw events (`replayData`) to the backend, calculate stats there, and broadcast the result.
 *   **Contracts:** Use shared TypeScript interfaces (`libs/room-contracts`) for **all** WebSocket messages (`SocketAction`, `SocketEvent`). This guarantees type safety across the full stack.
+
+---
+
+### **11. Reatom v1000 & Migration from v3**
+
+Reatom v1000 uses implicit context management via a global variable. Explicit `ctx` is no longer needed in the public API.
+
+**Core Rules:**
+*   **NEVER use `ctx` or `Ctx`:** The API is context-based implicitly via `wrap`.
+*   **No Manual Context Passing:** Do not pass `ctx` to actions or atoms.
+*   **Async Boundaries:** Use `wrap(promise)` to preserve context across `await`.
+*   **Implicit Tracking:** Use `anAtom()` instead of `ctx.spy(anAtom)` and `peek(anAtom)` instead of `ctx.get(anAtom)`.
+
+**Migration Table:**
+
+| v3 Pattern | v1000 Equivalent |
+| :--- | :--- |
+| `ctx.schedule(() => promise)` | `wrap(promise)` |
+| `ctx.spy(dataAtom)` | `dataAtom()` |
+| `ctx.get(dataAtom)` | `peek(dataAtom)` |
+| `atom(callback)` | `computed(callback)` |
+| `dataAtom(ctx, newState)` | `dataAtom.set(newState)` |
+| `dataAtom(ctx, (state) => newState)` | `dataAtom.set((state) => newState)` |
+| `ctx.spy(dataAtom, callback)` | `ifChanged(dataAtom, callback)` |
+| `reatomAsync(cb)` | `action(cb).extend(withAsync())` |
+| `reatomResource(cb)` | `computed(cb).extend(withAsyncData())` |
+| `reaction` | `effect` |
+| `anAtom.onChange(cb)` | `anAtom.extend(withChangeHook(cb))` |
+| `onConnect(anAtom, cb)` | `anAtom.extend(withConnectHook(cb))` |
+| `take(anAtom, (ctx, val, SKIP))` | `take(anAtom, (val) => val \|\| throwAbort())` |
+| `withConcurrency` | `withAbort` |
+
+**Component Lifecycle Management:**
+To ensure state is cleaned up when navigating away from a page, use the **Computed Factory** pattern or local model instances via `useMemo` in React components. Avoid global atoms for page-specific state.

@@ -1,9 +1,16 @@
 import { reatomComponent } from '@reatom/react';
-import { StrictMode } from 'react';
-import { fetchSetupStatus } from '@/features/initial-setup';
 import { socketConnectionAtom } from '@/shared/api/socket-model';
-import { homeRoute, mainRouter, setupRoute } from './routes';
+import {
+	fetchSetupStatus,
+	homeRoute,
+	mainRouter,
+	setupRequired,
+	setupRoute,
+} from '@/shared/model';
 import './interceptors';
+import { Button } from '@/shared/ui';
+import { Header } from '@/widgets/header';
+import { MainLayout } from '@/widgets/layout';
 
 const AppRouter = reatomComponent(() => {
 	socketConnectionAtom(); // Subscribe to connection
@@ -28,7 +35,7 @@ const AppRouter = reatomComponent(() => {
 		);
 	}
 
-	if (statusData?.isSetupRequired) {
+	if (setupRequired()) {
 		setupRoute.go();
 	}
 
@@ -36,14 +43,11 @@ const AppRouter = reatomComponent(() => {
 
 	if (!content || (Array.isArray(content) && content.length === 0)) {
 		return (
-			<div className="flex flex-col items-center justify-center min-h-screen gap-4 bg-zinc-950 text-zinc-200">
-				<h1 className="text-4xl font-bold text-emerald-400">404 Not Found</h1>
-				<button
-					onClick={() => homeRoute.go()}
-					className="mt-4 px-6 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors"
-				>
+			<div className="flex flex-col items-center justify-center min-h-screen gap-4 bg-background text-foreground">
+				<h1 className="text-4xl font-bold text-primary">404 Not Found</h1>
+				<Button onClick={() => homeRoute.go()} className="mt-4">
 					Back to Home
-				</button>
+				</Button>
 			</div>
 		);
 	}
@@ -53,10 +57,10 @@ const AppRouter = reatomComponent(() => {
 
 const App = reatomComponent(() => {
 	return (
-		<StrictMode>
+		<MainLayout header={<Header />}>
 			<AppRouter />
-		</StrictMode>
+		</MainLayout>
 	);
 });
 
-export default App;
+export { App };

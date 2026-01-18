@@ -1,4 +1,5 @@
 import type { Participant } from '@/entities/room';
+import { Progress } from '@/shared/ui';
 
 interface OpponentsProgressProps {
 	participants: Participant[];
@@ -14,19 +15,18 @@ export function OpponentsProgress({
 	);
 
 	return (
-		<div className="space-y-2 bg-gray-900/50 p-4 rounded-lg">
+		<div className="space-y-4 bg-muted/50 p-4 rounded-lg border border-border">
 			{others.map((p) => (
 				<div key={p.socketId} className="flex items-center gap-4 text-sm">
-					<span className="w-20 truncate text-right">{p.username}</span>
-					<div className="flex-1 h-2 bg-gray-700 rounded-full overflow-hidden">
-						<div
-							className="h-full bg-red-500 transition-all duration-300"
-							style={{ width: `${p.progress}%` }}
-						/>
-					</div>
+					<span className="w-20 truncate text-right font-bold text-muted-foreground">
+						{p.username}
+					</span>
+					<Progress value={p.progress} className="flex-1 h-2" />
 					<div className="flex gap-4 font-mono w-32 justify-end">
-						<span className="text-zinc-400">{Math.round(p.accuracy)}%</span>
-						<span className="text-yellow-500 w-12 text-right">
+						<span className="text-muted-foreground">
+							{Math.round(p.accuracy)}%
+						</span>
+						<span className="text-primary w-12 text-right font-bold">
 							{Math.round(p.wpm)}
 						</span>
 					</div>

@@ -1,16 +1,38 @@
-import { atom, computed, withAsyncData, wrap } from '@reatom/core';
-import { resultApi } from '@/entities/result';
+import { computed, withAsyncData, wrap } from '@reatom/core';
+import { type ReplayResponse, type Result, resultApi } from '@/entities/result';
+import { resultRoute } from '@/shared/model';
 
-export const resultIdAtom = atom<string | null>(null, 'resultView.id');
-
-export const resultDataAtom = computed(async () => {
-	const resultId = resultIdAtom();
-	if (!resultId) return null;
+export const resultResource = computed(async () => {
+	const id = resultRoute()?.resultId;
+	if (!id) {
+		return {
+			result: {
+				id: 0,
+				presetId: 0,
+				userId: 0,
+				raw: 0,
+				wpm: 0,
+				accuracy: 0,
+				consistency: 0,
+				afkDuration: 0,
+				createdAt: new Date().toDateString(),
+			},
+			replay: {
+				data: [],
+				targetText: '',
+			},
+		} satisfies { result: Result; replay: ReplayResponse };
+	}
 
 	const [result, replay] = await Promise.all([
-		wrap(resultApi.getResultById(resultId)),
-		wrap(resultApi.getReplayByResultId(resultId)),
+		wrap(resultApi.getResultById(id)),
+		wrap(resultApi.getReplayByResultId(id)),
 	]);
 
 	return { result, replay };
-}, 'resultView.data').extend(withAsyncData());
+}, 'resultResource').extend(withAsyncData());
+
+export const isResultLoading = computed(
+	() => !resultResource.ready(),
+	'isResultLoading',
+);

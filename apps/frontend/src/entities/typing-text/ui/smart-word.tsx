@@ -28,7 +28,7 @@ export const SmartWord = memo(function SmartWord({
 		const userChar = userWord[i];
 
 		let charToRender = targetChar;
-		let color = '#646669'; // Default untyped
+		let className = 'text-muted-foreground'; // Default untyped
 		let charType = 'target';
 		let charStatus = 'untyped';
 
@@ -38,16 +38,16 @@ export const SmartWord = memo(function SmartWord({
 				// Within bounds: Show TARGET char
 				charToRender = targetChar;
 				if (userChar === targetChar) {
-					color = '#d1d0c5';
+					className = 'text-foreground';
 					charStatus = 'correct';
 				} else {
-					color = '#ca4754';
+					className = 'text-destructive';
 					charStatus = 'incorrect';
 				}
 			} else {
 				// Extra character: Show USER char
 				charToRender = userChar;
-				color = '#7e2a33';
+				className = 'text-destructive/60';
 				charType = 'extra';
 				charStatus = 'extra';
 			}
@@ -61,7 +61,7 @@ export const SmartWord = memo(function SmartWord({
 				key={charIndex}
 				index={charIndex}
 				char={charToRender ?? ''}
-				color={color}
+				className={className}
 				type={charType}
 				status={charStatus}
 			/>,

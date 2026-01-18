@@ -1,57 +1,45 @@
-import { wrap } from '@reatom/core';
 import { reatomComponent } from '@reatom/react';
 import { ReplayViewer } from '@/features/replay-viewer';
-import { ResultsScreen } from '@/features/results';
+import { ResultsContent } from '@/features/results/ui/results-screen';
 import { SoloTypingMediator } from '@/features/solo-mode';
-import { navigate } from '@/shared/model';
 import { Button } from '@/shared/ui/button';
+import { createRoom } from '../model';
 
 const HomePage = reatomComponent(() => {
-	const handleCreateRoom = async () => {
-		try {
-			const res = await wrap(fetch('/api/rooms', { method: 'POST' }));
-			if (res.ok) {
-				const { roomId } = await wrap(res.json());
-				navigate(`/room/${roomId}`);
-			}
-		} catch (e) {
-			console.error('Failed to create room', e);
-		}
-	};
-
 	return (
 		<>
 			<div className="container mx-auto py-10 px-4 space-y-12">
-				<div className="flex justify-center">
+				<div className="flex justify-center w-full">
 					<SoloTypingMediator
 						renderResults={(results, onRestart) => (
-							<ResultsScreen
-								stats={results}
-								targetText={results.fullText}
-								participants={[]}
-								onRestart={onRestart}
-								onClose={onRestart}
-								ReplayComponent={ReplayViewer}
-							/>
+							<div className="w-full max-w-4xl mx-auto">
+								<ResultsContent
+									stats={results}
+									targetText={results.fullText}
+									participants={[]}
+									onRestart={onRestart}
+									isHost={true}
+									ReplayComponent={ReplayViewer}
+								/>
+							</div>
 						)}
-					/>
-				</div>
-
-				<div className="text-center space-y-4">
-					<h2 className="text-2xl font-bold text-zinc-200">
-						Ready to challenge others?
-					</h2>
-					<Button
-						onClick={handleCreateRoom}
-						className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-3 rounded-lg text-lg font-semibold transition-colors cursor-pointer"
 					>
-						Create Multiplayer Room
-					</Button>
+						<div className="text-center space-y-4 pt-12">
+							<h2 className="text-2xl font-bold text-foreground">
+								Ready to challenge others?
+							</h2>
+							<Button
+								onClick={() => createRoom()}
+								className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 rounded-lg text-lg font-semibold transition-colors cursor-pointer"
+							>
+								Create Multiplayer Room
+							</Button>
+						</div>
+					</SoloTypingMediator>
 				</div>
 			</div>
 		</>
 	);
 });
 
-const Component = HomePage;
-export default Component;
+export default HomePage;

@@ -1,24 +1,38 @@
+import { Copy } from 'lucide-react';
+import {
+	Button,
+	Card,
+	CardContent,
+	CardHeader,
+	CardTitle,
+	Input,
+} from '@/shared/ui';
+
 interface LobbyInviteProps {
 	shareUrl: string;
 }
 
 export function LobbyInvite({ shareUrl }: LobbyInviteProps) {
 	return (
-		<div className="bg-gray-800 p-4 rounded-lg">
-			<p className="text-gray-400 text-sm mb-2">Invite friends:</p>
-			<div className="flex gap-2">
-				<input
+		<Card className="bg-card border-border">
+			<CardHeader>
+				<CardTitle>Invite Friends</CardTitle>
+			</CardHeader>
+			<CardContent className="flex gap-2">
+				<Input
 					readOnly
 					value={shareUrl}
-					className="bg-gray-700 text-white px-3 py-1 rounded flex-1 text-xs"
+					className="bg-muted border-border text-foreground"
 				/>
-				<button
+				<Button
+					size="icon"
+					variant="outline"
 					onClick={() => navigator.clipboard.writeText(shareUrl)}
-					className="bg-blue-600 hover:bg-blue-500 px-3 py-1 rounded text-white text-xs"
+					className="border-border hover:bg-muted hover:text-foreground"
 				>
-					Copy
-				</button>
-			</div>
-		</div>
+					<Copy className="h-4 w-4" />
+				</Button>
+			</CardContent>
+		</Card>
 	);
 }

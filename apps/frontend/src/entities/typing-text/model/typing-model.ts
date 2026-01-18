@@ -2,6 +2,7 @@ import { action, atom, withConnectHook } from '@reatom/core';
 import {
 	appendCharacter,
 	calculateBackspace,
+	calculateCursorIndex,
 	checkWordCompletion,
 } from '../domain/typing-engine';
 
@@ -31,6 +32,7 @@ export const resetTyping = action(() => {
 	replayDataAtom.set([]);
 	startTimeAtom.set(null);
 	validLengthAtom.set(0);
+	caretPosAtom.set({ left: 0, top: 0 });
 }, 'resetTyping');
 
 export const handleKeydown = action((event: KeyboardEvent) => {
@@ -71,7 +73,8 @@ export const handleKeydown = action((event: KeyboardEvent) => {
 
 	if (nextTyped !== currentTyped) {
 		userTypedAtom.set(nextTyped);
-		cursorIndexAtom.set(nextTyped.length);
+		const index = calculateCursorIndex(targetText, nextTyped);
+		cursorIndexAtom.set(index);
 
 		// Record replay
 		const start = startTimeAtom() || Date.now();

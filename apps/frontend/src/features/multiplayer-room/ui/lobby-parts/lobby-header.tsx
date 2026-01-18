@@ -1,3 +1,5 @@
+import { Badge } from '@/shared/ui';
+
 interface LobbyHeaderProps {
 	roomId: string;
 	isHost: boolean;
@@ -5,13 +7,16 @@ interface LobbyHeaderProps {
 
 export function LobbyHeader({ roomId, isHost }: LobbyHeaderProps) {
 	return (
-		<>
+		<div className="flex flex-col items-center gap-4">
 			<h1 className="text-3xl font-bold">Room: {roomId}</h1>
 			{isHost && (
-				<div className="bg-emerald-900/20 border border-emerald-500/50 p-4 rounded-lg w-full text-center text-emerald-400 font-bold animate-pulse">
+				<Badge
+					variant="outline"
+					className="border-primary/50 text-primary bg-primary/20 px-4 py-1 text-sm animate-pulse"
+				>
 					You are the Host
-				</div>
+				</Badge>
 			)}
-		</>
+		</div>
 	);
 }

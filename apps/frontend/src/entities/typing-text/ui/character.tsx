@@ -1,8 +1,9 @@
 import { memo } from 'react';
+import { cn } from '@/shared/lib/utils';
 
 interface CharacterProps {
 	char: string;
-	color: string;
+	className?: string;
 	index: number;
 	type?: string;
 	status?: string;
@@ -11,7 +12,7 @@ interface CharacterProps {
 
 export const Character = memo(function Character({
 	char,
-	color,
+	className,
 	index,
 	type = 'target',
 	status = 'untyped',
@@ -24,8 +25,8 @@ export const Character = memo(function Character({
 			data-type={type}
 			data-status={status}
 			data-char-value={char}
-			className="inline-block"
-			style={{ color, width }}
+			className={cn('inline-block', className)}
+			style={{ width }}
 		>
 			{char === ' ' ? '\u00A0' : char}
 		</span>

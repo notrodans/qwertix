@@ -1,4 +1,5 @@
 import { memo, type ReactNode } from 'react';
+import { cn } from '@/shared/lib/utils';
 
 interface WordProps {
 	children: ReactNode;
@@ -19,9 +20,10 @@ export const Word = memo(function Word({
 			data-testid="word"
 			data-state={state}
 			data-has-error={hasError}
-			className={`inline-block mr-0 border-b-2 ${
-				hasError ? 'border-[#ca4754]' : 'border-transparent'
-			}`}
+			className={cn(
+				'inline-block mr-0 border-b-2',
+				hasError ? 'border-destructive' : 'border-transparent',
+			)}
 		>
 			{children}
 		</span>

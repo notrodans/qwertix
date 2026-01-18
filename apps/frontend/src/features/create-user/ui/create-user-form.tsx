@@ -1,5 +1,18 @@
 import { UserRoleEnum } from '@qwertix/room-contracts';
 import { bindField, reatomComponent } from '@reatom/react';
+import {
+	Alert,
+	AlertDescription,
+	AlertTitle,
+	Button,
+	Input,
+	Label,
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '@/shared/ui';
 import { createUserForm } from '../model/create-user-form';
 
 export const CreateUserForm = reatomComponent(() => {
@@ -7,15 +20,20 @@ export const CreateUserForm = reatomComponent(() => {
 
 	if (submitted()) {
 		return (
-			<div className="p-4 bg-emerald-900/50 border border-emerald-500 rounded text-emerald-200">
-				<p>User created successfully!</p>
-				<button
-					onClick={() => reset()}
-					className="mt-3 px-4 py-2 bg-emerald-500 text-zinc-950 font-bold rounded hover:bg-emerald-400"
-				>
-					Create Another
-				</button>
-			</div>
+			<Alert className="border-primary bg-primary/20 text-primary-foreground">
+				<AlertTitle>Success</AlertTitle>
+				<AlertDescription>
+					User created successfully!
+					<div className="mt-3">
+						<Button
+							onClick={() => reset()}
+							className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
+						>
+							Create Another
+						</Button>
+					</div>
+				</AlertDescription>
+			</Alert>
 		);
 	}
 
@@ -28,81 +46,74 @@ export const CreateUserForm = reatomComponent(() => {
 			className="space-y-4"
 		>
 			{submit.error() && (
-				<div className="p-3 bg-red-900/50 border border-red-500 rounded text-red-200 text-sm">
-					{submit.error()?.message}
-				</div>
+				<Alert variant="destructive">
+					<AlertTitle>Error</AlertTitle>
+					<AlertDescription>{submit.error()?.message}</AlertDescription>
+				</Alert>
 			)}
 
-			<div>
-				<label className="block text-sm font-medium text-zinc-400">
-					Username
-				</label>
-				<input
+			<div className="space-y-2">
+				<Label htmlFor="create-username">Username</Label>
+				<Input
+					id="create-username"
 					type="text"
-					className="w-full px-3 py-2 mt-1 bg-zinc-800 border border-zinc-700 rounded focus:ring-2 focus:ring-emerald-500 outline-none text-zinc-200"
 					{...bindField(fields.username)}
 				/>
 				{fields.username.validation().error && (
-					<span className="text-xs text-red-500">
+					<span className="text-xs text-destructive">
 						{fields.username.validation().error}
 					</span>
 				)}
 			</div>
 
-			<div>
-				<label className="block text-sm font-medium text-zinc-400">Email</label>
-				<input
-					type="email"
-					className="w-full px-3 py-2 mt-1 bg-zinc-800 border border-zinc-700 rounded focus:ring-2 focus:ring-emerald-500 outline-none text-zinc-200"
-					{...bindField(fields.email)}
-				/>
+			<div className="space-y-2">
+				<Label htmlFor="create-email">Email</Label>
+				<Input id="create-email" type="email" {...bindField(fields.email)} />
 				{fields.email.validation().error && (
-					<span className="text-xs text-red-500">
+					<span className="text-xs text-destructive">
 						{fields.email.validation().error}
 					</span>
 				)}
 			</div>
 
-			<div>
-				<label className="block text-sm font-medium text-zinc-400">
-					Password
-				</label>
-				<input
+			<div className="space-y-2">
+				<Label htmlFor="create-password">Password</Label>
+				<Input
+					id="create-password"
 					type="password"
-					className="w-full px-3 py-2 mt-1 bg-zinc-800 border border-zinc-700 rounded focus:ring-2 focus:ring-emerald-500 outline-none text-zinc-200"
 					{...bindField(fields.password)}
 				/>
 				{fields.password.validation().error && (
-					<span className="text-xs text-red-500">
+					<span className="text-xs text-destructive">
 						{fields.password.validation().error}
 					</span>
 				)}
 			</div>
 
-			<div>
-				<label className="block text-sm font-medium text-zinc-400">Role</label>
-				<select
-					className="w-full px-3 py-2 mt-1 bg-zinc-800 border border-zinc-700 rounded focus:ring-2 focus:ring-emerald-500 outline-none text-zinc-200"
+			<div className="space-y-2">
+				<Label htmlFor="create-role">Role</Label>
+				<Select
 					value={fields.role.value()}
-					onChange={(e) =>
-						// @ts-expect-error enum inference issue
-						fields.role.change(e.target.value as UserRoleEnum)
-					}
-					onFocus={() => fields.role.focus.in()}
-					onBlur={() => fields.role.focus.out()}
+					// @ts-expect-error - reatom types issue
+					onValueChange={(val) => fields.role.change(val)}
 				>
-					<option value={UserRoleEnum.USER}>User</option>
-					<option value={UserRoleEnum.ADMIN}>Admin</option>
-				</select>
+					<SelectTrigger id="create-role">
+						<SelectValue placeholder="Select a role" />
+					</SelectTrigger>
+					<SelectContent>
+						<SelectItem value={UserRoleEnum.USER}>User</SelectItem>
+						<SelectItem value={UserRoleEnum.ADMIN}>Admin</SelectItem>
+					</SelectContent>
+				</Select>
 			</div>
 
-			<button
+			<Button
 				type="submit"
 				disabled={!submit.ready()}
-				className="w-full py-2 font-bold text-zinc-950 bg-emerald-400 rounded hover:bg-emerald-300 transition-colors disabled:opacity-50"
+				className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
 			>
 				{!submit.ready() ? 'Creating...' : 'Create User'}
-			</button>
+			</Button>
 		</form>
 	);
 });

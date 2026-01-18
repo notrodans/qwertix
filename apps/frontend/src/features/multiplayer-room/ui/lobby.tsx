@@ -31,10 +31,10 @@ export function Lobby({
 	const shareUrl = `${window.location.origin}/room/${roomId}`;
 
 	return (
-		<div className="flex flex-col items-center justify-center p-8 space-y-6 w-full max-w-2xl mx-auto">
+		<div className="flex flex-col items-center gap-8 w-full max-w-4xl mx-auto py-8">
 			<LobbyHeader roomId={roomId} isHost={isHost} />
 
-			<div className="grid grid-cols-2 gap-8 w-full">
+			<div className="grid md:grid-cols-2 gap-6 w-full">
 				<div className="space-y-6">
 					<LobbyInvite shareUrl={shareUrl} />
 					<LobbySettings

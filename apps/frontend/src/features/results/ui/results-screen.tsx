@@ -1,10 +1,17 @@
-import type { ComponentType } from 'react';
+import { type ComponentType, Fragment } from 'react';
 import type { Participant } from '@/entities/room';
+import {
+	Button,
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+} from '@/shared/ui';
 import { LeaderboardSection } from './parts/leaderboard-section';
 import { ReplaySection } from './parts/replay-section';
 import { StatsGrid } from './parts/stats-grid';
 
-interface ResultsScreenProps {
+export interface ResultsContentProps {
 	stats: {
 		wpm: number;
 		raw: number;
@@ -17,7 +24,6 @@ interface ResultsScreenProps {
 	participants: Participant[];
 	isHost?: boolean;
 	onRestart?: () => void;
-	onClose: () => void;
 	ReplayComponent: ComponentType<{
 		replay: {
 			data: { key: string; timestamp: number }[];
@@ -26,46 +32,59 @@ interface ResultsScreenProps {
 	}>;
 }
 
-export function ResultsScreen({
+export function ResultsContent({
 	stats,
 	targetText,
 	participants,
 	isHost,
 	onRestart,
-	onClose,
 	ReplayComponent,
-}: ResultsScreenProps) {
+}: ResultsContentProps) {
 	return (
-		<div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 overflow-y-auto p-4">
-			<div className="bg-zinc-900 w-full max-w-4xl rounded-2xl border border-zinc-800 p-8 space-y-8">
-				<StatsGrid stats={stats} />
+		<div className="space-y-8">
+			<StatsGrid stats={stats} />
 
-				<div className="flex gap-8">
+			<div className="flex flex-col gap-8">
+				{participants.length > 0 && (
 					<LeaderboardSection participants={participants} />
-					<ReplaySection
-						targetText={targetText}
-						replayData={stats.replayData}
-						ReplayComponent={ReplayComponent}
-					/>
-				</div>
-
-				<div className="flex justify-center gap-4 pt-4">
-					<button
-						onClick={onClose}
-						className="px-12 py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-bold rounded-lg transition-colors"
-					>
-						Return to Lobby
-					</button>
-					{isHost && onRestart && (
-						<button
-							onClick={onRestart}
-							className="px-12 py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-lg transition-colors shadow-lg shadow-green-900/20"
-						>
-							Play Again
-						</button>
-					)}
-				</div>
+				)}
+				<ReplaySection
+					targetText={targetText}
+					replayData={stats.replayData}
+					ReplayComponent={ReplayComponent}
+				/>
 			</div>
+
+			{isHost && onRestart && (
+				<div className="flex justify-center pt-4">
+					<Button
+						onClick={onRestart}
+						size="lg"
+						className="px-12 py-6 bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-lg shadow-primary/20"
+					>
+						Play Again
+					</Button>
+				</div>
+			)}
 		</div>
+	);
+}
+
+interface ResultsScreenProps extends ResultsContentProps {
+	onClose: () => void;
+}
+
+export function ResultsScreen({ onClose, ...props }: ResultsScreenProps) {
+	return (
+		<Dialog open={true} onOpenChange={(open) => !open && onClose()}>
+			<DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+				<DialogHeader>
+					<DialogTitle className="text-center text-2xl font-bold">
+						Race Results
+					</DialogTitle>
+				</DialogHeader>
+				<ResultsContent {...props} />
+			</DialogContent>
+		</Dialog>
 	);
 }

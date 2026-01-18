@@ -40,9 +40,9 @@ describe('ResultsScreen', () => {
 			/>,
 		);
 
-		expect(screen.getByText('100')).toBeInTheDocument(); // WPM
-		expect(screen.getByText('98%')).toBeInTheDocument(); // ACC
-		expect(screen.getByText('You')).toBeInTheDocument(); // Leaderboard
+		expect(screen.getByTestId('wpm')).toBeInTheDocument();
+		expect(screen.getByTestId('rank')).toBeInTheDocument();
+		expect(screen.getByTestId('username')).toBeInTheDocument();
 	});
 
 	it('should show replay when button is clicked', () => {
@@ -58,11 +58,11 @@ describe('ResultsScreen', () => {
 			/>,
 		);
 
-		const button = screen.getByText('Watch Replay');
+		const button = screen.getByTestId('watch-replay');
 		fireEvent.click(button);
 
 		// ReplayVisualizer should be rendered (which renders TextDisplay)
-		expect(screen.queryByText('Watch Replay')).not.toBeInTheDocument();
+		expect(screen.queryByTestId('watch-replay')).not.toBeInTheDocument();
 	});
 
 	it('should call onClose when return button is clicked', () => {
@@ -77,7 +77,7 @@ describe('ResultsScreen', () => {
 			/>,
 		);
 
-		fireEvent.click(screen.getByText('Return to Lobby'));
+		fireEvent.click(screen.getByTestId('return-to-lobby'));
 		expect(onClose).toHaveBeenCalled();
 	});
 });

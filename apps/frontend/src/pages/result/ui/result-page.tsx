@@ -2,9 +2,8 @@ import { reatomComponent } from '@reatom/react';
 import { ReplayViewer } from '@/features/replay-viewer';
 import { ResultView } from '@/features/results';
 
-const ResultPage = reatomComponent(({ resultId }: { resultId: string }) => {
-	return <ResultView resultId={resultId} ReplayComponent={ReplayViewer} />;
+const ResultPage = reatomComponent(() => {
+	return <ResultView ReplayComponent={ReplayViewer} />;
 });
 
-const Component = ResultPage;
-export default Component;
+export default ResultPage;

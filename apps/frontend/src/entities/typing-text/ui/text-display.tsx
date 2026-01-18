@@ -29,11 +29,11 @@ export function TextDisplay({
 		<div
 			ref={wrapperRef}
 			className="relative overflow-hidden select-none"
-			style={{ height: '7.3125rem' }} // Exactly 3 lines (3 * 2.4375rem)
+			style={{ height: '9rem' }} // Exactly 3 lines (3 * 3rem)
 		>
 			<div
 				ref={containerRef}
-				className={`flex flex-wrap font-mono text-2xl leading-relaxed relative transition-transform duration-200 ${className}`}
+				className={`flex flex-wrap font-mono text-3xl leading-relaxed relative transition-transform duration-200 ${className}`}
 				style={{ transform: `translateY(-${scrollOffset}px)` }}
 				data-testid="text-display"
 				{...props}
@@ -72,7 +72,7 @@ export function TextDisplay({
 								key={spaceIndex}
 								index={spaceIndex}
 								char=" "
-								color="#646669"
+								className="text-muted-foreground/50"
 								type="space"
 								status={isSpaceTyped ? 'typed' : 'untyped'}
 								width="0.5ch"

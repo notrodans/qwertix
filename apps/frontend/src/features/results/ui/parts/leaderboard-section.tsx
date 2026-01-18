@@ -1,5 +1,17 @@
 import { useMemo } from 'react';
 import type { Participant } from '@/entities/room';
+import {
+	Card,
+	CardContent,
+	CardHeader,
+	CardTitle,
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from '@/shared/ui';
 import { formatWPM } from '../../domain/format';
 
 interface LeaderboardSectionProps {
@@ -13,21 +25,37 @@ export function LeaderboardSection({ participants }: LeaderboardSectionProps) {
 	);
 
 	return (
-		<div className="flex-1 space-y-4">
-			<h3 className="text-xl font-bold text-zinc-400">Leaderboard</h3>
-			<div className="space-y-2">
-				{sorted.map((p) => (
-					<div
-						key={p.socketId}
-						className="flex justify-between p-3 bg-zinc-800/50 rounded-lg"
-					>
-						<span>{p.username}</span>
-						<span className="font-mono text-emerald-400">
-							{formatWPM(p.wpm)} WPM
-						</span>
-					</div>
-				))}
-			</div>
-		</div>
+		<Card className="flex-1 bg-card/50 border-border">
+			<CardHeader>
+				<CardTitle className="text-muted-foreground">Leaderboard</CardTitle>
+			</CardHeader>
+			<CardContent>
+				<Table>
+					<TableHeader>
+						<TableRow className="hover:bg-transparent">
+							<TableHead>Rank</TableHead>
+							<TableHead>User</TableHead>
+							<TableHead className="text-right">WPM</TableHead>
+						</TableRow>
+					</TableHeader>
+					<TableBody>
+						{sorted.map((p, index) => (
+							<TableRow key={p.socketId} className="hover:bg-muted/50">
+								<TableCell data-testid="rank" className="font-medium">
+									{p.rank || index + 1}
+								</TableCell>
+								<TableCell data-testid="username">{p.username}</TableCell>
+								<TableCell
+									data-testid="wpm"
+									className="text-right font-mono text-primary"
+								>
+									{formatWPM(p.wpm)}
+								</TableCell>
+							</TableRow>
+						))}
+					</TableBody>
+				</Table>
+			</CardContent>
+		</Card>
 	);
 }

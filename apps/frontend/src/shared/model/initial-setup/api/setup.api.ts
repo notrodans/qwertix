@@ -1,4 +1,5 @@
 import { UserRoleEnum } from '@qwertix/room-contracts';
+import { wrap } from '@reatom/core';
 
 export interface SetupStatusResponse {
 	isSetupRequired: boolean;
@@ -22,9 +23,9 @@ export interface SetupResponse {
 
 export const setupApi = {
 	checkStatus: async (): Promise<SetupStatusResponse> => {
-		const res = await fetch('/api/auth/setup-status');
+		const res = await wrap(fetch('/api/auth/setup-status'));
 		if (!res.ok) throw new Error('Failed to check setup status');
-		return res.json();
+		return wrap(res.json());
 	},
 
 	createSuperuser: async (payload: SetupPayload): Promise<SetupResponse> => {

@@ -10,7 +10,6 @@ import {
 
 describe('session store', () => {
 	beforeEach(() => {
-		localStorage.clear();
 		logout(); // Reset global state
 	});
 

@@ -1,9 +1,8 @@
-import { atom, effect } from '@reatom/core';
+import { effect } from '@reatom/core';
 import { fetchUserResults } from '@/entities/result';
-
-export const historyUserIdAtom = atom<string | null>(null, 'historyUserId');
+import { userAtom } from '@/entities/session';
 
 effect(() => {
-	const id = historyUserIdAtom();
-	if (id) fetchUserResults(id);
+	const user = userAtom();
+	if (user) fetchUserResults(user.id);
 });

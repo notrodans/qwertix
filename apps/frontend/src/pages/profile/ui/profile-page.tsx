@@ -20,17 +20,17 @@ const ProfilePage = reatomComponent(() => {
 	return (
 		<div className="w-full space-y-8">
 			<div className="mb-8">
-				<h1 className="text-3xl font-bold text-zinc-100">
+				<h1 className="text-3xl font-bold text-foreground">
 					{user.username}'s Profile
 				</h1>
-				<p className="text-zinc-500">{user.email}</p>
+				<p className="text-muted-foreground">{user.email}</p>
 			</div>
 
-			<div className="bg-zinc-900/50 p-6 rounded-lg border border-zinc-800">
-				<h2 className="text-xl font-semibold mb-4 text-zinc-200">
+			<div className="bg-card p-6 rounded-lg border border-border">
+				<h2 className="text-xl font-semibold mb-4 text-foreground">
 					Match History
 				</h2>
-				<HistoryTable userId={user.id} />
+				<HistoryTable />
 			</div>
 		</div>
 	);

@@ -15,12 +15,12 @@ export function SoloIndicators({
 }: SoloIndicatorsProps) {
 	return (
 		<div className="flex flex-col items-center gap-2">
-			<div className="text-2xl font-black text-yellow-500 font-mono h-8">
+			<div className="text-2xl font-black text-primary font-mono h-8">
 				{mode === RaceModeEnum.TIME && timeLeft !== null && (
 					<div className="animate-pulse">{timeLeft}</div>
 				)}
 				{mode === RaceModeEnum.WORDS && (
-					<div className="text-sm text-zinc-500">
+					<div className="text-sm text-muted-foreground">
 						{typedWordsCount} / {wordCount}
 					</div>
 				)}

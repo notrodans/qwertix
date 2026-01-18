@@ -1,37 +1,29 @@
-import {
-	formatAccuracy,
-	formatConsistency,
-	formatWPM,
-} from '../../domain/format';
+import { cn } from '@/shared/lib/utils';
+import { Card, CardContent } from '@/shared/ui';
+import { formatAccuracy, formatWPM } from '../../domain/format';
 
 interface StatsGridProps {
 	stats: {
 		wpm: number;
 		raw: number;
 		accuracy: number;
-		consistency: number;
 		afkDuration?: number;
 	};
 }
 
 export function StatsGrid({ stats }: StatsGridProps) {
 	return (
-		<div className="grid grid-cols-5 gap-4">
-			<StatBox
-				label="WPM"
-				value={formatWPM(stats.wpm)}
-				color="text-emerald-400"
-			/>
+		<div className="grid grid-cols-4 gap-4">
+			<StatBox label="WPM" value={formatWPM(stats.wpm)} color="text-primary" />
 			<StatBox
 				label="ACC"
 				value={formatAccuracy(stats.accuracy)}
-				color="text-yellow-400"
+				color="text-primary"
 			/>
-			<StatBox label="RAW" value={formatWPM(stats.raw)} color="text-zinc-400" />
 			<StatBox
-				label="CONS"
-				value={formatConsistency(stats.consistency)}
-				color="text-zinc-400"
+				label="RAW"
+				value={formatWPM(stats.raw)}
+				color="text-muted-foreground"
 			/>
 			<StatBox
 				label="AFK"
@@ -40,7 +32,7 @@ export function StatsGrid({ stats }: StatsGridProps) {
 						? (stats.afkDuration / 1000).toFixed(1) + 's'
 						: '0.0s'
 				}
-				color="text-red-400"
+				color="text-destructive"
 			/>
 		</div>
 	);
@@ -56,11 +48,13 @@ function StatBox({
 	color: string;
 }) {
 	return (
-		<div className="bg-zinc-800/30 p-4 rounded-xl border border-zinc-800 text-center">
-			<div className="text-sm font-bold text-zinc-500 uppercase tracking-widest">
-				{label}
-			</div>
-			<div className={`text-4xl font-black ${color}`}>{value}</div>
-		</div>
+		<Card className="bg-muted/30 border-border">
+			<CardContent className="flex flex-col items-center justify-center p-4">
+				<div className="text-sm font-bold text-muted-foreground uppercase tracking-widest">
+					{label}
+				</div>
+				<div className={cn('text-4xl font-black', color)}>{value}</div>
+			</CardContent>
+		</Card>
 	);
 }

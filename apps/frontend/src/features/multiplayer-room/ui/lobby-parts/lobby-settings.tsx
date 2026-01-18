@@ -1,5 +1,14 @@
 import { RaceModeEnum } from '@qwertix/room-contracts';
 import type { RoomConfig } from '@/entities/room';
+import {
+	Card,
+	CardContent,
+	CardHeader,
+	CardTitle,
+	Label,
+	ToggleGroup,
+	ToggleGroupItem,
+} from '@/shared/ui';
 
 interface LobbySettingsProps {
 	config: RoomConfig;
@@ -13,111 +22,114 @@ export function LobbySettings({
 	onUpdateSettings,
 }: LobbySettingsProps) {
 	return (
-		<div className="bg-gray-800 p-4 rounded-lg">
-			<h2 className="text-xl mb-4 font-bold">Room Settings</h2>
-
-			<div className="space-y-6">
-				<div>
-					<label className="block text-xs text-gray-500 uppercase mb-2">
+		<Card className="bg-card border-border">
+			<CardHeader>
+				<CardTitle>Room Settings</CardTitle>
+			</CardHeader>
+			<CardContent className="space-y-6">
+				<div className="space-y-3">
+					<Label className="text-xs uppercase text-muted-foreground">
 						Mode
-					</label>
-
-					<div className="flex gap-2">
-						{['WORDS', 'TIME'].map((m) => (
-							<button
-								key={m}
-								disabled={!isHost}
-								onClick={() => {
-									const mode =
-										m === 'TIME' ? RaceModeEnum.TIME : RaceModeEnum.WORDS;
-									onUpdateSettings(
-										mode === RaceModeEnum.TIME
-											? {
-													mode: RaceModeEnum.TIME,
-													duration: 30,
-												}
-											: {
-													mode: RaceModeEnum.WORDS,
-													wordCount: 30,
-												},
-									);
-								}}
-								className={`px-4 py-2 rounded text-sm font-bold transition-all ${
-									(config.mode === RaceModeEnum.TIME && m === 'TIME') ||
-									(config.mode === RaceModeEnum.WORDS && m === 'WORDS')
-										? 'bg-yellow-500 text-black shadow-lg shadow-yellow-900/20'
-										: 'bg-gray-700 text-gray-400 hover:bg-gray-600'
-								}`}
-							>
-								{m}
-							</button>
-						))}
-					</div>
+					</Label>
+					<ToggleGroup
+						type="single"
+						disabled={!isHost}
+						value={config.mode === RaceModeEnum.TIME ? 'time' : 'words'}
+						onValueChange={(val) => {
+							if (!val) return;
+							const mode =
+								val === 'time' ? RaceModeEnum.TIME : RaceModeEnum.WORDS;
+							onUpdateSettings(
+								mode === RaceModeEnum.TIME
+									? {
+											mode: RaceModeEnum.TIME,
+											duration: 30,
+										}
+									: {
+											mode: RaceModeEnum.WORDS,
+											wordCount: 30,
+										},
+							);
+						}}
+						className="justify-start"
+					>
+						<ToggleGroupItem
+							value="words"
+							className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+						>
+							Words
+						</ToggleGroupItem>
+						<ToggleGroupItem
+							value="time"
+							className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+						>
+							Time
+						</ToggleGroupItem>
+					</ToggleGroup>
 				</div>
 
 				{config.mode === RaceModeEnum.WORDS && (
-					<div className="animate-in fade-in slide-in-from-top-2">
-						<label className="block text-xs text-gray-500 uppercase mb-2">
+					<div className="space-y-3 animate-in fade-in slide-in-from-top-2">
+						<Label className="text-xs uppercase text-muted-foreground">
 							Word Count
-						</label>
-
-						<div className="flex gap-2">
+						</Label>
+						<ToggleGroup
+							type="single"
+							disabled={!isHost}
+							value={String(config.wordCount)}
+							onValueChange={(val) => {
+								if (val)
+									onUpdateSettings({
+										mode: RaceModeEnum.WORDS,
+										wordCount: Number(val),
+									});
+							}}
+							className="justify-start"
+						>
 							{[10, 25, 50, 100].map((count) => (
-								<button
+								<ToggleGroupItem
 									key={count}
-									disabled={!isHost}
-									onClick={() =>
-										onUpdateSettings({
-											mode: RaceModeEnum.WORDS,
-											wordCount: count,
-										})
-									}
-									className={`w-10 h-10 rounded-full text-xs font-bold transition-all ${
-										config.mode === RaceModeEnum.WORDS &&
-										config.wordCount === count
-											? 'bg-emerald-500 text-black'
-											: 'bg-gray-700 text-gray-400 hover:bg-gray-600'
-									}`}
+									value={String(count)}
+									className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
 								>
 									{count}
-								</button>
+								</ToggleGroupItem>
 							))}
-						</div>
+						</ToggleGroup>
 					</div>
 				)}
 
 				{config.mode === RaceModeEnum.TIME && (
-					<div className="animate-in fade-in slide-in-from-top-2">
-						<label className="block text-xs text-gray-500 uppercase mb-2">
+					<div className="space-y-3 animate-in fade-in slide-in-from-top-2">
+						<Label className="text-xs uppercase text-muted-foreground">
 							Time Limit (seconds)
-						</label>
-
-						<div className="flex gap-2">
+						</Label>
+						<ToggleGroup
+							type="single"
+							disabled={!isHost}
+							value={String(config.duration)}
+							onValueChange={(val) => {
+								if (val)
+									onUpdateSettings({
+										mode: RaceModeEnum.TIME,
+										duration: Number(val),
+									});
+							}}
+							className="justify-start"
+						>
 							{[15, 30, 60, 120].map((seconds) => (
-								<button
+								<ToggleGroupItem
 									key={seconds}
-									disabled={!isHost}
-									onClick={() =>
-										onUpdateSettings({
-											mode: RaceModeEnum.TIME,
-
-											duration: seconds,
-										})
-									}
-									className={`w-10 h-10 rounded-full text-xs font-bold transition-all ${
-										config.mode === RaceModeEnum.TIME &&
-										config.duration === seconds
-											? 'bg-emerald-500 text-black'
-											: 'bg-gray-700 text-gray-400 hover:bg-gray-600'
-									}`}
+									value={String(seconds)}
+									className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
 								>
 									{seconds}s
-								</button>
+								</ToggleGroupItem>
 							))}
-						</div>
+						</ToggleGroup>
 					</div>
 				)}
-			</div>
-		</div>
+			</CardContent>
+		</Card>
 	);
 }

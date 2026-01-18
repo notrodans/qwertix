@@ -15,7 +15,7 @@ export function BoardIndicators({
 	remainingWords,
 }: BoardIndicatorsProps) {
 	return (
-		<div className="flex justify-center text-4xl font-black text-yellow-500 font-mono h-12">
+		<div className="flex justify-center text-4xl font-black text-primary font-mono h-12">
 			{config.mode === RaceModeEnum.TIME &&
 				timeLeft !== null &&
 				status === RoomStatusEnum.RACING && (

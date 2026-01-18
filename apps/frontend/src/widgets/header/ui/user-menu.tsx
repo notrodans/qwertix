@@ -9,7 +9,10 @@ export const UserMenu = reatomComponent(() => {
 	if (!isAuthenticated) {
 		return (
 			<div className="flex gap-4">
-				<Link to="/login" className="text-zinc-400 hover:text-white">
+				<Link
+					to="/login"
+					className="text-muted-foreground hover:text-foreground"
+				>
 					Login
 				</Link>
 			</div>
@@ -18,12 +21,15 @@ export const UserMenu = reatomComponent(() => {
 
 	return (
 		<div className="flex items-center gap-4">
-			<Link to="/profile" className="text-zinc-300 hover:text-white">
+			<Link
+				to="/profile"
+				className="text-muted-foreground hover:text-foreground"
+			>
 				{user?.username}
 			</Link>
 			<button
 				onClick={logout}
-				className="text-red-400 hover:text-red-300 text-sm"
+				className="text-destructive hover:text-destructive/80 text-sm"
 			>
 				Logout
 			</button>
