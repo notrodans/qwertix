@@ -8,7 +8,9 @@ interface LobbyHeaderProps {
 export function LobbyHeader({ roomId, isHost }: LobbyHeaderProps) {
 	return (
 		<div className="flex flex-col items-center gap-4">
-			<h1 className="text-3xl font-bold">Room: {roomId}</h1>
+			<h1 className="text-3xl font-bold" data-testid="room-id">
+				Room: {roomId}
+			</h1>
 			{isHost && (
 				<Badge
 					variant="outline"

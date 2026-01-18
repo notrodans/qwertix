@@ -27,6 +27,7 @@ export function LobbyActions({
 	return (
 		<Button
 			onClick={status === RoomStatusEnum.FINISHED ? onRestart : onStart}
+			data-testid="start-race-button"
 			className="px-12 py-8 rounded-xl text-2xl font-black bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95"
 		>
 			{status === RoomStatusEnum.FINISHED ? 'RESTART GAME' : 'START RACE'}

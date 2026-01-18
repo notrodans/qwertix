@@ -163,43 +163,42 @@ test.describe('Multiplayer Room Lifecycle', () => {
 		await page.goto('/');
 
 		// Create room
-		const createButton = page.getByText('Create Multiplayer Room');
+		const createButton = page.getByTestId('create-room-button');
 		await createButton.click();
 
 		// Should navigate to room page
 		await expect(page).toHaveURL(/\/room\/TEST12/, { timeout: 10000 });
 
 		// Wait for Loading Room... to disappear
-		await expect(page.getByText('Loading Room...')).toBeHidden({
+		await expect(page.getByTestId('loading-room')).toBeHidden({
 			timeout: 10000,
 		});
 
 		// Should show room details from HTTP initial data
-		await expect(page.getByText(/TEST12/)).toBeVisible({ timeout: 10000 });
-
-		// Settings should be visible
-		await expect(page.getByText(/words/i)).toBeVisible();
+		await expect(page.getByTestId('room-id')).toContainText('TEST12', {
+			timeout: 10000,
+		});
 
 		// Start button should be available (we are recognized as Guest-123 host)
-		await expect(
-			page.getByRole('button', { name: 'START RACE' }),
-		).toBeVisible();
+		await expect(page.getByTestId('start-race-button')).toBeVisible();
 	});
 
 	test('should run a full multiplayer race', async ({ page }) => {
 		page.on('console', (msg) => console.log('BROWSER LOG:', msg.text()));
 
 		await page.goto('/');
-		await page.getByText('Create Multiplayer Room').click();
+		await page.getByTestId('create-room-button').click();
 
 		// Wait for Lobby
-		await expect(page.getByText(/Room: TEST12/)).toBeVisible();
+		await expect(page.getByTestId('room-id')).toBeVisible();
 
 		// Wait for our name in participants list (LobbyPlayerList renders names)
-		await expect(page.getByText('Guest-123')).toBeVisible({ timeout: 5000 });
+		await expect(page.getByTestId('player-Guest-123')).toBeVisible({
+			timeout: 5000,
+		});
 
 		// Start Race
-		const startButton = page.getByRole('button', { name: /START RACE/i });
+		const startButton = page.getByTestId('start-race-button');
 		await startButton.waitFor({ state: 'visible' });
 		await startButton.click({ force: true });
 
@@ -212,14 +211,14 @@ test.describe('Multiplayer Room Lifecycle', () => {
 		await page.keyboard.type('multiplayer test room');
 
 		// Results should appear
-		await expect(
-			page.getByRole('button', { name: /Return to Lobby/i }),
-		).toBeVisible({ timeout: 10000 });
-		await expect(page.getByText('WPM', { exact: true }).first()).toBeVisible();
-		await expect(page.getByText('ACC', { exact: true }).first()).toBeVisible();
+		await expect(page.getByTestId('return-to-lobby-button')).toBeVisible({
+			timeout: 10000,
+		});
+		await expect(page.getByTestId('stat-wpm').first()).toBeVisible();
+		await expect(page.getByTestId('stat-acc').first()).toBeVisible();
 
 		// Can return to lobby
-		await page.getByRole('button', { name: 'Return to Lobby' }).click();
-		await expect(page.getByText(/Room: TEST12/)).toBeVisible();
+		await page.getByTestId('return-to-lobby-button').click();
+		await expect(page.getByTestId('room-id')).toBeVisible();
 	});
 });

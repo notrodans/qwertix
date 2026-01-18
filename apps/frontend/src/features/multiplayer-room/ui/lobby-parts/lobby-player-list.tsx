@@ -32,7 +32,9 @@ export function LobbyPlayerList({
 							className="bg-muted/50 p-3 rounded flex justify-between items-center"
 						>
 							<div className="flex items-center gap-2">
-								<span className="font-bold">{p.username}</span>
+								<span className="font-bold" data-testid={`player-${p.username}`}>
+									{p.username}
+								</span>
 								{p.isHost && (
 									<Badge variant="secondary" className="text-xs">
 										Host

@@ -53,7 +53,12 @@ function StatBox({
 				<div className="text-sm font-bold text-muted-foreground uppercase tracking-widest">
 					{label}
 				</div>
-				<div className={cn('text-4xl font-black', color)}>{value}</div>
+				<div
+					className={cn('text-4xl font-black', color)}
+					data-testid={`stat-${label.toLowerCase()}`}
+				>
+					{value}
+				</div>
 			</CardContent>
 		</Card>
 	);

@@ -24,6 +24,7 @@ export interface ResultsContentProps {
 	participants: Participant[];
 	isHost?: boolean;
 	onRestart?: () => void;
+	onClose?: () => void;
 	ReplayComponent: ComponentType<{
 		replay: {
 			data: { key: string; timestamp: number }[];
@@ -38,6 +39,7 @@ export function ResultsContent({
 	participants,
 	isHost,
 	onRestart,
+	onClose,
 	ReplayComponent,
 }: ResultsContentProps) {
 	return (
@@ -55,17 +57,29 @@ export function ResultsContent({
 				/>
 			</div>
 
-			{isHost && onRestart && (
-				<div className="flex justify-center pt-4">
+			<div className="flex justify-center gap-4 pt-4">
+				{isHost && onRestart && (
 					<Button
 						onClick={onRestart}
 						size="lg"
+						data-testid="play-again-button"
 						className="px-12 py-6 bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-lg shadow-primary/20"
 					>
 						Play Again
 					</Button>
-				</div>
-			)}
+				)}
+				{onClose && (
+					<Button
+						onClick={onClose}
+						variant="outline"
+						size="lg"
+						data-testid="return-to-lobby-button"
+						className="px-12 py-6 font-bold"
+					>
+						Return to Lobby
+					</Button>
+				)}
+			</div>
 		</div>
 	);
 }
