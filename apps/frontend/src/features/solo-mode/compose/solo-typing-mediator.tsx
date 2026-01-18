@@ -10,6 +10,7 @@ import {
 	typingListenerAtom,
 	useCursorPositioning,
 } from '@/entities/typing-text';
+import { cn } from '@/shared/lib/utils';
 import { SoloStatusEnum } from '../model/store';
 import { useSoloGame } from '../model/use-solo-game';
 import { SoloIndicators } from '../ui/solo-indicators';
@@ -73,11 +74,13 @@ export const SoloTypingMediator = reatomComponent(
 			<div className="relative w-full max-w-4xl mx-auto min-h-100">
 				{/* Results View Layer */}
 				<div
-					className={`absolute inset-0 transition-opacity duration-500 ease-in-out ${
-						isResultsView
-							? 'opacity-100 z-10 pointer-events-auto'
-							: 'opacity-0 z-0 pointer-events-none'
-					}`}
+					className={cn(
+						'absolute inset-0 transition-opacity duration-500 ease-in-out',
+						{
+							'opacity-100 z-10 pointer-events-auto': isResultsView,
+							'opacity-0 z-0 pointer-events-none': !isResultsView,
+						},
+					)}
 				>
 					{isSaving ? (
 						<div className="flex flex-col items-center justify-center h-full gap-4">
@@ -93,11 +96,13 @@ export const SoloTypingMediator = reatomComponent(
 
 				{/* Typing View Layer */}
 				<div
-					className={`flex flex-col items-center gap-12 w-full transition-opacity duration-500 ease-in-out ${
-						!isResultsView
-							? 'opacity-100 z-10 pointer-events-auto'
-							: 'opacity-0 z-0 pointer-events-none'
-					}`}
+					className={cn(
+						'flex flex-col items-center gap-12 w-full transition-opacity duration-500 ease-in-out',
+						{
+							'opacity-100 z-10 pointer-events-auto': !isResultsView,
+							'opacity-0 z-0 pointer-events-none': isResultsView,
+						},
+					)}
 				>
 					<SoloToolbar
 						className={

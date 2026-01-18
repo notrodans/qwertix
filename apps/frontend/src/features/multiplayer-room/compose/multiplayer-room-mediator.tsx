@@ -11,7 +11,6 @@ import {
 } from '@/entities/typing-text';
 import { createMultiplayerModel } from '../model/multiplayer-factory';
 import { useMultiplayerGame } from '../model/use-multiplayer-game';
-import { useMultiplayerRoom } from '../model/use-multiplayer-room';
 import { Lobby } from '../ui/lobby';
 import { MultiplayerBoard } from '../ui/multiplayer-board';
 import { RoomLayout } from '../ui/room-layout';
@@ -48,17 +47,19 @@ export const MultiplayerRoomMediator = reatomComponent(
 		});
 
 		// Create local model instance
-		const model = useMemo(() => createMultiplayerModel(), []);
+		const model = useMemo(
+			() => createMultiplayerModel(roomId, username, token),
+			[roomId, username, token],
+		);
 
-		const {
-			room,
-			error,
-			startRace,
-			updateSettings,
-			transferHost,
-			currentUser,
-			restartGame,
-		} = useMultiplayerRoom(model, roomId, username, token);
+		// Activate connection (will be disposed when model changes or component unmounts)
+		model.connectionAtom();
+
+		const room = model.roomAtom();
+		const error = model.roomErrorAtom();
+		const currentUser = room?.participants.find(
+			(p: Participant) => p.username === username,
+		);
 
 		const game = useMultiplayerGame(model);
 
@@ -103,69 +104,90 @@ export const MultiplayerRoomMediator = reatomComponent(
 			return <RoomLayout loading={<div>Loading Room...</div>} />;
 		}
 
+		const isResultsView = !!finalStats;
+
 		return (
-			<RoomLayout
-				lobby={
-					room.status === RoomStatusEnum.LOBBY ||
-					(room.status === RoomStatusEnum.FINISHED && !localResult) ? (
-						<Lobby
-							roomId={roomId}
-							participants={room.participants}
-							config={room.config}
-							isHost={currentUser?.isHost ?? false}
-							status={room.status}
-							onStart={startRace}
-							onRestart={restartGame}
-							onTransferHost={transferHost}
-							onUpdateSettings={updateSettings}
-						/>
-					) : null
-				}
-				board={
-					(room.status === RoomStatusEnum.COUNTDOWN ||
-						room.status === RoomStatusEnum.RACING) &&
-					!finalStats ? (
-						<div className="relative w-full flex justify-center">
-							{!game.isFocused && room.status === RoomStatusEnum.RACING && (
-								<div className="absolute inset-0 z-50 flex items-center justify-center bg-background/50 backdrop-blur-sm cursor-pointer">
-									<div className="text-xl font-bold text-foreground flex flex-col items-center gap-2">
-										<span>Out of focus</span>
-										<span className="text-sm font-normal text-muted-foreground">
-											Click to resume
-										</span>
-									</div>
-								</div>
-							)}
-							<MultiplayerBoard
-								text={room.text.join(' ')}
-								config={room.config}
-								status={room.status}
-								startTime={room.startTime}
-								participants={room.participants}
-								currentUser={currentUser}
-								// Game State
-								userTyped={game.userTyped}
-								validLength={game.validLength}
-								caretPos={game.caretPos}
-								timeLeft={game.timeLeft}
-								containerRef={containerRef}
-							/>
-						</div>
-					) : null
-				}
-				results={
-					finalStats
-						? renderResults?.({
+			<div className="relative w-full max-w-7xl mx-auto min-h-screen grid grid-cols-1 grid-rows-1">
+				{/* Results View Layer */}
+				<div
+					className={`col-start-1 row-start-1 transition-opacity duration-500 ease-in-out ${
+						isResultsView
+							? 'opacity-100 z-10 pointer-events-auto'
+							: 'opacity-0 z-0 pointer-events-none'
+					}`}
+				>
+					{isResultsView && renderResults
+						? renderResults({
 								stats: finalStats,
 								text: room.text.join(' '),
 								participants: room.participants,
 								isHost: currentUser?.isHost ?? false,
-								onRestart: restartGame,
+								onRestart: model.restartGame,
 								onClose: game.clearLocalResult,
 							})
-						: null
-				}
-			/>
+						: null}
+				</div>
+
+				{/* Game View Layer */}
+				<div
+					className={`col-start-1 row-start-1 flex flex-col gap-8 w-full transition-opacity duration-500 ease-in-out ${
+						!isResultsView
+							? 'opacity-100 z-10 pointer-events-auto'
+							: 'opacity-0 z-0 pointer-events-none'
+					}`}
+				>
+					<RoomLayout
+						lobby={
+							room.status === RoomStatusEnum.LOBBY ||
+							(room.status === RoomStatusEnum.FINISHED && !localResult) ? (
+								<Lobby
+									roomId={roomId}
+									participants={room.participants}
+									config={room.config}
+									isHost={currentUser?.isHost ?? false}
+									status={room.status}
+									onStart={model.startRace}
+									onRestart={model.restartGame}
+									onTransferHost={model.transferHost}
+									onUpdateSettings={model.updateSettings}
+								/>
+							) : null
+						}
+						board={
+							(room.status === RoomStatusEnum.COUNTDOWN ||
+								room.status === RoomStatusEnum.RACING) &&
+							!finalStats ? (
+								<div className="relative w-full flex justify-center">
+									{!game.isFocused && room.status === RoomStatusEnum.RACING && (
+										<div className="absolute inset-0 z-50 flex items-center justify-center bg-background/50 backdrop-blur-sm cursor-pointer">
+											<div className="text-xl font-bold text-foreground flex flex-col items-center gap-2">
+												<span>Out of focus</span>
+												<span className="text-sm font-normal text-muted-foreground">
+													Click to resume
+												</span>
+											</div>
+										</div>
+									)}
+									<MultiplayerBoard
+										text={room.text.join(' ')}
+										config={room.config}
+										status={room.status}
+										startTime={room.startTime}
+										participants={room.participants}
+										currentUser={currentUser}
+										// Game State
+										userTyped={game.userTyped}
+										validLength={game.validLength}
+										caretPos={game.caretPos}
+										timeLeft={game.timeLeft}
+										containerRef={containerRef}
+									/>
+								</div>
+							) : null
+						}
+					/>
+				</div>
+			</div>
 		);
 	},
 );
