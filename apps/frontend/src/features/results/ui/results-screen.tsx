@@ -1,4 +1,4 @@
-import { type ComponentType, Fragment } from 'react';
+import { type ComponentType } from 'react';
 import type { Participant } from '@/entities/room';
 import {
 	Button,

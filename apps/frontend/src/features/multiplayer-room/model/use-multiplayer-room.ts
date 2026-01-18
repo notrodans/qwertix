@@ -1,45 +1,33 @@
 import { type ParticipantDTO } from '@qwertix/room-contracts';
 import { useEffect } from 'react';
-import {
-	isResultSavedAtom,
-	joinRoom,
-	leaveRoom,
-	loadMoreWords,
-	restartGame,
-	roomAtom,
-	roomErrorAtom,
-	startRace,
-	submitResult,
-	transferHost,
-	updateProgress,
-	updateSettings,
-} from './multiplayer-model';
+import { type MultiplayerModel } from './multiplayer-factory';
 
 export function useMultiplayerRoom(
+	model: MultiplayerModel,
 	roomId: string,
 	username: string,
 	token?: string | null,
 ) {
 	useEffect(() => {
-		joinRoom(roomId, username, token);
+		const disconnect = model.joinRoom(roomId, username, token);
 		return () => {
-			leaveRoom();
+			disconnect();
 		};
-	}, [roomId, username, token]);
+	}, [model, roomId, username, token]);
 
-	const room = roomAtom();
+	const room = model.roomAtom();
 
 	return {
 		room,
-		error: roomErrorAtom(),
-		isResultSaved: isResultSavedAtom(),
-		startRace,
-		updateProgress,
-		updateSettings,
-		transferHost,
-		loadMoreWords,
-		submitResult,
-		restartGame,
+		error: model.roomErrorAtom(),
+		isResultSaved: model.isResultSavedAtom(),
+		startRace: model.startRace,
+		updateProgress: model.updateProgress,
+		updateSettings: model.updateSettings,
+		transferHost: model.transferHost,
+		loadMoreWords: model.loadMoreWords,
+		submitResult: model.submitResult,
+		restartGame: model.restartGame,
 		currentUser: room?.participants.find(
 			(p: ParticipantDTO) => p.username === username,
 		),

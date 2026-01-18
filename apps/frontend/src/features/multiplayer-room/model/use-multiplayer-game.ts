@@ -1,27 +1,15 @@
-import {
-	caretPosAtom,
-	resetTyping,
-	userTypedAtom,
-	validLengthAtom,
-} from '@/entities/typing-text';
-import {
-	clearLocalResult,
-	mpIsFocusedAtom,
-	mpLocalResultAtom,
-	mpTimeLeftAtom,
-} from './multiplayer-game-model';
+import { caretPosAtom, resetTyping } from '@/entities/typing-text';
+import { type MultiplayerModel } from './multiplayer-factory';
 
-// This hook is now just a selector for atoms, used in MultiplayerRoomMediator
-export { clearLocalResult };
-export function useMultiplayerGame() {
+export function useMultiplayerGame(model: MultiplayerModel) {
 	return {
-		userTyped: userTypedAtom(),
-		validLength: validLengthAtom(),
+		userTyped: model.userTypedAtom(),
+		validLength: model.validLengthAtom(),
 		caretPos: caretPosAtom(),
-		timeLeft: mpTimeLeftAtom(),
-		isFocused: mpIsFocusedAtom(),
-		localResult: mpLocalResultAtom(),
-		// containerRef logic is moved to mediator/component
+		timeLeft: model.mpTimeLeftAtom(),
+		isFocused: model.mpIsFocusedAtom(),
+		localResult: model.mpLocalResultAtom(),
+		clearLocalResult: model.clearLocalResult,
 		reset: resetTyping,
 	};
 }

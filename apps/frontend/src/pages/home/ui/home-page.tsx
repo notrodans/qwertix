@@ -1,6 +1,6 @@
 import { reatomComponent } from '@reatom/react';
 import { ReplayViewer } from '@/features/replay-viewer';
-import { ResultsContent } from '@/features/results/ui/results-screen';
+import { ResultsContent } from '@/features/results';
 import { SoloTypingMediator } from '@/features/solo-mode';
 import { Button } from '@/shared/ui/button';
 import { createRoom } from '../model';

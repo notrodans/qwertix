@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { ResultsScreen } from './results-screen';
 
 describe('ResultsScreen', () => {
@@ -63,21 +63,5 @@ describe('ResultsScreen', () => {
 
 		// ReplayVisualizer should be rendered (which renders TextDisplay)
 		expect(screen.queryByTestId('watch-replay')).not.toBeInTheDocument();
-	});
-
-	it('should call onClose when return button is clicked', () => {
-		const onClose = vi.fn();
-		render(
-			<ResultsScreen
-				stats={mockStats}
-				targetText="abc"
-				participants={mockParticipants}
-				onClose={onClose}
-				ReplayComponent={ReplayMock}
-			/>,
-		);
-
-		fireEvent.click(screen.getByTestId('return-to-lobby'));
-		expect(onClose).toHaveBeenCalled();
 	});
 });

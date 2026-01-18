@@ -9,10 +9,8 @@ import {
 	typingListenerAtom,
 	useCursorPositioning,
 } from '@/entities/typing-text';
-import {
-	clearLocalResult,
-	useMultiplayerGame,
-} from '../model/use-multiplayer-game';
+import { createMultiplayerModel } from '../model/multiplayer-factory';
+import { useMultiplayerGame } from '../model/use-multiplayer-game';
 import { useMultiplayerRoom } from '../model/use-multiplayer-room';
 import { Lobby } from '../ui/lobby';
 import { MultiplayerBoard } from '../ui/multiplayer-board';
@@ -49,6 +47,9 @@ export const MultiplayerRoomMediator = reatomComponent(
 			return `Guest-${Math.floor(Math.random() * 1000)}`;
 		});
 
+		// Create local model instance
+		const model = useMemo(() => createMultiplayerModel(), []);
+
 		const {
 			room,
 			error,
@@ -57,9 +58,9 @@ export const MultiplayerRoomMediator = reatomComponent(
 			transferHost,
 			currentUser,
 			restartGame,
-		} = useMultiplayerRoom(roomId, username, token);
+		} = useMultiplayerRoom(model, roomId, username, token);
 
-		const game = useMultiplayerGame();
+		const game = useMultiplayerGame(model);
 
 		// Cursor positioning
 		const containerRef = useRef<HTMLDivElement>(null);
@@ -93,7 +94,7 @@ export const MultiplayerRoomMediator = reatomComponent(
 		if (error) {
 			return (
 				<RoomLayout
-					error={<div className="text-red-400">Error: {error}</div>}
+					error={<div className="text-destructive">Error: {error}</div>}
 				/>
 			);
 		}
@@ -126,10 +127,10 @@ export const MultiplayerRoomMediator = reatomComponent(
 					!finalStats ? (
 						<div className="relative w-full flex justify-center">
 							{!game.isFocused && room.status === RoomStatusEnum.RACING && (
-								<div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm rounded-lg cursor-pointer">
-									<div className="text-xl font-bold text-white flex flex-col items-center gap-2">
+								<div className="absolute inset-0 z-50 flex items-center justify-center bg-background/50 backdrop-blur-sm cursor-pointer">
+									<div className="text-xl font-bold text-foreground flex flex-col items-center gap-2">
 										<span>Out of focus</span>
-										<span className="text-sm font-normal text-zinc-300">
+										<span className="text-sm font-normal text-muted-foreground">
 											Click to resume
 										</span>
 									</div>
@@ -160,7 +161,7 @@ export const MultiplayerRoomMediator = reatomComponent(
 								participants: room.participants,
 								isHost: currentUser?.isHost ?? false,
 								onRestart: restartGame,
-								onClose: clearLocalResult,
+								onClose: game.clearLocalResult,
 							})
 						: null
 				}
