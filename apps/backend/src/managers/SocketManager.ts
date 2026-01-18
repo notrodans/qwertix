@@ -41,12 +41,12 @@ export class SocketManager {
 				ws.isAlive = true;
 			});
 
-			ws.on('message', async (data) => {
+			ws.on('message', async (data: string) => {
 				try {
-					const message = JSON.parse(data.toString()) as SocketAction;
-					await this.handleMessage(ws, message);
+					const msg = JSON.parse(data) as SocketAction;
+					await this.handleMessage(ws, msg);
 				} catch (e) {
-					this.logger.error(e, 'Failed to parse message');
+					this.logger.error(e, 'Failed to handle message');
 				}
 			});
 
@@ -440,11 +440,15 @@ export class SocketManager {
 	private async handleLoadMoreWords(ws: Socket) {
 		if (!ws.roomId || !ws.userId) return;
 		const room = await this.roomService.get(ws.roomId);
-		if (!room) return;
+		if (!room || room.status() !== RoomStatusEnum.RACING) return;
 
-		const newWords = await this.roomService.appendWordsToRoom(ws.roomId, 20);
+		const newWords = await this.roomService.appendWordsToRoom(ws.roomId, 50);
 
 		if (newWords) {
+			this.logger.info(
+				{ roomId: ws.roomId, wordsCount: newWords.length },
+				'Appended more words to room',
+			);
 			this.broadcastToRoom(room, SocketEventEnum.WORDS_APPENDED, {
 				words: newWords,
 			});

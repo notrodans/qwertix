@@ -148,10 +148,7 @@ export class RoomService {
 		if (!room) return null;
 
 		const newWords = this.wordService.getWords(count);
-		const currentConfig = room.config();
-		const currentText = room.text();
-
-		room.updateConfig(currentConfig, [...currentText, ...newWords]);
+		room.appendWords(newWords);
 		await this.roomRepo.save(room);
 		return newWords;
 	}

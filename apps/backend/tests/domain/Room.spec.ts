@@ -129,6 +129,19 @@ describe('Room Domain Logic', () => {
 		expect(room.participants().get('u1')?.stats().progress).toBe(0);
 	});
 
+	it('should append words during race', () => {
+		const room = createRoom();
+		room.addParticipant('u1', 'user1');
+		room.startRace();
+		room.startRacing();
+
+		const initialLength = room.text().length;
+		room.appendWords(['more', 'words']);
+
+		expect(room.text().length).toBe(initialLength + 2);
+		expect(room.status()).toBe(RoomStatusEnum.RACING);
+	});
+
 	it('should convert to DTO correctly', () => {
 		const room = createRoom();
 		room.addParticipant('u1', 'user1');

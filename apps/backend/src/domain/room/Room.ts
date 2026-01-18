@@ -314,6 +314,15 @@ export class Room {
 	}
 
 	/**
+	 * Appends new words to the current text buffer.
+	 * Allowed in any state (typically used during RACING in TIME mode).
+	 * @param newWords - The words to append.
+	 */
+	appendWords(newWords: string[]): void {
+		this._text = [...this._text, ...newWords];
+	}
+
+	/**
 	 * Updates the room configuration and text.
 	 * @param config - The new room configuration.
 	 * @param newText - The new text.
