@@ -1,6 +1,6 @@
 import { UserRoleEnum } from '@qwertix/room-contracts';
 import { reatomComponent } from '@reatom/react';
-import { Fragment } from 'react/jsx-runtime';
+import { Fragment } from 'react';
 import { userAtom } from '@/entities/session';
 import { CreateUserForm } from '@/features/create-user';
 

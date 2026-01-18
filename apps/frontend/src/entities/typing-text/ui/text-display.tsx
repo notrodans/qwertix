@@ -20,39 +20,11 @@ export function TextDisplay({
 	...props
 }: TextDisplayProps) {
 	const targetWords = useMemo(() => targetText.split(' '), [targetText]);
-	const userWords = userTyped.split(' '); // Split every render, but DOM is the bottleneck.
-
-	// Calculate active word index
-	const activeWordIndex = userWords.length - 1;
-
-	// Virtualization Window
-	const BUFFER_BEFORE = 20;
-	const BUFFER_AFTER = 60;
-	const renderStart = Math.max(0, activeWordIndex - BUFFER_BEFORE);
-	const renderEnd = Math.min(
-		targetWords.length,
-		activeWordIndex + BUFFER_AFTER,
-	);
-
-	const visibleTargetWords = targetWords.slice(renderStart, renderEnd);
-
-	// Calculate global index offset for the start of the window
-	// This ensures character keys remain stable and correct
-	const startGlobalIndex = useMemo(() => {
-		let len = 0;
-		for (let i = 0; i < renderStart; i++) {
-			const word = targetWords[i];
-			if (word) {
-				len += word.length + 1; // +1 for space
-			}
-		}
-		return len;
-	}, [renderStart, targetWords]);
-
+	const userWords = userTyped.split(' ');
 	const scrollOffset = useTextScroll(containerRef, userTyped);
 	const wrapperRef = useRef<HTMLDivElement>(null);
 
-	let globalIndex = startGlobalIndex;
+	let globalIndex = 0;
 
 	return (
 		<div
@@ -68,8 +40,7 @@ export function TextDisplay({
 				{...props}
 			>
 				<Caret left={caretPos.left} top={caretPos.top} />
-				{visibleTargetWords.map((targetWord, idx) => {
-					const wordIndex = renderStart + idx;
+				{targetWords.map((targetWord, wordIndex) => {
 					const userWord = userWords[wordIndex] || '';
 
 					// Determine state

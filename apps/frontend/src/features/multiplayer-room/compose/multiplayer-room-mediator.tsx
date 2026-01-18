@@ -1,6 +1,13 @@
 import { RoomStatusEnum } from '@qwertix/room-contracts';
 import { reatomComponent } from '@reatom/react';
-import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import {
+	Fragment,
+	type ReactNode,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from 'react';
 import { type Participant } from '@/entities/room';
 import { tokenAtom, userAtom } from '@/entities/session';
 import {
@@ -116,16 +123,18 @@ export const MultiplayerRoomMediator = reatomComponent(
 							: 'opacity-0 z-0 pointer-events-none'
 					}`}
 				>
-					{isResultsView && renderResults
-						? renderResults({
-								stats: finalStats,
-								text: room.text.join(' '),
-								participants: room.participants,
-								isHost: currentUser?.isHost ?? false,
-								onRestart: model.restartGame,
-								onClose: game.clearLocalResult,
-							})
-						: null}
+					{isResultsView && renderResults ? (
+						renderResults({
+							stats: finalStats,
+							text: room.text.join(' '),
+							participants: room.participants,
+							isHost: currentUser?.isHost ?? false,
+							onRestart: model.restartGame,
+							onClose: game.clearLocalResult,
+						})
+					) : (
+						<Fragment />
+					)}
 				</div>
 
 				{/* Game View Layer */}

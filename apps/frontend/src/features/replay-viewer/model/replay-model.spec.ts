@@ -17,8 +17,9 @@ describe('replay-model', () => {
 	it('should initialize with correct data', () => {
 		const model = createReplayModel(mockReplay);
 
-		expect(model.durationAtom()).toBe(1000); // Min duration 1000
-		// At progress 0, time is 0. Since first event is at 100, text must be empty.
+		// Last event at 500 + 10 delay = 510. Min duration is 1000.
+		expect(model.durationAtom()).toBe(1000);
+		// At progress 0, time is 0. Since first event is at 110, text must be empty.
 		expect(model.typedTextAtom()).toBe('');
 		expect(model.progressAtom()).toBe(0);
 	});
@@ -27,7 +28,8 @@ describe('replay-model', () => {
 		const model = createReplayModel(mockReplay);
 
 		// Duration is 1000ms.
-		// progress 0.25 -> 250ms -> events at 100, 200 are included.
+		// events are at 110 and 210.
+		// progress 0.25 -> 250ms -> covers both.
 		model.progressAtom.set(0.25);
 
 		expect(model.typedTextAtom()).toBe('he');

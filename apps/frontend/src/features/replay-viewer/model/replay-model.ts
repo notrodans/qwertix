@@ -12,8 +12,18 @@ import { calculateCursorIndex } from '@/entities/typing-text';
 import { reconstructTextAtTime } from '../domain/text-reconstruction';
 
 export const createReplayModel = (initialData: ReplayResponse) => {
+	// Add start delay to make replay feel more natural
+	const START_DELAY = 10;
+	const adjustedData = {
+		...initialData,
+		data: initialData.data.map((e) => ({
+			...e,
+			timestamp: e.timestamp + START_DELAY,
+		})),
+	};
+
 	// State Atoms
-	const replayDataAtom = atom(initialData, 'replay.data');
+	const replayDataAtom = atom(adjustedData, 'replay.data');
 	const progressAtom = atom(0, 'replay.progress'); // 0 to 1
 	const isPlayingAtom = atom(false, 'replay.isPlaying');
 
@@ -51,7 +61,15 @@ export const createReplayModel = (initialData: ReplayResponse) => {
 
 	// Actions
 	const setReplayData = action((data: ReplayResponse) => {
-		replayDataAtom.set(data);
+		const START_DELAY = 10;
+		const adjustedData = {
+			...data,
+			data: data.data.map((e) => ({
+				...e,
+				timestamp: e.timestamp + START_DELAY,
+			})),
+		};
+		replayDataAtom.set(adjustedData);
 		progressAtom.set(0);
 		isPlayingAtom.set(false);
 	}, 'replay.setReplayData');
