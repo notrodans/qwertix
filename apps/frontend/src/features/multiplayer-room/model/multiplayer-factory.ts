@@ -22,6 +22,7 @@ import {
 	checkCompletion,
 	replayDataAtom,
 	resetTyping,
+	startTimeAtom,
 	targetTextAtom,
 	userTypedAtom,
 	validLengthAtom,
@@ -58,6 +59,7 @@ export const createMultiplayerModel = (
 	const mpLastInputTimeAtom = atom(0, 'mpGame.lastInputTime');
 	const mpAfkDurationAtom = atom(0, 'mpGame.afkDuration');
 	const mpBlurStartTimeAtom = atom<number | null>(null, 'mpGame.blurStartTime');
+	const mpIsLoadingWordsAtom = atom(false, 'mpGame.isLoadingWords');
 
 	// --- Actions ---
 	const clearLocalResult = action(() => {
@@ -155,7 +157,7 @@ export const createMultiplayerModel = (
 		mpSubmittedAtom.set(true);
 	}, 'mpGame.handleFinish');
 
-	// --- Connection & Lifecycle ---
+	// --- Connection & Logic ---
 	const connectionAtom = atom(null, 'multiplayer.connection').extend(
 		withConnectHook(() => {
 			roomErrorAtom.set(null);
@@ -236,7 +238,7 @@ export const createMultiplayerModel = (
 				},
 			});
 
-			// 2. React to Room Changes
+			// 2. React to Room Changes (Sync Text & Status)
 			const unsubRoom = effect(() => {
 				const room = roomAtom();
 				if (!room) return;
@@ -255,6 +257,7 @@ export const createMultiplayerModel = (
 				if (status === RoomStatusEnum.RACING && !startTimeLocal) {
 					const now = Date.now();
 					mpStartTimeLocalAtom.set(now);
+					startTimeAtom.set(now);
 					mpLastInputTimeAtom.set(now);
 					mpAfkDurationAtom.set(0);
 					mpIsFocusedAtom.set(true);
@@ -265,20 +268,22 @@ export const createMultiplayerModel = (
 					mpLocalResultAtom.set(null);
 					mpTimeLeftAtom.set(null);
 					mpStartTimeLocalAtom.set(null);
+					mpIsLoadingWordsAtom.set(false);
 					resetTyping();
 					mpAfkDurationAtom.set(0);
 					mpIsFocusedAtom.set(true);
 				}
 			});
 
-			// 3. React to Typing
+			// 3. React to Typing (Progress & AFK)
 			let lastProgressUpdate = 0;
+
 			const unsubTyping = effect(() => {
 				const userTyped = userTypedAtom();
 				const validLength = validLengthAtom();
 				const text = targetTextAtom();
 				const room = roomAtom();
-				const submitted = mpSubmittedAtom();
+				const submitted = peek(mpSubmittedAtom);
 
 				if (!room || submitted) return;
 
@@ -295,7 +300,13 @@ export const createMultiplayerModel = (
 				}
 
 				// Load More Words
-				if (text.length > 200 && text.length - userTyped.length < 150) {
+				if (
+					room.status === RoomStatusEnum.RACING &&
+					room.config.mode === RaceModeEnum.TIME &&
+					text.length - userTyped.length < 300 &&
+					!peek(mpIsLoadingWordsAtom)
+				) {
+					mpIsLoadingWordsAtom.set(true);
 					loadMoreWords();
 				}
 
@@ -311,7 +322,17 @@ export const createMultiplayerModel = (
 				}
 			});
 
-			// 4. Timer
+			// 4. Reset loading flag when words are appended
+			let lastTextLength = peek(roomAtom)?.text.length ?? 0;
+			const unsubWords = effect(() => {
+				const room = roomAtom();
+				if (room && room.text.length > lastTextLength) {
+					mpIsLoadingWordsAtom.set(false);
+					lastTextLength = room.text.length;
+				}
+			});
+
+			// 5. Timer
 			const timerInterval = setInterval(() => {
 				const room = peek(roomAtom);
 				const startTimeLocal = peek(mpStartTimeLocalAtom);
@@ -328,7 +349,7 @@ export const createMultiplayerModel = (
 				}
 			}, 1000);
 
-			// 5. Focus Listeners
+			// 6. Focus/Blur
 			const handleBlur = () => {
 				const room = peek(roomAtom);
 				if (room?.status === RoomStatusEnum.RACING) {
@@ -354,11 +375,13 @@ export const createMultiplayerModel = (
 			window.addEventListener('blur', handleBlur);
 			window.addEventListener('focus', handleFocus);
 
+			// Cleanup
 			return () => {
 				disconnect();
 				roomAtom.set(null);
 				unsubRoom();
 				unsubTyping();
+				unsubWords();
 				clearInterval(timerInterval);
 				window.removeEventListener('blur', handleBlur);
 				window.removeEventListener('focus', handleFocus);
@@ -376,6 +399,7 @@ export const createMultiplayerModel = (
 		mpTimeLeftAtom,
 		mpLocalResultAtom,
 		mpSubmittedAtom,
+		mpAfkDurationAtom,
 		// Actions
 		startRace,
 		updateProgress,
