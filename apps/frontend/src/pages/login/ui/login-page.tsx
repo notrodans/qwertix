@@ -18,8 +18,8 @@ export const LoginPage = reatomComponent(() => {
 	const { submit, fields } = data.loginForm;
 
 	return (
-		<div className="flex flex-col items-center justify-center min-h-screen bg-background text-foreground">
-			<Card className="w-full max-w-md">
+		<div className="w-full max-w-xl flex items-center text-foreground">
+			<Card className="w-full">
 				<CardHeader>
 					<CardTitle className="text-2xl font-bold text-center text-primary">
 						Login to Qwertix

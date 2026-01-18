@@ -7,7 +7,7 @@ export const SetupPage = reatomComponent(() => {
 	if (!ready || !data) return <div>Loading setup page...</div>;
 
 	return (
-		<div className="flex items-center justify-center min-h-screen bg-background text-foreground">
+		<div className="w-full max-w-xl flex items-center text-foreground">
 			<SetupForm />
 		</div>
 	);

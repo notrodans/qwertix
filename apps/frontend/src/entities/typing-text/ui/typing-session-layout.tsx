@@ -19,7 +19,7 @@ export function TypingSessionLayout({
 }: TypingSessionLayoutProps) {
 	return (
 		<div
-			className="flex flex-col gap-8 w-full max-w-3xl items-center"
+			className="flex flex-col gap-6 w-full max-w-3xl items-center"
 			data-testid="typing-board"
 		>
 			{/* Top: Config Summary */}
@@ -43,7 +43,7 @@ export function TypingSessionLayout({
 			</div>
 
 			{/* Bottom: Restart Button */}
-			<div className="flex justify-center mt-8 min-h-[3.5rem]">{controls}</div>
+			<div className="flex justify-center mt-6 min-h-[3.5rem]">{controls}</div>
 		</div>
 	);
 }

@@ -71,7 +71,7 @@ export const SoloTypingMediator = reatomComponent(
 		const typedWordsCount = userTyped.split(' ').length - 1;
 
 		return (
-			<div className="relative w-full max-w-4xl mx-auto min-h-100">
+			<div className="relative w-full max-w-4xl mx-auto">
 				{/* Results View Layer */}
 				<div
 					className={cn(
@@ -97,7 +97,7 @@ export const SoloTypingMediator = reatomComponent(
 				{/* Typing View Layer */}
 				<div
 					className={cn(
-						'flex flex-col items-center gap-12 w-full transition-opacity duration-500 ease-in-out',
+						'flex flex-col items-center gap-8 w-full transition-opacity duration-500 ease-in-out',
 						{
 							'opacity-100 z-10 pointer-events-auto': !isResultsView,
 							'opacity-0 z-0 pointer-events-none': isResultsView,

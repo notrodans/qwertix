@@ -102,19 +102,27 @@ export const MultiplayerRoomMediator = reatomComponent(
 		if (error) {
 			return (
 				<RoomLayout
-					error={<div className="text-destructive">Error: {error}</div>}
+					error={
+						<div className="text-destructive" data-testid="error-room">
+							Error: {error}
+						</div>
+					}
 				/>
 			);
 		}
 
 		if (!room) {
-			return <RoomLayout loading={<div>Loading Room...</div>} />;
+			return (
+				<RoomLayout
+					loading={<div data-testid="loading-room">Loading Room...</div>}
+				/>
+			);
 		}
 
 		const isResultsView = !!finalStats;
 
 		return (
-			<div className="relative w-full max-w-7xl mx-auto min-h-screen grid grid-cols-1 grid-rows-1">
+			<div className="relative w-full max-w-7xl mx-auto grid grid-cols-1 grid-rows-1">
 				{/* Results View Layer */}
 				<div
 					className={`col-start-1 row-start-1 transition-opacity duration-500 ease-in-out ${
