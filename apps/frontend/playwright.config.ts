@@ -25,5 +25,10 @@ export default defineConfig({
 		reuseExistingServer: !process.env.CI,
 		stdout: 'ignore',
 		stderr: 'pipe',
+		env: {
+			VITE_API_URL: 'http://localhost:3000',
+			VITE_WS_URL: 'ws://localhost:3000',
+			VITE_RESULT_HASH_SALT: 'test_salt',
+		},
 	},
 });
