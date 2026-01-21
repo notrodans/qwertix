@@ -1,0 +1,69 @@
+services:
+  db:
+    image: postgres:16
+    container_name: qwertix-db
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-qwertix}
+    volumes:
+      - qwertix_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  migrate:
+    build:
+      context: .
+      target: backend
+    container_name: qwertix-migrate
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_NAME: ${DB_NAME:-qwertix}
+      DB_HOST: db
+      DB_PORT: 5432
+      NODE_ENV: production
+    command: ["bun", "run", "db:migrate"]
+
+  backend:
+    build:
+      context: .
+      target: backend
+    container_name: qwertix-backend
+    restart: always
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      PORT: 3000
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_NAME: ${DB_NAME:-qwertix}
+      DB_HOST: db
+      DB_PORT: 5432
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+    ports:
+      - "8764:8764"
+
+  frontend:
+    build:
+      context: .
+      target: frontend
+      args:
+        APP: frontend
+    container_name: qwertix-frontend
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "8765:80"
+
+volumes:
+  qwertix_data:

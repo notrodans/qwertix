@@ -103,6 +103,7 @@ describe('solo-model', () => {
 
 		it('should reset state on initialization', async () => {
 			// Dirty state
+			// biome-ignore lint/suspicious/noExplicitAny: mock
 			resultsAtom.set({ wpm: 100 } as any);
 			afkDurationAtom.set(5000);
 
@@ -180,6 +181,7 @@ describe('solo-model', () => {
 			// We need to simulate typing close to end.
 
 			// Reset mock to track calls
+			// biome-ignore lint/suspicious/noExplicitAny: mock
 			const mockFetch = global.fetch as any;
 			mockFetch.mockClear();
 
@@ -252,6 +254,7 @@ describe('solo-model', () => {
 			vi.advanceTimersByTime(100);
 			await Promise.resolve();
 
+			// biome-ignore lint/suspicious/noExplicitAny: mock
 			const call = (global.fetch as any).mock.calls[0];
 			const body = JSON.parse(call[1].body);
 			expect(body).toMatchObject({

@@ -12,15 +12,18 @@ import { env } from './env';
 import type { WordService } from './services/WordService';
 
 export const app = Fastify({
-	logger: {
-		transport: {
-			target: 'pino-pretty',
-			options: {
-				translateTime: 'HH:MM:ss Z',
-				ignore: 'pid,hostname',
-			},
-		},
-	},
+	logger:
+		env.NODE_ENV === 'development'
+			? {
+					transport: {
+						target: 'pino-pretty',
+						options: {
+							translateTime: 'HH:MM:ss Z',
+							ignore: 'pid,hostname',
+						},
+					},
+				}
+			: true,
 });
 
 app.register(cors);

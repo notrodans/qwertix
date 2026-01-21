@@ -40,6 +40,7 @@ describe('login-form', () => {
 		const mockToken = 'token123';
 
 		// Mock authApi.login success
+		// biome-ignore lint/suspicious/noExplicitAny: mock
 		(authApi.login as any).mockResolvedValue({
 			user: mockUser,
 			token: mockToken,

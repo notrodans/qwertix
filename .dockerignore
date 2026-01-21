@@ -1,0 +1,12 @@
+node_modules
+.git
+.github
+apps/*/dist
+apps/*/node_modules
+libs/*/node_modules
+.DS_Store
+*.log
+docker-compose*.yml
+.env
+.env.*
+! .env.example
