@@ -34,30 +34,43 @@ A multiplayer typing competition platform built with real-time features.
 ### Prerequisites
 
 - [Bun](https://bun.sh) (v1.1+)
-- [Docker](https://www.docker.com/)
+- [Docker](https://www.docker.com/) & [Docker Compose](https://docs.docker.com/compose/)
 
-### Installation
+### 🐳 Deployment (Recommended)
+
+To run the full stack (Frontend, Backend, Database) with a single command:
 
 ```bash
-bun install --frozen-lockfile
+# 1. Setup environment variables
+cp example.env .env
+
+# 2. Start the application
+docker compose up -d --build
 ```
 
-### Development
+The application will be available at [http://localhost:8765](http://localhost:8765).
+
+### 🛠️ Local Development
+
+If you prefer to run services manually:
 
 ```bash
-# Start the database
-docker-compose -f docker-compose.dev.yml up -d
+# 1. Install dependencies
+bun install
 
-# Start both frontend and backend
+# 2. Start the database
+docker compose up -d db
+
+# 3. Start both frontend and backend
 bun run dev
 ```
 
-### Database Management
+### 🗄️ Database Management
 
 ```bash
 cd apps/backend
-bun run db:generate  # Generate migrations
-bun run db:push      # Push schema to DB
+bun run db:generate  # Generate migration files
+bun run db:migrate   # Apply migrations to the database
 ```
 
 ## 📜 License

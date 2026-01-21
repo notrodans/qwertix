@@ -9,5 +9,5 @@
 		}
 	},
 	"include": ["src", "**/*.spec.ts"],
-	"exclude": ["dist"]
+	"exclude": ["dist", "node_modules"]
 }

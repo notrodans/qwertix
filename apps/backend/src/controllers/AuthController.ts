@@ -22,7 +22,7 @@ export class AuthController {
 			'local',
 			new LocalStrategy(
 				{ usernameField: 'email' },
-				async (email, password, done) => {
+				async (email: string, password: string, done) => {
 					const user = await this.authService.validateLocalUser(
 						email,
 						password,
