@@ -3,8 +3,15 @@ import { sql } from 'drizzle-orm';
 
 export async function setup() {
 	// Ensure test environment variables are set
+	process.env.PORT = process.env.PORT || '3000';
+	process.env.DB_HOST = process.env.DB_HOST || 'localhost';
 	process.env.DB_PORT = '5433';
+	process.env.DB_USER = process.env.DB_USER || 'postgres';
+	process.env.DB_PASSWORD = process.env.DB_PASSWORD || 'postgres';
 	process.env.DB_NAME = 'qwertix_test';
+	process.env.JWT_SECRET = process.env.JWT_SECRET || 'test_secret';
+	process.env.RESULT_HASH_SALT = process.env.RESULT_HASH_SALT || 'test_salt';
+	process.env.NODE_ENV = 'test';
 
 	try {
 		// Dynamic import to ensure process.env is set
