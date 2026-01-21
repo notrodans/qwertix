@@ -21,6 +21,12 @@ RUN bun install
 
 # 3. Builder - Builds the specific app
 FROM deps AS builder
+ARG VITE_API_URL
+ARG VITE_WS_URL
+ARG VITE_RESULT_HASH_SALT
+ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_WS_URL=$VITE_WS_URL
+ENV VITE_RESULT_HASH_SALT=$VITE_RESULT_HASH_SALT
 # Copy source code
 COPY . .
 # Build all apps
@@ -28,6 +34,7 @@ RUN  bun run build
 
 # 4. Backend Runtime
 FROM base AS backend
+ENV NODE_ENV=production
 # Copy workspace definitions
 COPY package.json bun.lock ./
 COPY apps/frontend/package.json ./apps/frontend/
@@ -36,7 +43,7 @@ COPY libs/room-contracts/package.json ./libs/room-contracts/
 COPY libs/tsconfig/package.json ./libs/tsconfig/
 
 # Install production dependencies (including native modules)
-RUN rm bun.lock && bun install --production
+RUN bun install --production
 
 # Copy libs source (needed for workspace links)
 COPY --from=builder /usr/src/app/libs ./libs
@@ -50,7 +57,6 @@ COPY --from=builder /usr/src/app/apps/backend/drizzle.config.ts ./apps/backend/d
 
 WORKDIR /usr/src/app/apps/backend
 
-ENV NODE_ENV=production
 CMD ["bun", "run", "start"]
 
 # 5. Frontend Runtime

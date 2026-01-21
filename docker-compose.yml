@@ -15,6 +15,13 @@ services:
       timeout: 5s
       retries: 5
 
+  adminer:
+    image: adminer
+    container_name: qwertix-adminer
+    restart: always
+    ports:
+      - 8080:8080
+
   migrate:
     build:
       context: .
@@ -24,11 +31,14 @@ services:
       db:
         condition: service_healthy
     environment:
+      PORT: ${PORT:-8764}
       DB_USER: ${DB_USER:-postgres}
       DB_PASSWORD: ${DB_PASSWORD:-postgres}
       DB_NAME: ${DB_NAME:-qwertix}
       DB_HOST: db
-      DB_PORT: 5432
+      DB_PORT: ${DB_PORT:-8763}
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      RESULT_HASH_SALT: ${RESULT_HASH_SALT:-change-me-in-production}
       NODE_ENV: production
     command: ["bun", "run", "db:migrate"]
 
@@ -42,13 +52,15 @@ services:
       migrate:
         condition: service_completed_successfully
     environment:
-      PORT: 3000
+      PORT: ${PORT:-8764}
       DB_USER: ${DB_USER:-postgres}
       DB_PASSWORD: ${DB_PASSWORD:-postgres}
       DB_NAME: ${DB_NAME:-qwertix}
       DB_HOST: db
-      DB_PORT: 5432
+      DB_PORT: ${DB_PORT:-8763}
       JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      RESULT_HASH_SALT: ${RESULT_HASH_SALT:-change-me-in-production}
+      NODE_ENV: production
     ports:
       - "8764:8764"
 
@@ -57,7 +69,10 @@ services:
       context: .
       target: frontend
       args:
-        APP: frontend
+        - APP=frontend
+        - VITE_API_URL=${VITE_API_URL:-http://localhost:8764}
+        - VITE_WS_URL=${VITE_WS_URL:-ws://localhost:8764}
+        - VITE_RESULT_HASH_SALT=${RESULT_HASH_SALT:-change-me-in-production}
     container_name: qwertix-frontend
     restart: always
     depends_on:
