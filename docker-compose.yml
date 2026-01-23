@@ -79,7 +79,7 @@ services:
         condition: on-failure
 
   migrate:
-    image: wartype-backend:latest
+    image: qwertix-backend:latest
     build:
       context: .
       dockerfile: apps/backend/Dockerfile
@@ -105,7 +105,7 @@ services:
         max_attempts: 3
 
   backend:
-    image: wartype-backend:latest
+    image: qwertix-backend:latest
     build:
       context: .
       dockerfile: apps/backend/Dockerfile
@@ -148,7 +148,7 @@ services:
         - "traefik.docker.network=traefik-public"
 
   frontend:
-    image: wartype-frontend:latest
+    image: qwertix-frontend:latest
     build:
       context: .
       dockerfile: apps/frontend/Dockerfile

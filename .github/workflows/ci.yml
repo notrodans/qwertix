@@ -68,12 +68,9 @@ jobs:
       - run: bun install
       - run: bun run --filter backend test:e2e
         env:
-          DB_HOST: localhost
-          DB_PORT: 5433
-          DB_USER: postgres
-          DB_PASSWORD: password
-          DB_NAME: qwertix_test
+          DATABASE_URL: postgresql://postgres:password@localhost:5433/qwertix_test
           JWT_SECRET: test-secret
+          RESULT_HASH_SALT: test-salt
 
   build:
     name: Build Apps

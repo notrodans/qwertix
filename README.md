@@ -14,8 +14,9 @@ A multiplayer typing competition platform built with real-time features.
 ## 🛠 Tech Stack
 
 - **Monorepo:** Bun Workspaces
-- **Frontend:** React, Vite (8.0 Beta), Reatom (v1000 - State, Routing, Forms), Zod, ESLint (FSD boundaries)
-- **Backend:** Node.js, Fastify, WebSockets (`ws`), PostgreSQL + Drizzle ORM, `tsc`
+- **Frontend:** React, Vite, Reatom (v1000), Zod, ESLint (FSD boundaries), Nginx
+- **Backend:** Node.js, Fastify, WebSockets (`ws`), PostgreSQL + Drizzle ORM
+- **Infrastructure:** Docker Swarm, Traefik, Doppler (Secrets), Adminer
 - **Tooling:** Biome (Linting & Formatting), Vitest (Unit/E2E), Playwright (Integration)
 
 ## 📦 Project Structure
@@ -36,34 +37,61 @@ A multiplayer typing competition platform built with real-time features.
 - [Bun](https://bun.sh) (v1.1+)
 - [Docker](https://www.docker.com/) & [Docker Compose](https://docs.docker.com/compose/)
 
-### 🐳 Deployment (Recommended)
+### 🐳 Deployment (Production / Swarm)
 
-To run the full stack (Frontend, Backend, Database) with a single command:
+This project uses **Docker Swarm** for production-like deployment with Traefik as a reverse proxy.
 
-```bash
-# 1. Setup environment variables
-cp example.env .env
+For detailed instructions, see [PRODUCTION.md](PRODUCTION.md).
 
-# 2. Start the application
-docker compose up -d --build
-```
+**Quick Start (Local Swarm):**
 
-The application will be available at [http://localhost:8765](http://localhost:8765).
+1.  Initialize Swarm:
+    ```bash
+    docker swarm init
+    ```
 
-### 🛠️ Local Development
+2.  Create secrets (dev values):
+    ```bash
+    echo "postgres" | docker secret create db_user -
+    echo "postgres" | docker secret create db_password -
+    echo "qwertix" | docker secret create db_name -
+    echo "supersecret" | docker secret create jwt_secret -
+    echo "default_salt" | docker secret create result_hash_salt -
+    echo "" | docker secret create doppler_token -
+    ```
 
-If you prefer to run services manually:
+3.  Build & Deploy:
+    ```bash
+    # Build images
+    docker compose build
+
+    # Deploy stack
+    docker stack deploy -c docker-compose.yml qwertix
+    ```
+
+The application will be available at [http://localhost:3006](http://localhost:3006).
+
+### 🛠️ Local Development (No Swarm)
+
+For rapid development, use the dev-specific compose file and run apps locally.
 
 ```bash
 # 1. Install dependencies
 bun install
 
-# 2. Start the database
-docker compose up -d db
+# 2. Setup environment variables
+cp example.env .env
 
-# 3. Start both frontend and backend
+# 3. Start the dev services using dev config
+docker compose -f docker-compose.dev.yml up -d
+
+# 4. Start both frontend and backend
 bun run dev
 ```
+
+*   **Frontend**: http://localhost:3006
+*   **Backend API**: http://localhost:3009
+*   **Adminer**: http://localhost:8081
 
 ### 🗄️ Database Management
 

@@ -1,6 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const baseURL = process.env.SITE_BASE_URL || 'http://localhost:5173';
+const baseURL = process.env.SITE_BASE_URL || 'http://localhost:3006';
 
 export default defineConfig({
 	testDir: './e2e',
@@ -26,8 +26,8 @@ export default defineConfig({
 		stdout: 'ignore',
 		stderr: 'pipe',
 		env: {
-			VITE_API_URL: 'http://localhost:3000',
-			VITE_WS_URL: 'ws://localhost:3000',
+			VITE_API_URL: 'http://localhost:3009',
+			VITE_WS_URL: 'ws://localhost:3009',
 			VITE_RESULT_HASH_SALT: 'test_salt',
 		},
 	},
