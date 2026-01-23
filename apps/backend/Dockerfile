@@ -29,7 +29,7 @@ COPY apps/backend/package.json ./apps/backend/
 COPY apps/frontend/package.json ./apps/frontend/
 COPY libs/room-contracts/package.json ./libs/room-contracts/
 COPY libs/tsconfig/package.json ./libs/tsconfig/
-RUN bun install --production
+RUN bun install --production --ignore-scripts
 
 COPY --from=builder /usr/src/app/apps/backend/dist ./apps/backend/dist
 COPY --from=builder /usr/src/app/libs ./libs

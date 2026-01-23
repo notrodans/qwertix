@@ -62,9 +62,6 @@ services:
         limits:
           cpus: "1.0"
           memory: 1G
-      placement:
-        constraints:
-          - node.labels.databases == true
 
   adminer:
     image: adminer
@@ -90,6 +87,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3009
+      DB_HOST: qwertix_db
       DATABASE_URL: ${DATABASE_URL}
     secrets:
       - db_user
@@ -115,6 +113,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3009
+      DB_HOST: qwertix_db
       DATABASE_URL: ${DATABASE_URL}
     secrets:
       - db_user
@@ -185,8 +184,10 @@ volumes:
 networks:
   traefik-public:
     driver: overlay
+    attachable: true
   internal:
     driver: overlay
+    attachable: true
 
 secrets:
   db_user:
