@@ -14,14 +14,18 @@ export default defineConfig(({ mode }) => {
 		envDir: path.resolve(__dirname, '../../'),
 		server: {
 			host: '0.0.0.0',
+			port: 3006,
 			proxy: {
 				'/api': {
-					target: env.VITE_API_URL,
+					target: env.VITE_API_URL || 'http://localhost:3009',
 					changeOrigin: true,
 					rewrite: (path) => path.replace(/^\/api/, ''),
 				},
 			},
 		},
+		preview: {
+			host: '0.0.0.0',
+			port: 3006,
+		},
 	};
 });
-

@@ -4,19 +4,33 @@ services:
     container_name: qwertix-traefik
     command:
       - "--api.insecure=true"
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
+      - "--providers.swarm=true"
+      - "--providers.swarm.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
+      - "--accesslog=true"
     ports:
-      - "8765:80"
-      - "8080:8080"
+      - target: 80
+        published: 3006
+        mode: host
+      - target: 8080
+        published: 8080
+        mode: host
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - traefik-public
+      - internal
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
 
   db:
     image: postgres:16
-    container_name: qwertix-db
-    restart: always
     environment:
       POSTGRES_USER_FILE: /run/secrets/db_user
       POSTGRES_PASSWORD_FILE: /run/secrets/db_password
@@ -33,94 +47,157 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - internal
     ports:
-      - 8763:8763
+      - "8763:8763"
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: any
+        delay: 30s
+        max_attempts: 30
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+      placement:
+        constraints:
+          - node.labels.databases == true
 
   adminer:
     image: adminer
-    container_name: qwertix-adminer
-    restart: always
+    networks:
+      - internal
+      - traefik-public
     ports:
-      - 8081:8080 # Changed to 8081 to avoid conflict with Traefik dashboard
+      - "8081:8080"
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
 
   migrate:
+    image: wartype-backend:latest
     build:
       context: .
       dockerfile: apps/backend/Dockerfile
-    container_name: qwertix-migrate
     depends_on:
-      db:
-        condition: service_healthy
+      - db
+    networks:
+      - internal
     environment:
       NODE_ENV: production
-      PORT: 8764
-      DB_HOST: db
-      DB_PORT: 8763
+      PORT: 3009
+      DATABASE_URL: ${DATABASE_URL}
     secrets:
       - db_user
       - db_password
       - db_name
       - jwt_secret
       - result_hash_salt
+      - doppler_token
     command: ["bun", "run", "db:migrate"]
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
 
   backend:
+    image: wartype-backend:latest
     build:
       context: .
       dockerfile: apps/backend/Dockerfile
-    container_name: qwertix-backend
-    restart: always
-    depends_on:
-      migrate:
-        condition: service_completed_successfully
+    networks:
+      - internal
+      - traefik-public
     environment:
       NODE_ENV: production
-      PORT: 8764
-      DB_HOST: db
-      DB_PORT: 8763
+      PORT: 3009
+      DATABASE_URL: ${DATABASE_URL}
     secrets:
       - db_user
       - db_password
       - db_name
       - jwt_secret
       - result_hash_salt
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=PathPrefix(`/api`)"
-      - "traefik.http.routers.backend.entrypoints=web"
-      - "traefik.http.services.backend.loadbalancer.server.port=8764"
-      - "traefik.http.middlewares.backend-strip.stripprefix.prefixes=/api"
-      - "traefik.http.routers.backend.middlewares=backend-strip"
+      - doppler_token
+    deploy:
+      mode: replicated
+      replicas: 2
+      update_config:
+        parallelism: 1
+        order: start-first
+      restart_policy:
+        condition: any
+        delay: 10s
+        max_attempts: 30
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.backend.priority=100"
+        - "traefik.http.routers.backend.rule=PathPrefix(`/api`)"
+        - "traefik.http.routers.backend.entrypoints=web"
+        - "traefik.http.services.backend.loadbalancer.server.port=3009"
+        - "traefik.http.middlewares.backend-strip.stripprefix.prefixes=/api"
+        - "traefik.http.routers.backend.middlewares=backend-strip"
+        - "traefik.docker.network=traefik-public"
 
   frontend:
+    image: wartype-frontend:latest
     build:
       context: .
       dockerfile: apps/frontend/Dockerfile
       args:
-        - VITE_API_URL=${VITE_API_URL:-http://localhost:8765/api}
-        - VITE_WS_URL=${VITE_WS_URL:-ws://localhost:8765/api}
+        - VITE_API_URL=http://localhost:3006/api
+        - VITE_WS_URL=ws://localhost:3006/api
         - VITE_RESULT_HASH_SALT=${RESULT_HASH_SALT:-hash}
-    container_name: qwertix-frontend
-    restart: always
-    depends_on:
-      - backend
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
-      - "traefik.http.routers.frontend.entrypoints=web"
-      - "traefik.http.services.frontend.loadbalancer.server.port=80"
+    networks:
+      - traefik-public
+    deploy:
+      mode: replicated
+      replicas: 2
+      update_config:
+        parallelism: 1
+        order: start-first
+      restart_policy:
+        condition: any
+        delay: 10s
+        max_attempts: 30
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.frontend.rule=PathPrefix(`/`) || HostRegexp(`{host:.+}`)"
+        - "traefik.http.routers.frontend.entrypoints=web"
+        - "traefik.http.services.frontend.loadbalancer.server.port=80"
+        - "traefik.docker.network=traefik-public"
 
 volumes:
   qwertix_data:
 
+networks:
+  traefik-public:
+    driver: overlay
+  internal:
+    driver: overlay
+
 secrets:
   db_user:
-    file: ./secrets/db_user
+    external: true
   db_password:
-    file: ./secrets/db_password
+    external: true
   db_name:
-    file: ./secrets/db_name
+    external: true
   jwt_secret:
-    file: ./secrets/jwt_secret
+    external: true
   result_hash_salt:
-    file: ./secrets/result_hash_salt
+    external: true
+  doppler_token:
+    external: true

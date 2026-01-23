@@ -3,14 +3,14 @@ services:
     image: postgres:16
     container_name: qwertix-db-dev
     environment:
-      POSTGRES_USER: ${DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
-      POSTGRES_DB: ${DB_NAME:-qwertix}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: qwertix
       PGPORT: 8763
     volumes:
       - qwertix_db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -p 8763 -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-qwertix}"]
+      test: ["CMD-SHELL", "pg_isready -p 8763 -U postgres -d qwertix"]
       interval: 5s
       timeout: 5s
       retries: 5

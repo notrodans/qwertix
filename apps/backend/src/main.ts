@@ -3,10 +3,9 @@ import { env } from './env';
 
 const start = async () => {
 	try {
-		await app.listen({ port: env.PORT, host: '0.0.0.0' });
-		console.log(
-			`Server is running on port ${env.PORT} in ${env.NODE_ENV} mode`,
-		);
+		const port = 3009;
+		await app.listen({ port, host: '0.0.0.0' });
+		console.log(`Server is running on port ${port} in ${env.NODE_ENV} mode`);
 		console.log(`WebSocket server is ready`);
 	} catch (err) {
 		console.error(err);
@@ -15,3 +14,4 @@ const start = async () => {
 };
 
 start();
+
