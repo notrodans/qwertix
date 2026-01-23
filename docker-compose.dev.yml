@@ -2,19 +2,27 @@ services:
   db:
     image: postgres:16
     container_name: qwertix-db-dev
-    ports:
-      - "5432:5432"
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: qwertix
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-qwertix}
+      PGPORT: 8763
     volumes:
       - qwertix_db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d qwertix"]
+      test: ["CMD-SHELL", "pg_isready -p 8763 -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-qwertix}"]
       interval: 5s
       timeout: 5s
       retries: 5
+    ports:
+      - "8763:8763"
+
+  adminer:
+    image: adminer
+    container_name: qwertix-adminer-dev
+    restart: always
+    ports:
+      - 8081:8080
 
 volumes:
   qwertix_db_data:

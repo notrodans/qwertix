@@ -1,11 +1,6 @@
 import { createEnv } from '@t3-oss/env-core';
-import { config } from 'dotenv';
-import path from 'path';
 import { z } from 'zod';
-
-config({
-	path: path.resolve(__dirname, '../../../.env'),
-});
+import { getEnv } from './utils/get-env';
 
 export const env = createEnv({
 	server: {
@@ -21,6 +16,16 @@ export const env = createEnv({
 		JWT_SECRET: z.string(),
 		RESULT_HASH_SALT: z.string(),
 	},
-	runtimeEnv: process.env,
+	runtimeEnv: {
+		NODE_ENV: getEnv('NODE_ENV'),
+		PORT: getEnv('PORT'),
+		DB_HOST: getEnv('DB_HOST'),
+		DB_PORT: getEnv('DB_PORT'),
+		DB_USER: getEnv('DB_USER'),
+		DB_PASSWORD: getEnv('DB_PASSWORD'),
+		DB_NAME: getEnv('DB_NAME'),
+		JWT_SECRET: getEnv('JWT_SECRET'),
+		RESULT_HASH_SALT: getEnv('RESULT_HASH_SALT'),
+	},
 	emptyStringAsUndefined: true,
 });

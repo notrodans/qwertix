@@ -1,84 +1,126 @@
 services:
+  traefik:
+    image: traefik:latest
+    container_name: qwertix-traefik
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "8765:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
   db:
     image: postgres:16
     container_name: qwertix-db
     restart: always
     environment:
-      POSTGRES_USER: ${DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
-      POSTGRES_DB: ${DB_NAME:-qwertix}
+      POSTGRES_USER_FILE: /run/secrets/db_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+      POSTGRES_DB_FILE: /run/secrets/db_name
+      PGPORT: 8763
+    secrets:
+      - db_user
+      - db_password
+      - db_name
     volumes:
       - qwertix_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -p 8763 -U $$(cat /run/secrets/db_user) -d $$(cat /run/secrets/db_name)"]
       interval: 5s
       timeout: 5s
       retries: 5
+    ports:
+      - 8763:8763
 
   adminer:
     image: adminer
     container_name: qwertix-adminer
     restart: always
     ports:
-      - 8080:8080
+      - 8081:8080 # Changed to 8081 to avoid conflict with Traefik dashboard
 
   migrate:
     build:
       context: .
-      target: backend
+      dockerfile: apps/backend/Dockerfile
     container_name: qwertix-migrate
     depends_on:
       db:
         condition: service_healthy
     environment:
-      PORT: ${PORT:-8764}
-      DB_USER: ${DB_USER:-postgres}
-      DB_PASSWORD: ${DB_PASSWORD:-postgres}
-      DB_NAME: ${DB_NAME:-qwertix}
-      DB_HOST: db
-      DB_PORT: ${DB_PORT:-8763}
-      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
-      RESULT_HASH_SALT: ${RESULT_HASH_SALT:-change-me-in-production}
       NODE_ENV: production
+      PORT: 8764
+      DB_HOST: db
+      DB_PORT: 8763
+    secrets:
+      - db_user
+      - db_password
+      - db_name
+      - jwt_secret
+      - result_hash_salt
     command: ["bun", "run", "db:migrate"]
 
   backend:
     build:
       context: .
-      target: backend
+      dockerfile: apps/backend/Dockerfile
     container_name: qwertix-backend
     restart: always
     depends_on:
       migrate:
         condition: service_completed_successfully
     environment:
-      PORT: ${PORT:-8764}
-      DB_USER: ${DB_USER:-postgres}
-      DB_PASSWORD: ${DB_PASSWORD:-postgres}
-      DB_NAME: ${DB_NAME:-qwertix}
-      DB_HOST: db
-      DB_PORT: ${DB_PORT:-8763}
-      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
-      RESULT_HASH_SALT: ${RESULT_HASH_SALT:-change-me-in-production}
       NODE_ENV: production
-    ports:
-      - "8764:8764"
+      PORT: 8764
+      DB_HOST: db
+      DB_PORT: 8763
+    secrets:
+      - db_user
+      - db_password
+      - db_name
+      - jwt_secret
+      - result_hash_salt
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=PathPrefix(`/api`)"
+      - "traefik.http.routers.backend.entrypoints=web"
+      - "traefik.http.services.backend.loadbalancer.server.port=8764"
+      - "traefik.http.middlewares.backend-strip.stripprefix.prefixes=/api"
+      - "traefik.http.routers.backend.middlewares=backend-strip"
 
   frontend:
     build:
       context: .
-      target: frontend
+      dockerfile: apps/frontend/Dockerfile
       args:
-        - APP=frontend
-        - VITE_API_URL=${VITE_API_URL:-http://localhost:8764}
-        - VITE_WS_URL=${VITE_WS_URL:-ws://localhost:8764}
-        - VITE_RESULT_HASH_SALT=${RESULT_HASH_SALT:-change-me-in-production}
+        - VITE_API_URL=${VITE_API_URL:-http://localhost:8765/api}
+        - VITE_WS_URL=${VITE_WS_URL:-ws://localhost:8765/api}
+        - VITE_RESULT_HASH_SALT=${RESULT_HASH_SALT:-hash}
     container_name: qwertix-frontend
     restart: always
     depends_on:
       - backend
-    ports:
-      - "8765:80"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.frontend.entrypoints=web"
+      - "traefik.http.services.frontend.loadbalancer.server.port=80"
 
 volumes:
   qwertix_data:
+
+secrets:
+  db_user:
+    file: ./secrets/db_user
+  db_password:
+    file: ./secrets/db_password
+  db_name:
+    file: ./secrets/db_name
+  jwt_secret:
+    file: ./secrets/jwt_secret
+  result_hash_salt:
+    file: ./secrets/result_hash_salt
