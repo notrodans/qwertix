@@ -38,7 +38,7 @@ jobs:
         with:
           bun-version: latest
       - run: bun install
-      - run: bun run playwright install --with-deps chromium
+      - run: bun run --filter frontend playwright install --with-deps chromium
       - run: bun run --filter frontend test:e2e
         env:
           CI: true
