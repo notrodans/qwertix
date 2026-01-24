@@ -6,16 +6,16 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: qwertix
-      PGPORT: 8763
+      PGPORT: 54321
     volumes:
       - qwertix_db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -p 8763 -U postgres -d qwertix"]
+      test: ["CMD-SHELL", "pg_isready -p 54321 -U postgres -d qwertix"]
       interval: 5s
       timeout: 5s
       retries: 5
     ports:
-      - "8763:8763"
+      - "54321:54321"
 
   adminer:
     image: adminer

@@ -8,7 +8,6 @@ export const tokenAtom = atom<string | null>(null, 'session.token').extend(
 export const userAtom = atom<User | null>(null, 'session.user').extend(
 	withLocalStorage('session.user'),
 );
-
 export const isAuthenticatedAtom = computed(
 	() => !!tokenAtom(),
 	'session.isAuthenticated',
