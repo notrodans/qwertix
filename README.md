@@ -41,9 +41,9 @@ A multiplayer typing competition platform built with real-time features.
 
 This project uses **Docker Swarm** for production-like deployment with Traefik as a reverse proxy.
 
-For detailed instructions, see [PRODUCTION.md](PRODUCTION.md).
+For detailed instructions on Public vs Local deployment, see [PRODUCTION.md](PRODUCTION.md).
 
-**Quick Start (Local Swarm):**
+**Quick Start (Local Swarm with Auto-SSL):**
 
 1.  Initialize Swarm:
     ```bash
@@ -65,11 +65,13 @@ For detailed instructions, see [PRODUCTION.md](PRODUCTION.md).
     # Build images
     docker compose build
 
-    # Deploy stack
-    docker stack deploy -c docker-compose.yml qwertix
+    # Deploy stack using the LOCAL config
+    docker stack deploy -c docker-compose.stack.local.yml qwertix
     ```
 
-The application will be available at [http://localhost:3006](http://localhost:3006).
+The application will be available at:
+*   **HTTP**: [http://localhost:3006](http://localhost:3006)
+*   **HTTPS**: [https://localhost:3443](https://localhost:3443) (Self-signed)
 
 ### 🛠️ Local Development (No Swarm)
 

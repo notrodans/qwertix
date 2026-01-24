@@ -2,6 +2,10 @@
 
 This guide describes how to deploy **Qwertix** to a production environment using **Docker Swarm**.
 
+We provide two configurations:
+1.  **Local Swarm / Private Network**: With auto-generated self-signed SSL certificates and custom ports (3006/3443).
+2.  **Public Production (Cloudflare)**: With standard ports (80/443) designed to sit behind a proxy like Cloudflare (Full SSL).
+
 ## Prerequisites
 
 1.  **Docker Engine** (v24+) installed and running.
@@ -11,19 +15,18 @@ This guide describes how to deploy **Qwertix** to a production environment using
 ## Architecture
 
 The production stack consists of:
-*   **Traefik**: Reverse proxy and load balancer (listening on port 80/443, mapped to 3006 for this setup).
+*   **Traefik**: Reverse proxy and load balancer.
 *   **Postgres**: Database (v16).
 *   **Backend**: Node.js API (Fastify) running in replicas.
 *   **Frontend**: Nginx serving the SPA running in replicas.
+*   **Cert Init** (Local only): Ephemeral container to generate self-signed certificates.
 *   **Adminer**: Database management tool.
 
 ## 1. Secrets Management
 
 We use **Docker Secrets** to securely pass sensitive data to containers. Before deploying, you must create these secrets in your Swarm cluster.
 
-You can create secrets manually or use Doppler to inject them.
-
-### Option A: Manual Creation
+### Manual Creation
 
 Run the following commands on your Swarm manager node:
 
@@ -43,47 +46,42 @@ echo "your_random_salt_string" | docker secret create result_hash_salt -
 echo "" | docker secret create doppler_token - 
 ```
 
-### Option B: Using Doppler (Advanced)
+## 2. Choose Your Configuration
 
-If you have Doppler CLI installed and configured:
+### Scenario A: Local Swarm / Private Network
+Use `docker-compose.stack.local.yml`.
+*   **Ports**: HTTP on `3006`, HTTPS on `3443`.
+*   **SSL**: Automatically generates self-signed certificates for `localhost`, `127.0.0.1`, and `0.0.0.0`.
+*   **Use case**: Testing production build locally, accessing from mobile devices in LAN via IP.
 
-```bash
-doppler secrets download --no-file --format docker >> .env
-# Then use the env vars to create secrets (scripting required)
-```
-
-## 2. Configuration
-
-The main `docker-compose.yml` file is designed for production usage.
-
-*   **Ports**:
-    *   Frontend/Entrypoint (Traefik): `3006` (Mapped to container port 80).
-    *   Database: `8763` (Mapped to 8763).
-    *   Adminer: `8081`.
-*   **Scaling**: Backend and Frontend are configured with 2 replicas by default.
+### Scenario B: Public Production (e.g., Cloudflare)
+Use `docker-compose.stack.yml`.
+*   **Ports**: Standard HTTP (`80`) and HTTPS (`443`).
+*   **SSL**: Expects external SSL termination or valid certificates provided manually (Cloudflare Origin CA).
+*   **Use case**: VPS deployment behind Cloudflare Proxy or Tunnel.
 
 ## 3. Build Images
 
 Before deploying to a Swarm cluster (especially if multi-node), images must be available in a registry or built locally on all nodes.
 
-To build locally:
-
 ```bash
 docker compose build
+# Or push to registry
+# docker compose push
 ```
-
-To push to a registry (required for multi-node swarm):
-
-1.  Tag images with your registry prefix (e.g., `registry.example.com/qwertix-backend`).
-2.  Update `docker-compose.yml` `image` fields.
-3.  `docker compose push`.
 
 ## 4. Deploy
 
-Deploy the stack to the Swarm:
+### For Local Swarm (Auto SSL):
 
 ```bash
-docker stack deploy -c docker-compose.yml qwertix
+docker stack deploy -c docker-compose.stack.local.yml qwertix
+```
+
+### For Public Production:
+
+```bash
+docker stack deploy -c docker-compose.stack.yml qwertix
 ```
 
 ## 5. Verification
@@ -96,21 +94,21 @@ docker stack ps qwertix
 ```
 
 Access the application:
-*   **App**: http://localhost:3006
-*   **API**: http://localhost:3006/api/health
-*   **Traefik Dashboard**: http://localhost:8080 (if port exposed)
-*   **Adminer**: http://localhost:8081
+
+**Local Stack:**
+*   **HTTP**: `http://<IP>:3006` (e.g., http://localhost:3006 or http://192.168.1.5:3006)
+*   **HTTPS**: `https://<IP>:3443` (accept the "Not Secure" warning for self-signed certs)
+*   **Adminer**: `http://<IP>:8081`
+
+**Public Stack:**
+*   **Web**: `http(s)://your-domain.com` (Ports 80/443)
 
 ## 6. Updates (Zero Downtime)
 
 To update the application:
 
 1.  Pull or rebuild new images.
-2.  Run the deploy command again:
-
-```bash
-docker stack deploy -c docker-compose.yml qwertix
-```
+2.  Run the deploy command again with the same compose file.
 
 Docker Swarm will perform a rolling update (start new container -> wait for healthcheck -> stop old container).
 
@@ -120,7 +118,11 @@ Docker Swarm will perform a rolling update (start new container -> wait for heal
 ```bash
 docker service logs -f qwertix_backend
 docker service logs -f qwertix_frontend
+docker service logs -f qwertix_traefik
 ```
 
-**Database Connection:**
-If services fail to connect to DB, ensure the `db_password` secret matches what Postgres expects (Postgres uses the secret to Initialize the DB on first run). If you change the password secret later, you must update the running DB user manually via SQL.
+**DNS Issues in Swarm:**
+We use `qwertix_db` as the hostname. Ensure overlay networks are working correctly.
+
+**HTTPS Warning:**
+On the local stack, it is normal to see "Not Secure" because the certificate is self-signed. You can import the certificate from the `qwertix_traefik` container to your trusted root if needed.

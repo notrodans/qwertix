@@ -1,0 +1,250 @@
+services:
+  traefik:
+    image: traefik:latest
+    container_name: qwertix-traefik
+    command:
+      - "--api.insecure=true"
+      - "--providers.swarm=true"
+      - "--providers.swarm.exposedbydefault=false"
+      - "--providers.file.filename=/etc/traefik/dynamic.yml"
+      - "--providers.file.watch=true"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--accesslog=true"
+    ports:
+      - target: 80
+        published: 3006
+        mode: host
+      - target: 443
+        published: 3443
+        mode: host
+      - target: 8080
+        published: 8080
+        mode: host
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - certs:/certs
+    configs:
+      - source: traefik_dynamic
+        target: /etc/traefik/dynamic.yml
+    networks:
+      - traefik-public
+      - internal
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+
+  cert-init:
+    image: alpine:latest
+    command: >
+      sh -c "apk add --no-cache openssl &&
+      if [ ! -f /certs/local.crt ]; then
+        openssl req -new -newkey rsa:4096 -days 365 -nodes -x509 -subj '/CN=qwertix-local' -addext 'subjectAltName=DNS:localhost,DNS:*.localhost,IP:127.0.0.1,IP:0.0.0.0' -keyout /certs/local.key -out /certs/local.crt;
+        chmod 644 /certs/local.key;
+        echo 'Certificates generated';
+      else
+        echo 'Certificates exist';
+      fi"
+    volumes:
+      - certs:/certs
+    deploy:
+      restart_policy:
+        condition: on-failure
+
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER_FILE: /run/secrets/db_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+      POSTGRES_DB_FILE: /run/secrets/db_name
+      PGPORT: 8763
+    secrets:
+      - db_user
+      - db_password
+      - db_name
+    volumes:
+      - qwertix_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -p 8763 -U $$(cat /run/secrets/db_user) -d $$(cat /run/secrets/db_name)"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal
+    ports:
+      - "8763:8763"
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: any
+        delay: 30s
+        max_attempts: 30
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+
+  adminer:
+    image: adminer
+    networks:
+      - internal
+      - traefik-public
+    ports:
+      - "8081:8080"
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  migrate:
+    image: qwertix-backend:latest
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+    depends_on:
+      - db
+    networks:
+      - internal
+    environment:
+      NODE_ENV: production
+      PORT: 3009
+      DB_HOST: qwertix_db
+      DATABASE_URL: ${DATABASE_URL}
+    secrets:
+      - db_user
+      - db_password
+      - db_name
+      - jwt_secret
+      - result_hash_salt
+      - doppler_token
+    command: ["bun", "run", "db:migrate"]
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+
+  backend:
+    image: qwertix-backend:latest
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+    networks:
+      - internal
+      - traefik-public
+    environment:
+      NODE_ENV: production
+      PORT: 3009
+      DB_HOST: qwertix_db
+      DATABASE_URL: ${DATABASE_URL}
+    secrets:
+      - db_user
+      - db_password
+      - db_name
+      - jwt_secret
+      - result_hash_salt
+      - doppler_token
+    deploy:
+      mode: replicated
+      replicas: 2
+      update_config:
+        parallelism: 1
+        order: start-first
+      restart_policy:
+        condition: any
+        delay: 10s
+        max_attempts: 30
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+      labels:
+        - "traefik.enable=true"
+        # HTTP Router
+        - "traefik.http.routers.backend.entrypoints=web"
+        - "traefik.http.routers.backend.rule=PathPrefix(`/api`)"
+        - "traefik.http.routers.backend.priority=100"
+        - "traefik.http.routers.backend.middlewares=backend-strip"
+        # HTTPS Router
+        - "traefik.http.routers.backend-secure.entrypoints=websecure"
+        - "traefik.http.routers.backend-secure.rule=PathPrefix(`/api`)"
+        - "traefik.http.routers.backend-secure.priority=100"
+        - "traefik.http.routers.backend-secure.tls=true"
+        - "traefik.http.routers.backend-secure.middlewares=backend-strip"
+        # Services & Middlewares
+        - "traefik.http.services.backend.loadbalancer.server.port=3009"
+        - "traefik.http.middlewares.backend-strip.stripprefix.prefixes=/api"
+        - "traefik.docker.network=qwertix_traefik-public"
+
+  frontend:
+    image: qwertix-frontend:latest
+    build:
+      context: .
+      dockerfile: apps/frontend/Dockerfile
+      args:
+        - VITE_API_URL=/api
+        - VITE_WS_URL=/api
+        - VITE_RESULT_HASH_SALT=${RESULT_HASH_SALT:-hash}
+    networks:
+      - traefik-public
+    deploy:
+      mode: replicated
+      replicas: 2
+      update_config:
+        parallelism: 1
+        order: start-first
+      restart_policy:
+        condition: any
+        delay: 10s
+        max_attempts: 30
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+      labels:
+        - "traefik.enable=true"
+        # HTTP Router
+        - "traefik.http.routers.frontend.entrypoints=web"
+        - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
+        # HTTPS Router
+        - "traefik.http.routers.frontend-secure.entrypoints=websecure"
+        - "traefik.http.routers.frontend-secure.rule=PathPrefix(`/`)"
+        - "traefik.http.routers.frontend-secure.tls=true"
+        # Services
+        - "traefik.http.services.frontend.loadbalancer.server.port=80"
+        - "traefik.docker.network=qwertix_traefik-public"
+
+volumes:
+  qwertix_data:
+  certs:
+
+networks:
+  traefik-public:
+    driver: overlay
+    attachable: true
+  internal:
+    driver: overlay
+    attachable: true
+
+secrets:
+  db_user:
+    external: true
+  db_password:
+    external: true
+  db_name:
+    external: true
+  jwt_secret:
+    external: true
+  result_hash_salt:
+    external: true
+  doppler_token:
+    external: true
+
+configs:
+  traefik_dynamic:
+    file: ./traefik_dynamic.yml

@@ -9,6 +9,11 @@ export default defineConfig(({ mode }) => {
 	// Load env file from the root directory
 	const env = loadEnv(mode, path.resolve(__dirname, '../../'), '');
 
+	const apiTarget =
+		env.VITE_API_URL && env.VITE_API_URL.startsWith('http')
+			? env.VITE_API_URL
+			: 'http://127.0.0.1:3009';
+
 	return {
 		plugins: [react(), tsconfigPaths(), tailwindcss()],
 		envDir: path.resolve(__dirname, '../../'),
@@ -17,9 +22,16 @@ export default defineConfig(({ mode }) => {
 			port: 3006,
 			proxy: {
 				'/api': {
-					target: env.VITE_API_URL || 'http://127.0.0.1:3009',
+					target: apiTarget,
 					changeOrigin: true,
 					rewrite: (path) => path.replace(/^\/api/, ''),
+					secure: false,
+					ws: true,
+					configure: (proxy) => {
+						proxy.on('error', (err) => {
+							console.error('proxy error', err);
+						});
+					},
 				},
 			},
 		},

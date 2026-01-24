@@ -7,10 +7,14 @@ services:
       - "--providers.swarm=true"
       - "--providers.swarm.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
       - "--accesslog=true"
     ports:
       - target: 80
-        published: 3006
+        published: 80
+        mode: host
+      - target: 443
+        published: 443
         mode: host
       - target: 8080
         published: 8080
@@ -138,13 +142,21 @@ services:
           memory: 512M
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.backend.priority=100"
-        - "traefik.http.routers.backend.rule=PathPrefix(`/api`)"
+        # HTTP Router
         - "traefik.http.routers.backend.entrypoints=web"
+        - "traefik.http.routers.backend.rule=PathPrefix(`/api`)"
+        - "traefik.http.routers.backend.priority=100"
+        - "traefik.http.routers.backend.middlewares=backend-strip"
+        # HTTPS Router (Default Cert)
+        - "traefik.http.routers.backend-secure.entrypoints=websecure"
+        - "traefik.http.routers.backend-secure.rule=PathPrefix(`/api`)"
+        - "traefik.http.routers.backend-secure.priority=100"
+        - "traefik.http.routers.backend-secure.tls=true"
+        - "traefik.http.routers.backend-secure.middlewares=backend-strip"
+        # Services & Middlewares
         - "traefik.http.services.backend.loadbalancer.server.port=3009"
         - "traefik.http.middlewares.backend-strip.stripprefix.prefixes=/api"
-        - "traefik.http.routers.backend.middlewares=backend-strip"
-        - "traefik.docker.network=traefik-public"
+        - "traefik.docker.network=qwertix_traefik-public"
 
   frontend:
     image: qwertix-frontend:latest
@@ -152,8 +164,8 @@ services:
       context: .
       dockerfile: apps/frontend/Dockerfile
       args:
-        - VITE_API_URL=http://localhost:3006/api
-        - VITE_WS_URL=ws://localhost:3006/api
+        - VITE_API_URL=/api
+        - VITE_WS_URL=/api
         - VITE_RESULT_HASH_SALT=${RESULT_HASH_SALT:-hash}
     networks:
       - traefik-public
@@ -173,10 +185,16 @@ services:
           memory: 256M
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.frontend.rule=PathPrefix(`/`) || HostRegexp(`{host:.+}`)"
+        # HTTP Router
         - "traefik.http.routers.frontend.entrypoints=web"
+        - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
+        # HTTPS Router (Default Cert)
+        - "traefik.http.routers.frontend-secure.entrypoints=websecure"
+        - "traefik.http.routers.frontend-secure.rule=PathPrefix(`/`)"
+        - "traefik.http.routers.frontend-secure.tls=true"
+        # Services
         - "traefik.http.services.frontend.loadbalancer.server.port=80"
-        - "traefik.docker.network=traefik-public"
+        - "traefik.docker.network=qwertix_traefik-public"
 
 volumes:
   qwertix_data:
