@@ -64,6 +64,7 @@ export const createMultiplayerModel = (
 	// --- Actions ---
 	const clearLocalResult = action(() => {
 		mpLocalResultAtom.set(null);
+		socketService.send(SocketActionEnum.RESTART_GAME, {});
 	}, 'mpGame.clearLocalResult');
 
 	const startRace = action(() => {

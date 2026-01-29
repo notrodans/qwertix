@@ -13,9 +13,8 @@ FROM deps AS builder
 COPY . .
 RUN bun run --filter backend build
 
-FROM base AS runner
+FROM oven/bun:1-slim AS runner
 WORKDIR /usr/src/app
-ENV NODE_ENV=production
 
 # Install Doppler CLI
 RUN apt-get update && apt-get install -y apt-transport-https ca-certificates curl gnupg && \
@@ -36,11 +35,11 @@ COPY --from=builder /usr/src/app/libs ./libs
 COPY --from=builder /usr/src/app/apps/backend/drizzle ./apps/backend/drizzle
 COPY --from=builder /usr/src/app/apps/backend/drizzle.config.ts ./apps/backend/drizzle.config.ts
 COPY --from=builder /usr/src/app/apps/backend/src ./apps/backend/src
-COPY --from=builder /usr/src/app/apps/backend/entrypoint.sh ./apps/backend/entrypoint.sh
+COPY --from=builder /usr/src/app/docker-entrypoint.sh /docker-entrypoint.sh
 
 WORKDIR /usr/src/app/apps/backend
-RUN chmod +x ./entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
 
 EXPOSE 3009
-ENTRYPOINT ["./entrypoint.sh"]
+ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["bun", "run", "start"]

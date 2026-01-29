@@ -10,11 +10,11 @@
 		"url": "github.com/notrodans/qwertix"
 	},
 	"scripts": {
-		"dev": "bun run --filter '*' dev",
-		"dev:frontend": "bun run --filter frontend dev",
-		"dev:backend": "bun run --filter backend dev",
+		"dev": "doppler run -- bun run --filter '*' dev",
+		"dev:frontend": "doppler run -- bun run --filter frontend dev",
+		"dev:backend": "doppler run -- bun run --filter backend dev",
 		"build": "bun run --filter '*' build",
-		"start": "bun run --filter '*' start",
+		"start": "doppler run -- bun run --filter '*' start",
 		"lint": "bun run --filter '*' lint",
 		"lint:fix": "bun run --filter '*' lint:fix",
 		"format": "biome format --write .",
