@@ -14,8 +14,10 @@ export class DataBase {
 	readonly source: DataSource;
 
 	constructor() {
+		const connectionString = env.DATABASE_URL;
+
 		const pool = new Pool({
-			connectionString: env.DATABASE_URL,
+			connectionString,
 		});
 
 		this.source = drizzle(pool, { schema: combinedSchema });

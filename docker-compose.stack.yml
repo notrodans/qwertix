@@ -1,7 +1,6 @@
 services:
   traefik:
     image: traefik:latest
-    container_name: qwertix-traefik
     command:
       - "--api.insecure=true"
       - "--providers.swarm=true"
@@ -39,22 +38,14 @@ services:
       POSTGRES_USER_FILE: /run/secrets/db_user
       POSTGRES_PASSWORD_FILE: /run/secrets/db_password
       POSTGRES_DB_FILE: /run/secrets/db_name
-      PGPORT: 8763
     secrets:
       - db_user
       - db_password
       - db_name
     volumes:
       - qwertix_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -p 8763 -U $$(cat /run/secrets/db_user) -d $$(cat /run/secrets/db_name)"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
     networks:
       - internal
-    ports:
-      - "8763:8763"
     deploy:
       mode: replicated
       replicas: 1
@@ -73,7 +64,7 @@ services:
       - internal
       - traefik-public
     ports:
-      - "8081:8080"
+      - "8085:8080"
     deploy:
       replicas: 1
       restart_policy:
@@ -89,16 +80,8 @@ services:
     networks:
       - internal
     environment:
-      NODE_ENV: production
-      PORT: 3009
-      DB_HOST: qwertix_db
-      DATABASE_URL: ${DATABASE_URL}
+      - NODE_ENV=production
     secrets:
-      - db_user
-      - db_password
-      - db_name
-      - jwt_secret
-      - result_hash_salt
       - doppler_token
     command: ["bun", "run", "db:migrate"]
     deploy:
@@ -115,16 +98,8 @@ services:
       - internal
       - traefik-public
     environment:
-      NODE_ENV: production
-      PORT: 3009
-      DB_HOST: qwertix_db
-      DATABASE_URL: ${DATABASE_URL}
+      - NODE_ENV=production
     secrets:
-      - db_user
-      - db_password
-      - db_name
-      - jwt_secret
-      - result_hash_salt
       - doppler_token
     deploy:
       mode: replicated
@@ -159,16 +134,17 @@ services:
         - "traefik.docker.network=qwertix_traefik-public"
 
   frontend:
-    image: qwertix-frontend:latest
+    image: localhost:5000/qwertix-frontend:latest
     build:
       context: .
       dockerfile: apps/frontend/Dockerfile
-      args:
-        - VITE_API_URL=/api
-        - VITE_WS_URL=/api
-        - VITE_RESULT_HASH_SALT=${RESULT_HASH_SALT:-hash}
+    environment:
+      - VITE_API_URL=/api
+      - VITE_WS_URL=/api
     networks:
       - traefik-public
+    secrets:
+      - doppler_token
     deploy:
       mode: replicated
       replicas: 2
@@ -208,15 +184,11 @@ networks:
     attachable: true
 
 secrets:
+  doppler_token:
+    external: true
   db_user:
     external: true
   db_password:
     external: true
   db_name:
-    external: true
-  jwt_secret:
-    external: true
-  result_hash_salt:
-    external: true
-  doppler_token:
     external: true
