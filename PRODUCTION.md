@@ -16,31 +16,44 @@ We provide two configurations:
 ## Architecture
 
 The production stack consists of:
-*   **Traefik**: Reverse proxy and load balancer.
-*   **Postgres**: Database (v16).
+*   **Traefik**: Reverse proxy and load balancer with Let's Encrypt.
+*   **Postgres**: Database (v18.1).
 *   **Backend**: Node.js API (Fastify) running in replicas, secrets managed by Doppler.
 *   **Frontend**: Bun (sirv) serving the SPA, secrets managed by Doppler.
-*   **Cert Init** (Local only): Ephemeral container to generate self-signed certificates.
 *   **Adminer**: Database management tool.
 
-## 1. Secrets Management
+## 1. SSL Certificates (Let's Encrypt)
+
+We use Let's Encrypt for automatic certificate management.
+
+### Prerequisites for SSL
+*   A public domain with A/AAAA records pointing to your server.
+*   Ports 80 and 443 must be open and reachable from the internet.
+
+Traefik is configured to use the `letsencrypt` certresolver with the `httpChallenge`. Certificates are stored in the `traefik-certificates` volume.
+
+## 2. Secrets Management
 
 We use **Doppler** as the single source of truth for all secrets (Database, JWT, Salts). Docker Swarm only needs to know the `doppler_token`.
 
-### Setup Doppler Secret
+### Setup Docker Secrets
 
-Run the following command on your Swarm manager node to allow services to fetch secrets:
+Run the following commands on your Swarm manager node to setup required secrets:
 
 ```bash
-# Get your Service Token from Doppler Dashboard (Access -> Service Tokens)
+# Doppler token (for Backend/Frontend)
 echo "dp.st.your_service_token" | docker secret create doppler_token -
+
+# Database credentials (for Postgres)
+echo "your_db_user" | docker secret create db_user -
+echo "your_db_password" | docker secret create db_password -
+echo "your_db_name" | docker secret create db_name -
 ```
 
 ### Required Variables in Doppler
 
-Ensure your Doppler config contains:
+Ensure your Doppler config contains the following (fetched by the application at runtime):
 *   `DATABASE_URL`: Full connection string for the backend.
-*   `DB_USER`, `DB_PASSWORD`, `DB_NAME`: Used by the Postgres container.
 *   `JWT_SECRET`: Secret for authentication.
 *   `RESULT_HASH_SALT`: Salt for result verification.
 
@@ -49,6 +62,8 @@ Ensure your Doppler config contains:
 For local development with Swarm, we use a **local Docker registry** (on port 5000) to ensure images are correctly updated across the cluster.
 
 ### Scenario A: Local Swarm (Auto SSL)
+
+This configuration uses Let's Encrypt. Note that for ACME to work, your local machine must be reachable from the internet, or you should use a tool like `ngrok` or `cloudflare tunnel`.
 
 1.  **Start Local Registry**:
     ```bash
