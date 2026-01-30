@@ -33,7 +33,7 @@ services:
         condition: on-failure
 
   db:
-    image: postgres:16
+    image: postgres:18.1
     environment:
       POSTGRES_USER_FILE: /run/secrets/db_user
       POSTGRES_PASSWORD_FILE: /run/secrets/db_password
@@ -43,7 +43,7 @@ services:
       - db_password
       - db_name
     volumes:
-      - qwertix_data:/var/lib/postgresql/data
+      - qwertix_data:/var/lib/postgresql
     networks:
       - internal
     deploy:
