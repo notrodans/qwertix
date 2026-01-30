@@ -11,8 +11,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  static-checks:
-    name: Lint & Format
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -26,6 +26,7 @@ jobs:
 
   unit-tests:
     name: Unit Tests
+    needs: [lint]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -39,6 +40,7 @@ jobs:
 
   e2e-frontend:
     name: Frontend E2E
+    needs: [lint]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -56,6 +58,7 @@ jobs:
 
   e2e-backend:
     name: Backend E2E
+    needs: [lint]
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -87,6 +90,7 @@ jobs:
 
   build:
     name: Build Apps
+    needs: [lint]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
