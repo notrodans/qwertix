@@ -36,20 +36,24 @@ Traefik is configured to use the `letsencrypt` certresolver with the `httpChalle
 
 We use **Doppler** as the single source of truth for all secrets (Database, JWT, Salts). Docker Swarm only needs to know the `doppler_token`.
 
-### Setup Doppler Secret
+### Setup Docker Secrets
 
-Run the following command on your Swarm manager node to allow services to fetch secrets:
+Run the following commands on your Swarm manager node to setup required secrets:
 
 ```bash
-# Get your Service Token from Doppler Dashboard (Access -> Service Tokens)
+# Doppler token (for Backend/Frontend)
 echo "dp.st.your_service_token" | docker secret create doppler_token -
+
+# Database credentials (for Postgres)
+echo "your_db_user" | docker secret create db_user -
+echo "your_db_password" | docker secret create db_password -
+echo "your_db_name" | docker secret create db_name -
 ```
 
 ### Required Variables in Doppler
 
-Ensure your Doppler config contains:
+Ensure your Doppler config contains the following (fetched by the application at runtime):
 *   `DATABASE_URL`: Full connection string for the backend.
-*   `DB_USER`, `DB_PASSWORD`, `DB_NAME`: Used by the Postgres container.
 *   `JWT_SECRET`: Secret for authentication.
 *   `RESULT_HASH_SALT`: Salt for result verification.
 
