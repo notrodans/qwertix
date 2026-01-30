@@ -16,7 +16,7 @@ A multiplayer typing competition platform built with real-time features.
 - **Monorepo:** Bun Workspaces
 - **Frontend:** React, Vite, Reatom (v1000), Zod, ESLint (FSD boundaries), Bun (sirv)
 - **Backend:** Node.js, Fastify, WebSockets (`ws`), PostgreSQL + Drizzle ORM
-- **Infrastructure:** Docker Swarm, Traefik, Doppler (Secrets), Adminer
+- **Infrastructure:** Docker Swarm, Traefik (Let's Encrypt), Doppler (Secrets), Adminer
 - **Tooling:** Biome (Linting & Formatting), Vitest (Unit/E2E), Playwright (Integration)
 
 ## 🚥 Getting Started
@@ -24,12 +24,12 @@ A multiplayer typing competition platform built with real-time features.
 ### Prerequisites
 
 - [Bun](https://bun.sh) (v1.1+)
-- [Docker](https://www.docker.com/)
+- [Docker](https://www.docker.com/) (v24+)
 - [Doppler CLI](https://docs.doppler.com/docs/install-cli)
 
 ### 🐳 Deployment (Production / Swarm)
 
-This project uses **Docker Swarm** with **Doppler** for secrets management.
+This project uses **Docker Swarm** with **Traefik** for automatic SSL (Let's Encrypt) and **Doppler** for secrets management.
 
 For detailed instructions, see [PRODUCTION.md](PRODUCTION.md).
 
@@ -38,7 +38,8 @@ For detailed instructions, see [PRODUCTION.md](PRODUCTION.md).
 1.  Initialize Swarm: `docker swarm init`
 2.  Start local registry: `docker compose -f docker-compose.stack.local.yml up -d registry`
 3.  Create Doppler secret: `echo "your_token" | docker secret create doppler_token -`
-4.  Build, Push & Deploy:
+4.  (Optional) Clear old DB data if migrating from Postgres < 18: `docker volume rm qwertix_data`
+5.  Build, Push & Deploy:
     ```bash
     docker compose -f docker-compose.stack.local.yml build
     docker compose -f docker-compose.stack.local.yml push

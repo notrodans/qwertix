@@ -16,14 +16,23 @@ We provide two configurations:
 ## Architecture
 
 The production stack consists of:
-*   **Traefik**: Reverse proxy and load balancer.
-*   **Postgres**: Database (v16).
+*   **Traefik**: Reverse proxy and load balancer with Let's Encrypt.
+*   **Postgres**: Database (v18.1).
 *   **Backend**: Node.js API (Fastify) running in replicas, secrets managed by Doppler.
 *   **Frontend**: Bun (sirv) serving the SPA, secrets managed by Doppler.
-*   **Cert Init** (Local only): Ephemeral container to generate self-signed certificates.
 *   **Adminer**: Database management tool.
 
-## 1. Secrets Management
+## 1. SSL Certificates (Let's Encrypt)
+
+We use Let's Encrypt for automatic certificate management.
+
+### Prerequisites for SSL
+*   A public domain with A/AAAA records pointing to your server.
+*   Ports 80 and 443 must be open and reachable from the internet.
+
+Traefik is configured to use the `letsencrypt` certresolver with the `httpChallenge`. Certificates are stored in the `traefik-certificates` volume.
+
+## 2. Secrets Management
 
 We use **Doppler** as the single source of truth for all secrets (Database, JWT, Salts). Docker Swarm only needs to know the `doppler_token`.
 
@@ -49,6 +58,8 @@ Ensure your Doppler config contains:
 For local development with Swarm, we use a **local Docker registry** (on port 5000) to ensure images are correctly updated across the cluster.
 
 ### Scenario A: Local Swarm (Auto SSL)
+
+This configuration uses Let's Encrypt. Note that for ACME to work, your local machine must be reachable from the internet, or you should use a tool like `ngrok` or `cloudflare tunnel`.
 
 1.  **Start Local Registry**:
     ```bash
