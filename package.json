@@ -1,6 +1,7 @@
 {
 	"license": "MIT",
 	"private": true,
+	"version": "0.1.0",
 	"name": "qwertix",
 	"author": "notrodans@gmail.com",
 	"description": "An app for typing competitions between people",
