@@ -1,7 +1,7 @@
 import { $ } from 'bun';
-import { parseArgs } from 'util';
-import { join, dirname } from 'path';
+import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
+import { parseArgs } from 'util';
 
 export type ShellExecutor = typeof $;
 
@@ -115,7 +115,8 @@ export class ReleaseManager {
 			const version = pkg.version;
 			const tagName = `v${version}`;
 
-			const commitMsg = `chore(release): prepare for ${tagName} ${this.isNoDeploy ? '[no-deploy]' : ''}`.trim();
+			const commitMsg =
+				`chore(release): prepare for ${tagName} ${this.isNoDeploy ? '[no-deploy]' : ''}`.trim();
 
 			await this.$`git add ../../package.json package.json ../../CHANGELOG.md`;
 			await this.$`git commit -m "${commitMsg}"`;
