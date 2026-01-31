@@ -2,7 +2,7 @@
 	"license": "MIT",
 	"private": true,
 	"name": "qwertix",
-	"version": "0.2.0",
+	"version": "0.1.0",
 	"author": "notrodans@gmail.com",
 	"description": "An app for typing competitions between people",
 	"keywords": [
