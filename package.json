@@ -26,7 +26,10 @@
 		"docker": "docker compose -f docker-compose.dev.yml up -d",
 		"docker:test": "docker compose -f docker-compose.test.yml up -d db-test",
 		"docker:test:down": "docker compose -f docker-compose.test.yml down",
-		"prepare": "husky"
+		"prepare": "husky",
+		"changelog": "git-cliff -o CHANGELOG.md",
+		"changelog:preview": "git-cliff --unreleased --strip all",
+		"release": "bun run test:all && git-cliff --bump -o CHANGELOG.md"
 	},
 	"workspaces": {
 		"packages": ["apps/*", "libs/*"],
@@ -70,6 +73,7 @@
 		"eslint-import-resolver-typescript": "catalog:",
 		"eslint-plugin-boundaries": "catalog:",
 		"eslint-plugin-import": "catalog:",
+		"git-cliff": "^2.12.0",
 		"globals": "catalog:",
 		"husky": "^9.1.7",
 		"lint-staged": "^16.2.7",
