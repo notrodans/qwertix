@@ -70,7 +70,7 @@ export class ReleaseManager {
 			await this.runStep(
 				'Preview Changelog',
 				async () => {
-					await this.$`bun x git-cliff --unreleased --strip all`;
+					await this.$`git-cliff --unreleased --strip all`;
 				},
 				true,
 			); // Always run preview
@@ -79,10 +79,11 @@ export class ReleaseManager {
 
 		// 3. Bump Version & Changelog
 		await this.runStep('Bump Version & Generate Changelog', async () => {
-			await this.$`bun x git-cliff --bump -o CHANGELOG.md`;
+			// Generate changelog in the root directory
+			await this.$`git-cliff --bump -o ../../CHANGELOG.md`;
 
 			const nextVersion = (
-				await this.$`bun x git-cliff --bumped-version`.text()
+				await this.$`git-cliff --bumped-version`.text()
 			).trim();
 			if (!nextVersion) {
 				throw new Error('Could not determine next version.');
@@ -91,7 +92,7 @@ export class ReleaseManager {
 
 			// Manual version bump to avoid npm's "catalog:" protocol error
 			// We update both root and current package.json
-			const rootPkgPath = join(import.meta.dir, '../../package.json');
+			const rootPkgPath = join(import.meta.dir, '../../../package.json');
 			const currentPkgPath = join(import.meta.dir, '../package.json');
 
 			for (const path of [rootPkgPath, currentPkgPath]) {
@@ -106,7 +107,7 @@ export class ReleaseManager {
 
 		// 4. Commit and Tag
 		await this.runStep('Commit and Tag', async () => {
-			const rootPkgPath = join(import.meta.dir, '../../package.json');
+			const rootPkgPath = join(import.meta.dir, '../../../package.json');
 			// biome-ignore lint/correctness/noUndeclaredVariables: Bun is global
 			const pkg = await Bun.file(rootPkgPath).json();
 			const version = pkg.version;
@@ -114,7 +115,8 @@ export class ReleaseManager {
 
 			const commitMsg = `chore(release): prepare for ${tagName} ${this.isNoDeploy ? '[no-deploy]' : ''}`.trim();
 
-			await this.$`git add ../../package.json package.json CHANGELOG.md`;
+			// Add root package.json, local package.json, and root CHANGELOG.md
+			await this.$`git add ../../package.json package.json ../../CHANGELOG.md`;
 			await this.$`git commit -m "${commitMsg}"`;
 			await this.$`git tag -a ${tagName} -m "Release ${tagName}"`;
 
