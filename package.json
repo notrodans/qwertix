@@ -26,13 +26,13 @@
 		"docker:test": "docker compose -f docker-compose.test.yml up -d db-test",
 		"docker:test:down": "docker compose -f docker-compose.test.yml down",
 		"prepare": "husky",
-		"preview-fe": "bun scripts/release.ts --preview-fe",
-		"preview-be": "bun scripts/release.ts --preview-be",
-		"release": "bun scripts/release.ts",
-		"release-fe": "bun scripts/release.ts --fe",
-		"release-be": "bun scripts/release.ts --be",
-		"release-no-deploy": "bun scripts/release.ts --no-deploy",
-		"release-dry": "bun scripts/release.ts --dry"
+		"preview-fe": "bun run --filter @qwertix/release release -- --preview-fe",
+		"preview-be": "bun run --filter @qwertix/release release -- --preview-be",
+		"release": "bun run --filter @qwertix/release release --",
+		"release-fe": "bun run --filter @qwertix/release release -- --fe",
+		"release-be": "bun run --filter @qwertix/release release -- --be",
+		"release-no-deploy": "bun run --filter @qwertix/release release -- --no-deploy",
+		"release-dry": "bun run --filter @qwertix/release release -- --dry"
 	},
 	"workspaces": {
 		"packages": ["apps/*", "libs/*"],

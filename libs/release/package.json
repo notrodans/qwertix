@@ -1,0 +1,22 @@
+{
+	"name": "@qwertix/release",
+	"version": "0.1.0",
+	"type": "module",
+	"bin": {
+		"qwertix-release": "./src/index.ts"
+	},
+	"private": true,
+	"scripts": {
+		"release": "bun src/index.ts",
+		"test": "bun test",
+		"lint": "biome check .",
+		"lint:fix": "biome check --write ."
+	},
+	"dependencies": {
+		"bun": "^1.0.0"
+	},
+	"devDependencies": {
+		"@qwertix/tsconfig": "workspace:*",
+		"@types/bun": "latest"
+	}
+}
