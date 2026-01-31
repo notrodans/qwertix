@@ -1,6 +1,7 @@
 import { $ } from 'bun';
 import { parseArgs } from 'util';
-import { join } from 'path';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 
 export type ShellExecutor = typeof $;
 
@@ -79,7 +80,6 @@ export class ReleaseManager {
 
 		// 3. Bump Version & Changelog
 		await this.runStep('Bump Version & Generate Changelog', async () => {
-			// Generate changelog in the root directory
 			await this.$`git-cliff --bump -o ../../CHANGELOG.md`;
 
 			const nextVersion = (
@@ -92,8 +92,9 @@ export class ReleaseManager {
 
 			// Manual version bump to avoid npm's "catalog:" protocol error
 			// We update both root and current package.json
-			const rootPkgPath = join(import.meta.dir, '../../../package.json');
-			const currentPkgPath = join(import.meta.dir, '../package.json');
+			const currentDir = dirname(fileURLToPath(import.meta.url));
+			const rootPkgPath = join(currentDir, '../../../package.json');
+			const currentPkgPath = join(currentDir, '../package.json');
 
 			for (const path of [rootPkgPath, currentPkgPath]) {
 				// biome-ignore lint/correctness/noUndeclaredVariables: Bun is global
@@ -107,7 +108,8 @@ export class ReleaseManager {
 
 		// 4. Commit and Tag
 		await this.runStep('Commit and Tag', async () => {
-			const rootPkgPath = join(import.meta.dir, '../../../package.json');
+			const currentDir = dirname(fileURLToPath(import.meta.url));
+			const rootPkgPath = join(currentDir, '../../../package.json');
 			// biome-ignore lint/correctness/noUndeclaredVariables: Bun is global
 			const pkg = await Bun.file(rootPkgPath).json();
 			const version = pkg.version;
@@ -115,7 +117,6 @@ export class ReleaseManager {
 
 			const commitMsg = `chore(release): prepare for ${tagName} ${this.isNoDeploy ? '[no-deploy]' : ''}`.trim();
 
-			// Add root package.json, local package.json, and root CHANGELOG.md
 			await this.$`git add ../../package.json package.json ../../CHANGELOG.md`;
 			await this.$`git commit -m "${commitMsg}"`;
 			await this.$`git tag -a ${tagName} -m "Release ${tagName}"`;
@@ -125,8 +126,8 @@ export class ReleaseManager {
 
 		// 5. Push
 		await this.runStep('Push to Remote', async () => {
-			await this.$`git push origin main --follow-tags`;
-			console.log('  🚀 Pushed to origin/main with tags.');
+			await this.$`git push --follow-tags`;
+			console.log('  🚀 Pushed to remote with tags.');
 		});
 	}
 }

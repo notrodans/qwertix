@@ -71,7 +71,9 @@ describe('ReleaseManager', () => {
 		await manager.run();
 
 		expect(executedCommands).toContain('bun --cwd ../.. run test:all');
-		expect(executedCommands).toContain('git-cliff --bump -o ../../CHANGELOG.md');
+		expect(executedCommands).toContain(
+			'git-cliff --bump -o ../../CHANGELOG.md',
+		);
 		expect(executedCommands).toContain('git-cliff --bumped-version');
 		// We don't check for npm version anymore as we do manual update
 		// but we can check if it attempted to read file (not easily mockable here without mocking Bun.file)
@@ -83,7 +85,7 @@ describe('ReleaseManager', () => {
 			'git commit -m "chore(release): prepare for v1.2.3"',
 		);
 		expect(executedCommands).toContain('git tag -a v1.2.3 -m "Release v1.2.3"');
-		expect(executedCommands).toContain('git push origin main --follow-tags');
+		expect(executedCommands).toContain('git push --follow-tags');
 	});
 
 	it('should add [no-deploy] flag when requested', async () => {
