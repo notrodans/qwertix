@@ -87,7 +87,7 @@ services:
         condition: any
 
   migrate:
-    image: localhost:5000/qwertix-backend:latest
+    image: ghcr.io/notrodans/qwertix-backend:${IMAGE_TAG:-latest}
     build:
       context: .
       dockerfile: apps/backend/Dockerfile
@@ -106,7 +106,7 @@ services:
         max_attempts: 3
 
   backend:
-    image: localhost:5000/qwertix-backend:latest
+    image: ghcr.io/notrodans/qwertix-backend:${IMAGE_TAG:-latest}
     build:
       context: .
       dockerfile: apps/backend/Dockerfile
@@ -151,7 +151,7 @@ services:
         - "traefik.docker.network=qwertix_traefik-public"
 
   frontend:
-    image: localhost:5000/qwertix-frontend:latest
+    image: ghcr.io/notrodans/qwertix-frontend:${IMAGE_TAG:-latest}
     build:
       context: .
       dockerfile: apps/frontend/Dockerfile
