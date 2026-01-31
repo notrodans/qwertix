@@ -5,6 +5,7 @@ FROM base AS deps
 COPY package.json bun.lock ./
 COPY apps/backend/package.json ./apps/backend/
 COPY apps/frontend/package.json ./apps/frontend/
+COPY libs/release/package.json ./libs/release/
 COPY libs/room-contracts/package.json ./libs/room-contracts/
 COPY libs/tsconfig/package.json ./libs/tsconfig/
 RUN bun install
