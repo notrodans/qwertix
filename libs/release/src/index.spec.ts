@@ -51,7 +51,7 @@ describe('ReleaseManager', () => {
 		const manager = new ReleaseManager(mockShell, { preview: true });
 		await manager.run();
 
-		expect(executedCommands).not.toContain('bun run test:all');
+		expect(executedCommands).not.toContain('bun --cwd ../.. run test:all');
 		expect(executedCommands).toContain('git-cliff --unreleased --strip all');
 		expect(executedCommands.some((c) => c.includes('git tag'))).toBe(false);
 	});
@@ -60,7 +60,7 @@ describe('ReleaseManager', () => {
 		const manager = new ReleaseManager(mockShell, { dry: true });
 		await manager.run();
 
-		expect(executedCommands).toContain('bun run test:all');
+		expect(executedCommands).toContain('bun --cwd ../.. run test:all');
 		expect(executedCommands.some((c) => c.includes('git-cliff --bump'))).toBe(
 			false,
 		);
@@ -70,7 +70,7 @@ describe('ReleaseManager', () => {
 		const manager = new ReleaseManager(mockShell, { dry: false });
 		await manager.run();
 
-		expect(executedCommands).toContain('bun run test:all');
+		expect(executedCommands).toContain('bun --cwd ../.. run test:all');
 		expect(executedCommands).toContain('git-cliff --bump -o CHANGELOG.md');
 		expect(executedCommands).toContain('git-cliff --bumped-version');
 		expect(
@@ -98,6 +98,6 @@ describe('ReleaseManager', () => {
 		await manager.run();
 
 		expect(executedCommands).toContain('git-cliff --unreleased --strip all');
-		expect(executedCommands).not.toContain('bun run test:all');
+		expect(executedCommands).not.toContain('bun --cwd ../.. run test:all');
 	});
 });
