@@ -2,6 +2,7 @@
 	"license": "MIT",
 	"private": true,
 	"name": "qwertix",
+	"version": "0.1.0",
 	"author": "notrodans@gmail.com",
 	"description": "An app for typing competitions between people",
 	"keywords": [
@@ -86,6 +87,5 @@
 		"lint-staged": "^16.2.7",
 		"typescript": "catalog:",
 		"typescript-eslint": "catalog:"
-	},
-	"version": "0.1.0"
+	}
 }
