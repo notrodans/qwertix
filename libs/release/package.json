@@ -9,6 +9,7 @@
 	"scripts": {
 		"release": "bun src/index.ts",
 		"test": "vitest run",
+		"test:watch": "vitest",
 		"lint": "biome check .",
 		"lint:fix": "biome check --write ."
 	},
