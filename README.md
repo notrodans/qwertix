@@ -71,7 +71,6 @@ qwertix/
 ├── libs/              # Shared libraries
 │   ├── room-contracts/# Shared types & interfaces
 │   └── tsconfig/      # Base TypeScript configs
-├── specifications/    # Feature specifications (SDD)
 ├── docker-compose.*   # Docker orchestration files
 ├── package.json       # Monorepo configuration
 └── README.md          # This file

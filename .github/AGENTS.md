@@ -3,7 +3,7 @@
 ## Agent Rules
 
 - **NEVER ignore linting rules**: Always address lint warnings and errors. Use `bun run lint:fix` to automatically fix issues where possible, and manually resolve any remaining violations before committing code.
-- **Spec-Driven Development (SDD)**: Before implementing any feature, ALWAYS check or create a specification in `docs/user-stories/`.
+- **Spec-Driven Development (SDD)**: Before implementing any feature, ALWAYS check or create a user story in `docs/user-stories/`.
 
 ## Build/Lint/Test Commands
 
@@ -87,7 +87,7 @@ The repository uses Husky with lint-staged to run checks on staged files before 
 
 *   **Location**: `docs/user-stories/*.md`
 *   **Workflow**:
-    1.  Check if a specification/user story exists.
+    1.  Check if a user story exists.
     2.  If not, create one using the template.
     3.  Implement only after requirements are clear.
 
