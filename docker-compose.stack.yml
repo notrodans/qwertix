@@ -75,10 +75,7 @@ services:
         condition: on-failure
 
   migrate:
-    image: qwertix-backend:latest
-    build:
-      context: .
-      dockerfile: apps/backend/Dockerfile
+    image: ${DOCKER_USERNAME:-notrodans}/qwertix-backend:${IMAGE_TAG:-latest}
     depends_on:
       - db
     networks:
@@ -94,10 +91,7 @@ services:
         max_attempts: 3
 
   backend:
-    image: qwertix-backend:latest
-    build:
-      context: .
-      dockerfile: apps/backend/Dockerfile
+    image: ${DOCKER_USERNAME:-notrodans}/qwertix-backend:${IMAGE_TAG:-latest}
     networks:
       - internal
       - traefik-public
@@ -139,10 +133,7 @@ services:
         - "traefik.docker.network=qwertix_traefik-public"
 
   frontend:
-    image: localhost:5000/qwertix-frontend:latest
-    build:
-      context: .
-      dockerfile: apps/frontend/Dockerfile
+    image: ${DOCKER_USERNAME:-notrodans}/qwertix-frontend:${IMAGE_TAG:-latest}
     environment:
       - VITE_API_URL=/api
       - VITE_WS_URL=/api

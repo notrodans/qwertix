@@ -6,49 +6,63 @@ on:
   pull_request:
     branches: [ main ]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  static-checks:
-    name: Lint & Format
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
-      - run: bun install
-      - run: bun run lint
+      - name: Install dependencies
+        run: bun install
+      - name: Lint
+        run: bun run lint
 
   unit-tests:
     name: Unit Tests
+    needs: [lint]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
-      - run: bun install
-      - run: bun run test
+      - name: Install dependencies
+        run: bun install
+      - name: Test
+        run: bun run test
 
   e2e-frontend:
     name: Frontend E2E
+    needs: [lint]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
-      - run: bun install
-      - run: bun run --filter frontend playwright install --with-deps chromium
-      - run: bun run --filter frontend test:e2e
+      - name: Install dependencies
+        run: bun install
+      - name: Install Playwright Browsers
+        run: bun run --filter frontend playwright install --with-deps chromium
+      - name: Run E2E Tests
+        run: bun run --filter frontend test:e2e
         env:
           CI: true
 
   e2e-backend:
     name: Backend E2E
+    needs: [lint]
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:16
+        image: postgres:18.1
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: password
@@ -61,12 +75,14 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
-      - run: bun install
-      - run: bun run --filter backend test:e2e
+      - name: Install dependencies
+        run: bun install
+      - name: Run E2E Tests
+        run: bun run --filter backend test:e2e
         env:
           DATABASE_URL: postgresql://postgres:password@localhost:5433/qwertix_test
           JWT_SECRET: test-secret
@@ -74,11 +90,14 @@ jobs:
 
   build:
     name: Build Apps
+    needs: [lint]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
-      - run: bun install
-      - run: bun run build
+      - name: Install dependencies
+        run: bun install
+      - name: Build
+        run: bun run build

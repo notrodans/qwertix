@@ -1,0 +1,25 @@
+{
+	"name": "@qwertix/release",
+	"version": "0.1.0",
+	"type": "module",
+	"bin": {
+		"qwertix-release": "./src/index.ts"
+	},
+	"private": true,
+	"scripts": {
+		"release": "bun src/index.ts",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"lint": "tsc --noEmit -p tsconfig.json && eslint . && biome check .",
+		"lint:fix": "tsc --noEmit -p tsconfig.json && eslint . --fix && biome check --write ."
+	},
+	"dependencies": {
+		"bun": "^1.0.0"
+	},
+	"devDependencies": {
+		"@qwertix/tsconfig": "workspace:*",
+		"@types/bun": "latest",
+		"vite-tsconfig-paths": "catalog:",
+		"vitest": "catalog:"
+	}
+}

@@ -1,0 +1,120 @@
+name: Release
+
+permissions:
+  contents: write
+  packages: write
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  push_to_registry:
+    env:
+      BE_REPO: ${{ secrets.DOCKER_USERNAME }}/qwertix-backend
+      FE_REPO: ${{ secrets.DOCKER_USERNAME }}/qwertix-frontend
+      PLATFORMS: linux/amd64,linux/arm64
+
+    name: Push Docker image to Docker Hub
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@49b3bc8e6bdd4a60e6116a5414239cba5943d3cf # v3.2.0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@c47758b77c9736f4b2ef4073d4d51994fabfe349 # v3.7.1
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Generate a changelog
+        uses: orhun/git-cliff-action@v4
+        id: git-cliff
+        with:
+          config: cliff.toml
+          args: --verbose
+        env:
+          OUTPUT: CHANGELOG.md
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body: ${{ steps.git-cliff.outputs.content }}
+          files: CHANGELOG.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # --- Backend ---
+      - name: Backend extract metadata
+        id: bemeta
+        uses: docker/metadata-action@369ebfd91f95188ef8c61f501015609462f46374 # v5.6.1
+        with:
+          images: ${{ env.BE_REPO }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest
+
+      - name: Backend build and push
+        uses: docker/build-push-action@48aba3b46d1b1fec4febb7c5d0c644b249a11355 # v6.10.0
+        with:
+          context: .
+          platforms: ${{ env.PLATFORMS }}
+          file: apps/backend/Dockerfile
+          push: true
+          tags: ${{ steps.bemeta.outputs.tags }}
+          labels: ${{ steps.bemeta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Backend publish description
+        uses: peter-evans/dockerhub-description@e98e4d1628a5f3be2be7c231e50981aee98723ae # v4.0.0
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          repository: ${{ env.BE_REPO }}
+          short-description: Qwertix Backend Server
+          readme-filepath: ./README.md
+
+      # --- Frontend ---
+      - name: Frontend extract metadata
+        id: femeta
+        uses: docker/metadata-action@369ebfd91f95188ef8c61f501015609462f46374 # v5.6.1
+        with:
+          images: ${{ env.FE_REPO }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest
+
+      - name: Frontend build and push
+        uses: docker/build-push-action@48aba3b46d1b1fec4febb7c5d0c644b249a11355 # v6.10.0
+        with:
+          context: .
+          platforms: ${{ env.PLATFORMS }}
+          file: apps/frontend/Dockerfile
+          push: true
+          tags: ${{ steps.femeta.outputs.tags }}
+          labels: ${{ steps.femeta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Frontend publish description
+        uses: peter-evans/dockerhub-description@e98e4d1628a5f3be2be7c231e50981aee98723ae # v4.0.0
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          repository: ${{ env.FE_REPO }}
+          short-description: Qwertix Frontend Application
+          readme-filepath: ./README.md

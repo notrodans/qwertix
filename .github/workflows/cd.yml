@@ -1,0 +1,56 @@
+# name: CD
+# 
+# # ==============================================================================
+# # Continuous Deployment Workflow
+# # ==============================================================================
+# # This workflow manages the automatic deployment of the application to the
+# # production environment after a successful Release.
+# #
+# # Triggers:
+# #   - Automatically triggers after the "Release" workflow completes successfully.
+# #   - Runs only on the 'main' branch.
+# #
+# # Conditions:
+# #   - Checks for "[no-deploy]" in the commit message to allow skipping deployment
+# #     for specific releases (e.g. documentation-only releases or manual overrides).
+# #
+# # Steps:
+# #   1. Checkout: Retrieves the codebase.
+# #   2. Deploy: Executes the deployment command via SSH to the production server.
+# #      It uses the 'latest' Docker tag, which is pushed by the Release workflow.
+# # ==============================================================================
+# 
+# on:
+#   workflow_run:
+#     workflows: ["Release"]
+#     branches: [main]
+#     types:
+#       - completed
+# 
+# jobs:
+#   deploy:
+#     runs-on: ubuntu-latest
+#     # Run only if Release succeeded AND the commit message does NOT contain "[no-deploy]"
+#     if: >
+#       ${{
+#         github.event.workflow_run.conclusion == 'success' && 
+#         !contains(github.event.workflow_run.head_commit.message, '[no-deploy]')
+#       }}
+#     steps:
+#       - name: Checkout repository
+#         uses: actions/checkout@v6
+# 
+#       - name: Deploy to production
+#         run: |
+#           echo "🚀 Starting deployment to production..."
+#           echo "ℹ️  Triggered by Release commit: ${{ github.event.workflow_run.head_commit.message }}"
+#           
+#           # Deployment Command Explanation:
+#           # 1. SSH into the server using secrets.
+#           # 2. Pass DOCKER_USERNAME for image verification.
+#           # 3. Use IMAGE_TAG=latest (as Release workflow updates the 'latest' tag).
+#           # 4. Update the Docker Swarm stack using the compose file.
+#           
+#           # Example command (uncomment and configure):
+#           # ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
+#           #   "DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }} IMAGE_TAG=latest docker stack deploy -c docker-compose.stack.yml qwertix --with-registry-auth"
