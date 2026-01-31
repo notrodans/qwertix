@@ -3,7 +3,17 @@ import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import { parseArgs } from 'util';
 
-export type ShellExecutor = typeof $;
+/**
+ * Release Management Orchestrator
+ *
+ * This script handles the full release cycle:
+ * 1. Validation (Tests)
+ * 2. Versioning (Git-Cliff + Manual package.json update)
+ * 3. Documentation (Changelog generation)
+ * 4. Git Orchestration (Commit, Tag, Push)
+ *
+ * It avoids using 'npm version' to prevent conflicts with Bun's 'catalog:' protocol.
+ */
 
 export interface ReleaseOptions {
 	preview?: boolean;
@@ -16,13 +26,16 @@ export interface ReleaseOptions {
 }
 
 export class ReleaseManager {
-	private $: ShellExecutor;
 	private isDry: boolean;
 	private isNoDeploy: boolean;
 	private isPreview: boolean;
+	private rootDir: string;
+	private releaseDir: string;
 
-	constructor(executor: ShellExecutor, options: ReleaseOptions) {
-		this.$ = executor;
+	constructor(
+		private executor: typeof $,
+		options: ReleaseOptions,
+	) {
 		this.isDry = !!options.dry;
 		this.isNoDeploy = !!options['no-deploy'];
 		this.isPreview = !!(
@@ -30,110 +43,111 @@ export class ReleaseManager {
 			options['preview-fe'] ||
 			options['preview-be']
 		);
+
+		const currentDir = dirname(fileURLToPath(import.meta.url));
+		this.releaseDir = join(currentDir, '..');
+		this.rootDir = join(currentDir, '../../..');
 	}
 
-	private async runStep(
-		name: string,
-		action: () => Promise<unknown>,
-		forceRun = false,
-	) {
-		console.log(`\n📦 Step: ${name}`);
-		if (this.isDry && !forceRun) {
-			console.log('  [Skipped due to --dry]');
+	private async step(name: string, action: () => Promise<void>, force = false) {
+		console.log(`\n📦 [Step] ${name}`);
+		if (this.isDry && !force) {
+			console.log('   ⚠️  Skipped (Dry Run)');
 			return;
 		}
 		try {
 			await action();
-			console.log('  ✅ Done.');
+			console.log('   ✅ Success');
 		} catch (error) {
-			console.error('  ❌ Failed:', error);
+			console.error(`   ❌ Failed: ${name}`);
 			throw error;
 		}
 	}
 
-	public async run() {
-		console.log('🚀 Starting Release Process...');
-		if (this.isDry)
-			console.log('[DRY RUN] No changes will be committed or pushed.');
+	private async getNextVersion(): Promise<string> {
+		const result = await this.executor.cwd(
+			this.rootDir,
+		)`git-cliff --bumped-version`.text();
+		const version = result.trim();
+		if (!version)
+			throw new Error('Could not calculate next version with git-cliff');
+		return version;
+	}
 
-		// 1. Run Tests
-		await this.runStep(
-			'Tests',
+	public async run() {
+		console.log('🚀 Initializing Release...');
+		if (this.isDry) console.log('🧪 Mode: DRY RUN');
+
+		// 1. Validation
+		await this.step(
+			'Running Tests',
 			async () => {
 				if (this.isPreview) return;
-				await this.$`bun --cwd ../.. run test:all`;
+				await this.executor.cwd(this.rootDir)`bun run test:all`;
 			},
 			true,
-		); // Always run tests even in dry run unless preview
+		);
 
-		// 2. Preview or Generate Changelog
+		// 2. Preview Mode
 		if (this.isPreview) {
-			await this.runStep(
-				'Preview Changelog',
+			await this.step(
+				'Generating Changelog Preview',
 				async () => {
-					await this.$`git-cliff --unreleased --strip all`;
+					await this.executor.cwd(
+						this.rootDir,
+					)`git-cliff --unreleased --strip all`;
 				},
 				true,
-			); // Always run preview
+			);
 			return;
 		}
 
-		// 3. Bump Version & Changelog
-		await this.runStep('Bump Version & Generate Changelog', async () => {
-			await this.$`git-cliff --bump -o ../../CHANGELOG.md`;
+		// 3. Version Bump
+		let nextVersion = '';
+		await this.step('Calculating Version & Updating package.json', async () => {
+			nextVersion = await this.getNextVersion();
+			console.log(`   📈 Target Version: ${nextVersion}`);
 
-			const nextVersion = (
-				await this.$`git-cliff --bumped-version`.text()
-			).trim();
-			if (!nextVersion) {
-				throw new Error('Could not determine next version.');
-			}
-			console.log(`  Target Version: ${nextVersion}`);
+			const filesToUpdate = [
+				join(this.rootDir, 'package.json'),
+				join(this.releaseDir, 'package.json'),
+			];
 
-			// Manual version bump to avoid npm's "catalog:" protocol error
-			// We update both root and current package.json
-			const currentDir = dirname(fileURLToPath(import.meta.url));
-			const rootPkgPath = join(currentDir, '../../../package.json');
-			const currentPkgPath = join(currentDir, '../package.json');
-
-			for (const path of [rootPkgPath, currentPkgPath]) {
+			for (const filePath of filesToUpdate) {
 				// biome-ignore lint/correctness/noUndeclaredVariables: Bun is global
-				const pkgFile = Bun.file(path);
-				const pkg = await pkgFile.json();
+				const pkg = await Bun.file(filePath).json();
 				pkg.version = nextVersion;
 				// biome-ignore lint/correctness/noUndeclaredVariables: Bun is global
-				await Bun.write(path, JSON.stringify(pkg, null, '\t') + '\n');
+				await Bun.write(filePath, `${JSON.stringify(pkg, null, '\t')}\n`);
 			}
+
+			await this.executor.cwd(this.rootDir)`git-cliff --bump -o CHANGELOG.md`;
 		});
 
-		// 4. Commit and Tag
-		await this.runStep('Commit and Tag', async () => {
-			const currentDir = dirname(fileURLToPath(import.meta.url));
-			const rootPkgPath = join(currentDir, '../../../package.json');
-			// biome-ignore lint/correctness/noUndeclaredVariables: Bun is global
-			const pkg = await Bun.file(rootPkgPath).json();
-			const version = pkg.version;
-			const tagName = `v${version}`;
-
+		// 4. Git Commit & Tag
+		const tagName = `v${nextVersion}`;
+		await this.step('Creating Git Commit and Tag', async () => {
 			const commitMsg =
 				`chore(release): prepare for ${tagName} ${this.isNoDeploy ? '[no-deploy]' : ''}`.trim();
 
-			await this.$`git add ../../package.json package.json ../../CHANGELOG.md`;
-			await this.$`git commit -m "${commitMsg}"`;
-			await this.$`git tag -a ${tagName} -m "Release ${tagName}"`;
-
-			console.log(`  Tagged: ${tagName}`);
+			await this.executor.cwd(
+				this.rootDir,
+			)`git add package.json CHANGELOG.md libs/release/package.json`;
+			await this.executor.cwd(this.rootDir)`git commit -m ${commitMsg}`;
+			await this.executor.cwd(
+				this.rootDir,
+			)`git tag -a ${tagName} -m ${tagName}`;
 		});
 
-		// 5. Push
-		await this.runStep('Push to Remote', async () => {
-			await this.$`git push --follow-tags`;
-			console.log('  🚀 Pushed to remote with tags.');
+		// 5. Publish
+		await this.step('Pushing to Remote', async () => {
+			await this.executor.cwd(this.rootDir)`git push --follow-tags`;
 		});
+
+		console.log(`\n🎉 Release ${tagName} completed successfully!`);
 	}
 }
 
-// Execution block - only run if directly executed
 if (import.meta.main) {
 	const { values } = parseArgs({
 		// biome-ignore lint/correctness/noUndeclaredVariables: Bun is global

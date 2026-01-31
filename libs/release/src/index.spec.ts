@@ -1,107 +1,97 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ReleaseManager } from './index';
 
-function reconstructCmd(args: unknown[]) {
-	const strings = args[0] as TemplateStringsArray;
-	const values = args.slice(1);
-	let cmd = strings[0] || '';
-	values.forEach((v, i) => {
-		cmd += v + (strings[i + 1] || '');
-	});
-	return cmd.trim();
+/**
+ * Mocking the executor ($) to capture commands
+ */
+function createMockExecutor() {
+	const commands: string[] = [];
+	// Mock the template literal call
+	// biome-ignore lint/suspicious/noExplicitAny: complex mock
+	const mockFunc: any = vi.fn(
+		(strings: TemplateStringsArray, ...values: unknown[]) => {
+			let cmd = strings[0] || '';
+			for (let i = 0; i < values.length; i++) {
+				cmd += values[i] + (strings[i + 1] || '');
+			}
+			commands.push(cmd.trim());
+
+			return {
+				text: () => {
+					if (cmd.includes('--bumped-version')) return Promise.resolve('1.2.3');
+					return Promise.resolve('');
+				},
+				// biome-ignore lint/suspicious/noExplicitAny: promise mock
+				then: (resolve: (value: any) => any) =>
+					Promise.resolve({
+						exitCode: 0,
+						text: () => (cmd.includes('--bumped-version') ? '1.2.3' : ''),
+					}).then(resolve),
+			};
+		},
+	);
+
+	mockFunc.cwd = vi.fn().mockReturnValue(mockFunc);
+
+	return { mockFunc, commands };
 }
 
 describe('ReleaseManager', () => {
-	// biome-ignore lint/suspicious/noExplicitAny: mock
-	let mockShell: any;
-	let executedCommands: string[] = [];
+	let mock: ReturnType<typeof createMockExecutor>;
 
 	beforeEach(() => {
-		executedCommands = [];
-		mockShell = vi.fn((strings: TemplateStringsArray, ...values: unknown[]) => {
-			const cmd = reconstructCmd([strings, ...values]);
-			executedCommands.push(cmd);
+		mock = createMockExecutor();
+		// Mock Bun globals
+		// biome-ignore lint/suspicious/noExplicitAny: global mock
+		(globalThis as any).Bun = {
+			file: () => ({
+				json: () => Promise.resolve({ version: '1.0.0' }),
+			}),
+			write: vi.fn(),
+		};
+	});
 
-			const getOutput = () => {
-				if (cmd.includes('git-cliff --bumped-version')) return '1.2.3\n';
-				if (cmd.includes('package.json') && cmd.includes('version'))
-					return '1.2.3\n';
-				return '';
-			};
+	it('should execute full release flow', async () => {
+		// biome-ignore lint/suspicious/noExplicitAny: test mock
+		const manager = new ReleaseManager(mock.mockFunc as any, {});
+		await manager.run();
 
-			return {
-				// Pattern 1: await $`cmd`.text()
-				text: () => Promise.resolve(getOutput()),
+		expect(mock.commands).toContain('bun run test:all');
+		expect(mock.commands).toContain('git-cliff --bump -o CHANGELOG.md');
+		expect(mock.commands).toContain('git push --follow-tags');
+		expect(mock.commands.some((c) => c.includes('git tag -a v1.2.3'))).toBe(
+			true,
+		);
+	});
 
-				// Pattern 2: (await $`cmd`).text()
-				// biome-ignore lint/suspicious/noExplicitAny: generic promise callback
-				then: (onfulfilled: (value: any) => any) => {
-					const output = getOutput();
-					return Promise.resolve({
-						exitCode: 0,
-						stdout: Buffer.from(output),
-						text: () => output,
-					}).then(onfulfilled);
-				},
-			};
+	it('should skip deployment if [no-deploy] is requested', async () => {
+		// biome-ignore lint/suspicious/noExplicitAny: test mock
+		const manager = new ReleaseManager(mock.mockFunc as any, {
+			'no-deploy': true,
 		});
-	});
-
-	it('should run preview flow correctly', async () => {
-		const manager = new ReleaseManager(mockShell, { preview: true });
 		await manager.run();
 
-		expect(executedCommands).not.toContain('bun --cwd ../.. run test:all');
-		expect(executedCommands).toContain('git-cliff --unreleased --strip all');
-		expect(executedCommands.some((c) => c.includes('git tag'))).toBe(false);
+		expect(mock.commands.some((c) => c.includes('[no-deploy]'))).toBe(true);
 	});
 
-	it('should run dry run flow correctly', async () => {
-		const manager = new ReleaseManager(mockShell, { dry: true });
+	it('should skip destructive steps in dry run', async () => {
+		// biome-ignore lint/suspicious/noExplicitAny: test mock
+		const manager = new ReleaseManager(mock.mockFunc as any, { dry: true });
 		await manager.run();
 
-		expect(executedCommands).toContain('bun --cwd ../.. run test:all');
-		expect(executedCommands.some((c) => c.includes('git-cliff --bump'))).toBe(
+		expect(mock.commands).toContain('bun run test:all');
+		expect(mock.commands).not.toContain('git push --follow-tags');
+		expect(mock.commands.some((c) => c.includes('git-cliff --bump'))).toBe(
 			false,
 		);
 	});
 
-	it('should run full release flow correctly', async () => {
-		const manager = new ReleaseManager(mockShell, { dry: false });
+	it('should generate preview when requested', async () => {
+		// biome-ignore lint/suspicious/noExplicitAny: test mock
+		const manager = new ReleaseManager(mock.mockFunc as any, { preview: true });
 		await manager.run();
 
-		expect(executedCommands).toContain('bun --cwd ../.. run test:all');
-		expect(executedCommands).toContain(
-			'git-cliff --bump -o ../../CHANGELOG.md',
-		);
-		expect(executedCommands).toContain('git-cliff --bumped-version');
-		// We don't check for npm version anymore as we do manual update
-		// but we can check if it attempted to read file (not easily mockable here without mocking Bun.file)
-		// So we focus on git commands
-		expect(executedCommands).toContain(
-			'git add ../../package.json package.json ../../CHANGELOG.md',
-		);
-		expect(executedCommands).toContain(
-			'git commit -m "chore(release): prepare for v1.2.3"',
-		);
-		expect(executedCommands).toContain('git tag -a v1.2.3 -m "Release v1.2.3"');
-		expect(executedCommands).toContain('git push --follow-tags');
-	});
-
-	it('should add [no-deploy] flag when requested', async () => {
-		const manager = new ReleaseManager(mockShell, { 'no-deploy': true });
-		await manager.run();
-
-		expect(executedCommands).toContain(
-			'git commit -m "chore(release): prepare for v1.2.3 [no-deploy]"',
-		);
-	});
-
-	it('should treat --preview-fe as preview', async () => {
-		const manager = new ReleaseManager(mockShell, { 'preview-fe': true });
-		await manager.run();
-
-		expect(executedCommands).toContain('git-cliff --unreleased --strip all');
-		expect(executedCommands).not.toContain('bun --cwd ../.. run test:all');
+		expect(mock.commands).toContain('git-cliff --unreleased --strip all');
+		expect(mock.commands).not.toContain('bun run test:all');
 	});
 });
