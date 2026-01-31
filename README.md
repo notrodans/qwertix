@@ -1,77 +1,122 @@
-# Qwertix ⌨️
+# Qwertix
+
+A high-performance, social typing competition platform (Monkeytype clone) built for **Agent-Driven Development (ADD)** with a modern full-stack TypeScript environment.
 
 > [!CAUTION]
 > This is a **pet project** currently under active development. Expect **numerous bugs**, unfinished features, and occasional breaking changes.
 
-A multiplayer typing competition platform built with real-time features.
+## Features
 
-## 🚀 Features
+- **Real-time Racing**: Compete with friends in real-time using WebSockets (`ws`).
+- **Feature-Sliced Design**: Scalable frontend architecture using FSD methodology.
+- **Dependency Injection**: Clean backend architecture with `awilix`.
+- **Modern Tooling**: Bun, Biome, ESLint, Vitest, Playwright, Drizzle ORM.
+- **Infrastructure**: Docker Swarm ready, centralized secrets with Doppler.
 
-- **Real-time Racing:** Compete with friends in real-time.
-- **Doppler Integration:** Centralized secrets management.
-- **Modern Stack:** Built with Bun, React, and Fastify.
-
-## 🛠 Tech Stack
-
-- **Monorepo:** Bun Workspaces
-- **Frontend:** React, Vite, Reatom (v1000), Zod, ESLint (FSD boundaries), Bun (sirv)
-- **Backend:** Node.js, Fastify, WebSockets (`ws`), PostgreSQL + Drizzle ORM
-- **Infrastructure:** Docker Swarm, Traefik (Let's Encrypt), Doppler (Secrets), Adminer
-- **Tooling:** Biome (Linting & Formatting), Vitest (Unit/E2E), Playwright (Integration)
-
-## 🚥 Getting Started
+## Getting Started
 
 ### Prerequisites
 
-- [Bun](https://bun.sh) (v1.1+)
-- [Docker](https://www.docker.com/) (v24+)
-- [Doppler CLI](https://docs.doppler.com/docs/install-cli)
+- [Bun](https://bun.sh) (v1.1+) (JavaScript runtime & package manager)
+- [Docker](https://www.docker.com/) (v24+) (for Database & Swarm)
+- [Doppler CLI](https://docs.doppler.com/docs/install-cli) (Secrets management)
 
-### 🐳 Deployment (Production / Swarm)
-
-This project uses **Docker Swarm** with **Traefik** for automatic SSL (Let's Encrypt) and **Doppler** for secrets management.
-
-For detailed instructions, see [PRODUCTION.md](PRODUCTION.md).
-
-**Quick Start:**
-
-1.  Initialize Swarm: `docker swarm init`
-2.  Start local registry: `docker compose -f docker-compose.stack.local.yml up -d registry`
-3.  Create Doppler secret: `echo "your_token" | docker secret create doppler_token -`
-4.  (Optional) Clear old DB data if migrating from Postgres < 18: `docker volume rm qwertix_data`
-5.  Build, Push & Deploy:
-    ```bash
-    docker compose -f docker-compose.stack.local.yml build
-    docker compose -f docker-compose.stack.local.yml push
-    docker stack deploy -c docker-compose.stack.local.yml qwertix
-    ```
-
-### 🛠️ Local Development (No Swarm)
+### Installation
 
 1.  **Install dependencies**:
     ```bash
     bun install
     ```
 
-2.  **Setup Doppler**:
+2.  **Setup Doppler** (Required for environment variables):
     ```bash
     doppler setup
     ```
 
-3.  **Start the dev services** (DB, Adminer):
+### Running Local Development
+
+1.  **Start Infrastructure** (PostgreSQL, Adminer):
     ```bash
     docker compose -f docker-compose.dev.yml up -d
     ```
 
-4.  **Start both frontend and backend**:
+2.  **Start Application** (Frontend + Backend):
     ```bash
     bun run dev
     ```
+    - **Frontend**: http://localhost:3006
+    - **Backend API**: http://localhost:3009
+    - **Adminer**: http://localhost:8085
 
-*   **Frontend**: http://localhost:3006
-*   **Backend API**: http://localhost:3009
-*   **Adminer**: http://localhost:8085
+### Linting & Formatting
 
-## 📜 License
+```bash
+# Run all linters and formatters (Biome + ESLint)
+bun run lint:fix
 
-MIT
+# Check formatting without fixing
+bun run lint
+```
+
+## Workspace Structure
+
+```text
+qwertix/
+├── .github/           # GitHub Actions & Agent Guidelines
+├── .husky/            # Git hooks (pre-commit)
+├── apps/              # Application workspaces
+│   ├── backend/       # Fastify + WebSocket API
+│   └── frontend/      # React + Vite (FSD)
+├── docs/              # Documentation & User Stories
+├── libs/              # Shared libraries
+│   ├── room-contracts/# Shared types & interfaces
+│   └── tsconfig/      # Base TypeScript configs
+├── docker-compose.*   # Docker orchestration files
+├── package.json       # Monorepo configuration
+└── README.md          # This file
+```
+
+## Available Scripts
+
+| Script                               | Description                                       |
+| ------------------------------------ | ------------------------------------------------- |
+| `bun run dev`                        | Start both frontend and backend in watch mode     |
+| `bun run build`                      | Build all workspaces for production               |
+| `bun run lint`                       | Check code style and quality (Biome + ESLint)     |
+| `bun run lint:fix`                   | Auto-fix code style and quality issues            |
+| `bun run test`                       | Run unit tests (Vitest)                           |
+| `bun run test:e2e`                   | Run end-to-end tests (Playwright)                 |
+| `bun run db:generate`                | Generate SQL migrations from Drizzle schema       |
+| `bun run db:migrate`                 | Apply SQL migrations to the database              |
+
+## Testing
+
+Run tests for specific layers or workspaces:
+
+```bash
+# Unit Tests (Vitest)
+bun run test
+
+# E2E Tests (Playwright - Frontend)
+bun run --filter frontend test:e2e
+
+# E2E Tests (Vitest + Supertest - Backend)
+bun run --filter backend test:e2e
+```
+
+## Configuration Files
+
+- **`package.json`** – Bun workspaces, scripts, dev dependencies
+- **`biome.json`** – Biome configuration (Formatting/Linting)
+- **`eslint.config.mjs`** – ESLint flat config (FSD boundaries, React rules)
+- **`tsconfig.json`** – TypeScript compiler options (Base)
+- **`cliff.toml`** – Git Cliff changelog configuration
+- **`doppler.yaml`** – Doppler secrets configuration
+
+## Deployment (Production / Swarm)
+
+This project uses **Docker Swarm** with **Traefik** for automatic SSL. See [PRODUCTION.md](PRODUCTION.md) for detailed deployment instructions.
+
+## License
+
+MIT – see [LICENSE](LICENSE) (if present).
