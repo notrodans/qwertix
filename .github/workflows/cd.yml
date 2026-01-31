@@ -18,7 +18,7 @@ jobs:
       - name: Deploy to production
         run: |
           echo "Deploying to production with tag ${{ github.sha }}..."
-          # Пример команды для деплоя через SSH (раскомментируйте и настройте при необходимости):
+          # Example command for deployment via SSH (uncomment and configure as needed):
           # ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
           #   "IMAGE_TAG=${{ github.sha }} docker stack deploy -c docker-compose.stack.yml qwertix --with-registry-auth"
 
