@@ -6,7 +6,7 @@ on:
       - 'v*'
 
 env:
-  REGISTRY: ghcr.io
+  REGISTRY: ${{ secrets.DOCKER_REGISTRY || 'localhost:5000' }}
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
