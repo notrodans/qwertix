@@ -31,7 +31,7 @@
 		"drizzle-orm": "catalog:",
 		"drizzle-kit": "catalog:",
 		"passport-local": "^1.0.0",
-		"pg": "^8.16.3",
+		"pg": "^8.18.0",
 		"uuid": "^13.0.0",
 		"ws": "^8.18.0",
 		"zod": "^4.3.6"
