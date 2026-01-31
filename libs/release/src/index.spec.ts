@@ -51,14 +51,14 @@ describe('ReleaseManager', () => {
 		};
 	});
 
-	it('should execute full release flow', async () => {
+	it('should execute full release flow (without tests or changelog)', async () => {
 		// biome-ignore lint/suspicious/noExplicitAny: test mock
 		const manager = new ReleaseManager(mock.mockFunc as any, {});
 		await manager.run();
 
-		expect(mock.commands).toContain('bun run test:all');
-		expect(mock.commands).toContain('git-cliff --bump -o CHANGELOG.md');
-		expect(mock.commands).toContain('git push --follow-tags');
+		expect(mock.commands).not.toContain('bun run test:all');
+		expect(mock.commands).not.toContain('git-cliff --bump -o CHANGELOG.md');
+		expect(mock.commands).toContain('git push origin HEAD --follow-tags');
 		expect(mock.commands.some((c) => c.includes('git tag -a v1.2.3'))).toBe(
 			true,
 		);
@@ -79,19 +79,16 @@ describe('ReleaseManager', () => {
 		const manager = new ReleaseManager(mock.mockFunc as any, { dry: true });
 		await manager.run();
 
-		expect(mock.commands).toContain('bun run test:all');
-		expect(mock.commands).not.toContain('git push --follow-tags');
-		expect(mock.commands.some((c) => c.includes('git-cliff --bump'))).toBe(
-			false,
-		);
+		expect(mock.commands).not.toContain('git push origin HEAD --follow-tags');
+		expect(mock.commands.some((c) => c.includes('git tag'))).toBe(false);
 	});
 
-	it('should generate preview when requested', async () => {
+	it('should only show version preview when requested', async () => {
 		// biome-ignore lint/suspicious/noExplicitAny: test mock
 		const manager = new ReleaseManager(mock.mockFunc as any, { preview: true });
 		await manager.run();
 
-		expect(mock.commands).toContain('git-cliff --unreleased --strip all');
-		expect(mock.commands).not.toContain('bun run test:all');
+		expect(mock.commands).toContain('git-cliff --bumped-version');
+		expect(mock.commands).not.toContain('git push origin HEAD --follow-tags');
 	});
 });

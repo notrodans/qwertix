@@ -6,13 +6,12 @@ import { parseArgs } from 'util';
 /**
  * Release Management Orchestrator
  *
- * This script handles the full release cycle:
- * 1. Validation (Tests)
- * 2. Versioning (Git-Cliff + Manual package.json update)
- * 3. Documentation (Changelog generation)
- * 4. Git Orchestration (Commit, Tag, Push)
+ * This script handles the release orchestration:
+ * 1. Versioning (Git-Cliff + Manual package.json update)
+ * 2. Git Orchestration (Commit, Tag, Push)
  *
  * It avoids using 'npm version' to prevent conflicts with Bun's 'catalog:' protocol.
+ * Tests and Changelog generation are handled by CI.
  */
 
 export interface ReleaseOptions {
@@ -78,34 +77,18 @@ export class ReleaseManager {
 		console.log('🚀 Initializing Release...');
 		if (this.isDry) console.log('🧪 Mode: DRY RUN');
 
-		// 1. Validation
-		await this.step(
-			'Running Tests',
-			async () => {
-				if (this.isPreview) return;
-				await this.executor.cwd(this.rootDir)`bun run test:all`;
-			},
-			true,
-		);
-
-		// 2. Preview Mode
+		// 1. Preview Mode (Version only)
 		if (this.isPreview) {
-			await this.step(
-				'Generating Changelog Preview',
-				async () => {
-					await this.executor.cwd(
-						this.rootDir,
-					)`git-cliff --unreleased --strip all`;
-				},
-				true,
-			);
+			const version = await this.getNextVersion();
+			console.log(`\nℹ️  Next estimated version: ${version}`);
 			return;
 		}
 
-		// 3. Version Bump
+		// 2. Version Bump
 		let nextVersion = '';
 		await this.step('Calculating Version & Updating package.json', async () => {
-			nextVersion = await this.getNextVersion();
+			const rawVersion = await this.getNextVersion();
+			nextVersion = rawVersion.replace(/^v+/, ''); // Normalize: remove leading 'v'
 			console.log(`   📈 Target Version: ${nextVersion}`);
 
 			const filesToUpdate = [
@@ -120,28 +103,28 @@ export class ReleaseManager {
 				// biome-ignore lint/correctness/noUndeclaredVariables: Bun is global
 				await Bun.write(filePath, `${JSON.stringify(pkg, null, '\t')}\n`);
 			}
-
-			await this.executor.cwd(this.rootDir)`git-cliff --bump -o CHANGELOG.md`;
 		});
 
-		// 4. Git Commit & Tag
+		// 3. Git Commit & Tag
 		const tagName = `v${nextVersion}`;
 		await this.step('Creating Git Commit and Tag', async () => {
-			const commitMsg =
-				`chore(release): prepare for ${tagName} ${this.isNoDeploy ? '[no-deploy]' : ''}`.trim();
+			const commitMsg = `chore(release): prepare for ${tagName} ${
+				this.isNoDeploy ? '[no-deploy]' : ''
+			}`.trim();
 
 			await this.executor.cwd(
 				this.rootDir,
-			)`git add package.json CHANGELOG.md libs/release/package.json`;
-			await this.executor.cwd(this.rootDir)`git commit -m ${commitMsg}`;
+			)`git add package.json libs/release/package.json`;
+			await this.executor.cwd(this.rootDir)`git commit -m "${commitMsg}"`;
 			await this.executor.cwd(
 				this.rootDir,
 			)`git tag -a ${tagName} -m ${tagName}`;
 		});
 
-		// 5. Publish
+		// 4. Publish
 		await this.step('Pushing to Remote', async () => {
-			await this.executor.cwd(this.rootDir)`git push --follow-tags`;
+			// Push HEAD to origin to handle branches without explicit upstream
+			await this.executor.cwd(this.rootDir)`git push origin HEAD --follow-tags`;
 		});
 
 		console.log(`\n🎉 Release ${tagName} completed successfully!`);
