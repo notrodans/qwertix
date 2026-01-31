@@ -1,6 +1,5 @@
 {
 	"name": "@qwertix/release",
-	"version": "0.1.0",
 	"type": "module",
 	"bin": {
 		"qwertix-release": "./src/index.ts"
@@ -21,5 +20,6 @@
 		"@types/bun": "latest",
 		"vite-tsconfig-paths": "catalog:",
 		"vitest": "catalog:"
-	}
+	},
+	"version": "0.1.0"
 }
