@@ -5,54 +5,75 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-
-env:
-  REGISTRY: ${{ secrets.DOCKER_REGISTRY || 'localhost:5000' }}
-  IMAGE_NAME: ${{ github.repository }}
+  workflow_dispatch:
 
 jobs:
-  build-and-push:
+  push_to_registry:
+    env:
+      BE_REPO: ${{ secrets.DOCKER_USERNAME }}/qwertix-backend
+      FE_REPO: ${{ secrets.DOCKER_USERNAME }}/qwertix-frontend
+      PLATFORMS: linux/amd64,linux/arm64
+
+    name: Push Docker image to Docker Hub
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-
-    strategy:
-      matrix:
-        component: [backend, frontend]
-
     steps:
-      - name: Checkout repository
+      - name: Check out the repo
         uses: actions/checkout@v6
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@49b3bc8e6bdd4a60e6116a5414239cba5943d3cf # v3.2.0
 
-      - name: Log in to the Container registry
-        uses: docker/login-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@c47758b77c9736f4b2ef4073d4d51994fabfe349 # v3.7.1
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
         with:
-          registry: ${{ env.REGISTRY }}
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@v5
+      # --- Backend ---
+      - name: Backend extract metadata
+        id: bemeta
+        uses: docker/metadata-action@369ebfd91f95188ef8c61f501015609462f46374 # v5.6.1
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.component }}
+          images: ${{ env.BE_REPO }}
           tags: |
             type=sha,format=long
             type=ref,event=branch
-            type=ref,event=pr
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v6
+      - name: Backend build and push
+        uses: docker/build-push-action@48aba3b46d1b1fec4febb7c5d0c644b249a11355 # v6.10.0
         with:
           context: .
-          file: apps/${{ matrix.component }}/Dockerfile
+          platforms: ${{ env.PLATFORMS }}
+          file: apps/backend/Dockerfile
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.be-meta.outputs.tags || steps.bemeta.outputs.tags }}
+          labels: ${{ steps.bemeta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # --- Frontend ---
+      - name: Frontend extract metadata
+        id: femeta
+        uses: docker/metadata-action@369ebfd91f95188ef8c61f501015609462f46374 # v5.6.1
+        with:
+          images: ${{ env.FE_REPO }}
+          tags: |
+            type=sha,format=long
+            type=ref,event=branch
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+
+      - name: Frontend build and push
+        uses: docker/build-push-action@48aba3b46d1b1fec4febb7c5d0c644b249a11355 # v6.10.0
+        with:
+          context: .
+          platforms: ${{ env.PLATFORMS }}
+          file: apps/frontend/Dockerfile
+          push: true
+          tags: ${{ steps.femeta.outputs.tags }}
+          labels: ${{ steps.femeta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
