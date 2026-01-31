@@ -58,7 +58,7 @@ describe('ReleaseManager', () => {
 
 		expect(mock.commands).not.toContain('bun run test:all');
 		expect(mock.commands).not.toContain('git-cliff --bump -o CHANGELOG.md');
-		expect(mock.commands).toContain('git push --follow-tags');
+		expect(mock.commands).toContain('git push origin HEAD --follow-tags');
 		expect(mock.commands.some((c) => c.includes('git tag -a v1.2.3'))).toBe(
 			true,
 		);
@@ -79,7 +79,7 @@ describe('ReleaseManager', () => {
 		const manager = new ReleaseManager(mock.mockFunc as any, { dry: true });
 		await manager.run();
 
-		expect(mock.commands).not.toContain('git push --follow-tags');
+		expect(mock.commands).not.toContain('git push origin HEAD --follow-tags');
 		expect(mock.commands.some((c) => c.includes('git tag'))).toBe(false);
 	});
 
@@ -89,6 +89,6 @@ describe('ReleaseManager', () => {
 		await manager.run();
 
 		expect(mock.commands).toContain('git-cliff --bumped-version');
-		expect(mock.commands).not.toContain('git push --follow-tags');
+		expect(mock.commands).not.toContain('git push origin HEAD --follow-tags');
 	});
 });

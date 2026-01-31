@@ -87,7 +87,8 @@ export class ReleaseManager {
 		// 2. Version Bump
 		let nextVersion = '';
 		await this.step('Calculating Version & Updating package.json', async () => {
-			nextVersion = await this.getNextVersion();
+			const rawVersion = await this.getNextVersion();
+			nextVersion = rawVersion.replace(/^v+/, ''); // Normalize: remove leading 'v'
 			console.log(`   📈 Target Version: ${nextVersion}`);
 
 			const filesToUpdate = [
@@ -122,7 +123,8 @@ export class ReleaseManager {
 
 		// 4. Publish
 		await this.step('Pushing to Remote', async () => {
-			await this.executor.cwd(this.rootDir)`git push --follow-tags`;
+			// Push HEAD to origin to handle branches without explicit upstream
+			await this.executor.cwd(this.rootDir)`git push origin HEAD --follow-tags`;
 		});
 
 		console.log(`\n🎉 Release ${tagName} completed successfully!`);
