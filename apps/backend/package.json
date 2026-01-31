@@ -34,7 +34,7 @@
 		"pg": "^8.16.3",
 		"uuid": "^13.0.0",
 		"ws": "^8.18.0",
-		"zod": "^4.2.1"
+		"zod": "^4.3.6"
 	},
 	"devDependencies": {
 		"@qwertix/tsconfig": "workspace:*",
