@@ -18,7 +18,6 @@ describe('ReleaseManager', () => {
 
 	beforeEach(() => {
 		executedCommands = [];
-		// biome-ignore lint/suspicious/noExplicitAny: mock arguments
 		mockShell = vi.fn((strings: TemplateStringsArray, ...values: unknown[]) => {
 			const cmd = reconstructCmd([strings, ...values]);
 			executedCommands.push(cmd);
@@ -74,9 +73,9 @@ describe('ReleaseManager', () => {
 		expect(executedCommands).toContain('bun run test:all');
 		expect(executedCommands).toContain('git-cliff --bump -o CHANGELOG.md');
 		expect(executedCommands).toContain('git-cliff --bumped-version');
-		expect(executedCommands.some((c) => c.startsWith('npm version 1.2.3'))).toBe(
-			true,
-		);
+		expect(
+			executedCommands.some((c) => c.startsWith('npm version 1.2.3')),
+		).toBe(true);
 		expect(executedCommands).toContain('git add package.json CHANGELOG.md');
 		expect(executedCommands).toContain(
 			'git commit -m "chore(release): prepare for v1.2.3"',

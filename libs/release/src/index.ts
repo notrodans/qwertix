@@ -88,7 +88,8 @@ export class ReleaseManager {
 			}
 			console.log(`  Target Version: ${nextVersion}`);
 
-			await this.$`npm version ${nextVersion} --no-git-tag-version --allow-same-version`;
+			await this
+				.$`npm version ${nextVersion} --no-git-tag-version --allow-same-version`;
 		});
 
 		// 4. Commit and Tag
@@ -100,7 +101,7 @@ export class ReleaseManager {
 				.trim();
 			const tagName = `v${version}`;
 
-			const commitMsg = `chore(release): prepare for ${tagName} ${ 
+			const commitMsg = `chore(release): prepare for ${tagName} ${
 				this.isNoDeploy ? '[no-deploy]' : ''
 			}`.trim();
 

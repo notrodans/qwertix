@@ -10,8 +10,8 @@
 		"release": "bun src/index.ts",
 		"test": "vitest run",
 		"test:watch": "vitest",
-		"lint": "biome check .",
-		"lint:fix": "biome check --write ."
+		"lint": "tsc --noEmit -p tsconfig.json && eslint . && biome check .",
+		"lint:fix": "tsc --noEmit -p tsconfig.json && eslint . --fix && biome check --write ."
 	},
 	"dependencies": {
 		"bun": "^1.0.0"
