@@ -63,7 +63,6 @@ jobs:
           images: ${{ env.BE_REPO }}
           tags: |
             type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
             type=raw,value=latest
 
       - name: Backend build and push
@@ -95,7 +94,6 @@ jobs:
           images: ${{ env.FE_REPO }}
           tags: |
             type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
             type=raw,value=latest
 
       - name: Frontend build and push
