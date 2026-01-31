@@ -2,7 +2,7 @@ name: CD
 
 on:
   workflow_run:
-    workflows: ["Docker Publish"]
+    workflows: ["Release"]
     branches: [main]
     types:
       - completed
@@ -17,8 +17,8 @@ jobs:
 
       - name: Deploy to production
         run: |
-          echo "Deploying to production with tag ${{ github.sha }}..."
-          # Example command for deployment via SSH (uncomment and configure as needed):
+          echo "Deploying to production..."
+          # Example command for deployment via SSH:
           # ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
-          #   "IMAGE_TAG=${{ github.sha }} docker stack deploy -c docker-compose.stack.yml qwertix --with-registry-auth"
+          #   "DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }} IMAGE_TAG=latest docker stack deploy -c docker-compose.stack.yml qwertix --with-registry-auth"
 
