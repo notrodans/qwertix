@@ -58,7 +58,7 @@ jobs:
       # --- Backend ---
       - name: Backend extract metadata
         id: bemeta
-        uses: docker/metadata-action@369ebfd91f95188ef8c61f501015609462f46374 # v5.6.1
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
         with:
           images: ${{ env.BE_REPO }}
           tags: |
@@ -90,7 +90,7 @@ jobs:
       # --- Frontend ---
       - name: Frontend extract metadata
         id: femeta
-        uses: docker/metadata-action@369ebfd91f95188ef8c61f501015609462f46374 # v5.6.1
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
         with:
           images: ${{ env.FE_REPO }}
           tags: |
