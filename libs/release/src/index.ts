@@ -59,7 +59,7 @@ export class ReleaseManager {
 			'Tests',
 			async () => {
 				if (this.isPreview) return;
-				await this.$`bun run test:all`;
+				await this.$`bun --cwd ../.. run test:all`;
 			},
 			true,
 		); // Always run tests even in dry run unless preview
