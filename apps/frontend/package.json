@@ -25,7 +25,7 @@
 		"@radix-ui/react-slot": "^1.2.4",
 		"@radix-ui/react-toggle": "^1.1.10",
 		"@radix-ui/react-toggle-group": "^1.1.11",
-		"@reatom/core": "^1000.14.1",
+		"@reatom/core": "^1000.15.0",
 		"@reatom/react": "^1000.2.2",
 		"@t3-oss/env-core": "catalog:",
 		"@tailwindcss/vite": "^4.1.18",
