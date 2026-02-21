@@ -28,7 +28,7 @@
 		"@reatom/core": "^1000.14.1",
 		"@reatom/react": "^1000.2.2",
 		"@t3-oss/env-core": "catalog:",
-		"@tailwindcss/vite": "^4.1.18",
+		"@tailwindcss/vite": "^4.2.0",
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
 		"lucide-react": "^0.563.0",
