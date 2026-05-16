@@ -27,7 +27,7 @@
 		"@t3-oss/env-core": "catalog:",
 		"awilix": "^13.0.0",
 		"bcryptjs": "^3.0.3",
-		"dotenv": "^17.3.1",
+		"dotenv": "^17.4.2",
 		"drizzle-orm": "catalog:",
 		"drizzle-kit": "catalog:",
 		"passport-local": "^1.0.0",
